@@ -35,6 +35,7 @@ export default function SideMenu() {
         },
       }}
     >
+      <img src="/solarcalc.jpg" alt="logo" />
       <Box
         sx={{
           display: "flex",

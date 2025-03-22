@@ -39,7 +39,7 @@ function SideMenuMobile({ open, toggleDrawer }) {
           >
             <Avatar
               sizes="small"
-              alt="Riley Carter"
+              alt="Alejandro Martin"
               src="/static/images/avatar/7.jpg"
               sx={{ width: 24, height: 24 }}
             />
@@ -47,16 +47,15 @@ function SideMenuMobile({ open, toggleDrawer }) {
               Alejandro Martin
             </Typography>
           </Stack>
-          <MenuButton showBadge>
+          {/* <MenuButton showBadge>
             <NotificationsRoundedIcon />
-          </MenuButton>
+          </MenuButton> */}
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
           <MenuContent />
           <Divider />
         </Stack>
-        <CardAlert />
         <Stack sx={{ p: 2 }}>
           <Button
             variant="outlined"
