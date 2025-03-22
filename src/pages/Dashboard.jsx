@@ -15,6 +15,7 @@ import {
   datePickersCustomizations,
   treeViewCustomizations,
 } from "../theme/customizations";
+import MapCustom from "../components/MapCustom";
 
 const xThemeComponents = {
   ...chartsCustomizations,
@@ -51,7 +52,8 @@ export default function Dashboard(props) {
             }}
           >
             <Header />
-            <MainGrid />
+            {/* <MainGrid /> */}
+            <MapCustom />
           </Stack>
         </Box>
       </Box>
