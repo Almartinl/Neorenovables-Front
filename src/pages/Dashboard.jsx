@@ -16,6 +16,8 @@ import {
   treeViewCustomizations,
 } from "../theme/customizations";
 import MapCustom from "../components/MapCustom";
+import CustomizedDataGrid from "../components/CustomizedDataGrid";
+import Grid from "@mui/material/Grid2";
 
 const xThemeComponents = {
   ...chartsCustomizations,
@@ -52,8 +54,13 @@ export default function Dashboard(props) {
             }}
           >
             <Header />
+            <Box sx={{ width: "100%", maxWidth: { sm: "100%" } }}>
+              <Grid size={{ xs: 12 }}>
+                <CustomizedDataGrid />
+              </Grid>
+            </Box>
             {/* <MainGrid /> */}
-            <MapCustom />
+            {/* <MapCustom /> */}
           </Stack>
         </Box>
       </Box>

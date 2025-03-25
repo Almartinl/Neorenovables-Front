@@ -5,8 +5,10 @@ import CustomDatePicker from "./CustomDatePicker";
 import NavbarBreadcrumbs from "./NavbarBreadcrumbs";
 import MenuButton from "./MenuButton";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 import Search from "./Search";
+import { Button } from "@mui/material";
 
 export default function Header() {
   return (
@@ -24,8 +26,16 @@ export default function Header() {
     >
       <NavbarBreadcrumbs />
       <Stack direction="row" sx={{ gap: 1 }}>
-        <Search />
-        <CustomDatePicker />
+        <Button
+          variant="outlined"
+          color="secondary"
+          size="small"
+          startIcon={<AddRoundedIcon />}
+        >
+          Crear Nuevo Estudio
+        </Button>
+        {/* <Search /> */}
+        {/* <CustomDatePicker /> */}
         {/* <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
         </MenuButton> */}

@@ -12,12 +12,13 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
+import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 
 const mainListItems = [
-  { text: "Inicio", icon: <HomeRoundedIcon /> },
-  { text: "Informes", icon: <AnalyticsRoundedIcon /> },
-  { text: "Clientes", icon: <PeopleRoundedIcon /> },
-  { text: "Tareas", icon: <AssignmentRoundedIcon /> },
+  { text: "Estudios", icon: <AnalyticsRoundedIcon /> },
+  { text: "Productos", icon: <CategoryRoundedIcon /> },
+  { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
+  { text: "Presupuestos", icon: <AssignmentRoundedIcon /> },
 ];
 
 const secondaryListItems = [
