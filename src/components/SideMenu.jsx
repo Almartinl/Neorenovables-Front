@@ -36,7 +36,9 @@ export default function SideMenu() {
         },
       }}
     >
-      <img src="/solarcalc.jpg" alt="logo" />
+      <Box pt={2}>
+        <img src="/neorenovables_logo.png" alt="logo" width="200px" />
+      </Box>
       <Box
         sx={{
           display: "flex",

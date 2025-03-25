@@ -13,9 +13,10 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import { useNavigate } from "react-router-dom";
 
 const mainListItems = [
-  { text: "Estudios", icon: <AnalyticsRoundedIcon /> },
+  { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/" },
   { text: "Productos", icon: <CategoryRoundedIcon /> },
   { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
   { text: "Presupuestos", icon: <AssignmentRoundedIcon /> },
@@ -28,12 +29,19 @@ const secondaryListItems = [
 ];
 
 export default function MenuContent() {
+  const navigate = useNavigate();
+  function Linkto(ruta) {
+    navigate(ruta);
+  }
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton selected={index === 0}>
+            <ListItemButton
+              selected={index === 0}
+              onClick={() => Linkto(item.url)}
+            >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>

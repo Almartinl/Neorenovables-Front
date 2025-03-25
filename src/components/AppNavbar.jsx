@@ -63,10 +63,13 @@ export default function AppNavbar() {
             spacing={1}
             sx={{ justifyContent: "center", mr: "auto" }}
           >
-            <img src="/solarcalc.jpg" width="100px" alt="logo" />
+            <img src="/neorenovables_logo.png" width="50px" alt="logo" />
           </Stack>
-          <ColorModeIconDropdown />
-          <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
+          <MenuButton
+            sx={{ mr: 2 }}
+            aria-label="menu"
+            onClick={toggleDrawer(true)}
+          >
             <MenuRoundedIcon />
           </MenuButton>
           <SideMenuMobile open={open} toggleDrawer={toggleDrawer} />

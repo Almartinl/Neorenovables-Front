@@ -9,6 +9,15 @@ export default function CustomizedDataGrid() {
       disableRowSelectionOnClick
       rows={rows}
       columns={columns}
+      sx={{
+        "& .MuiDataGrid-cell:focus": {
+          outline: "none", // Elimina el borde azul al enfocar una celda
+        },
+        "& .MuiDataGrid-columnHeader:focus": {
+          outline: "none", // Elimina el borde en los encabezados de columna
+        },
+        borderRadius: 3,
+      }}
       getRowClassName={(params) =>
         params.indexRelativeToCurrentPage % 2 === 0 ? "even" : "odd"
       }
@@ -16,11 +25,11 @@ export default function CustomizedDataGrid() {
         pagination: { paginationModel: { pageSize: 20 } },
       }}
       pageSizeOptions={[10, 20, 50]}
-      disableColumnResize
       density="compact"
       localeText={{
         columnMenuSortAsc: "Ordenar Ascendente",
         columnMenuSortDesc: "Ordenar Descendente",
+        columnMenuUnsort: "Quitar Orden",
         columnMenuFilter: "Filtrar",
         columnMenuHideColumn: "Ocultar Columna",
         columnMenuShowColumns: "Mostrar Columnas",

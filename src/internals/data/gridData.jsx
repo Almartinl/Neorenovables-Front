@@ -69,10 +69,13 @@ export const columns = [
     flex: 1,
     minWidth: 100,
     renderCell: () => (
-      <div style={{ display: "flex", gap: "12px" }}>
+      <div
+        style={{ display: "flex", gap: "12px" }}
+        onClick={(event) => event.stopPropagation()}
+      >
         {/* Botón Ver */}
         <Tooltip title="Ver">
-          <IconButton variant size="small" sx={{ color: "#1976d2" }}>
+          <IconButton size="small" sx={{ color: "#1976d2" }}>
             <VisibilityRoundedIcon />
           </IconButton>
         </Tooltip>
