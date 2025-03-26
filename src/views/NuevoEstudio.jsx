@@ -4,6 +4,7 @@ import {
   Checkbox,
   FormControl,
   FormControlLabel,
+  FormLabel,
   IconButton,
   InputLabel,
   MenuItem,
@@ -22,6 +23,20 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import MapCustom from "../components/MapCustom";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import SpeedDial from "@mui/material/SpeedDial";
+import SpeedDialIcon from "@mui/material/SpeedDialIcon";
+import SpeedDialAction from "@mui/material/SpeedDialAction";
+import FileCopyIcon from "@mui/icons-material/FileCopyOutlined";
+import SaveIcon from "@mui/icons-material/Save";
+import PrintIcon from "@mui/icons-material/Print";
+import ShareIcon from "@mui/icons-material/Share";
+import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import SolarPowerRoundedIcon from "@mui/icons-material/SolarPowerRounded";
+import ElectricalServicesRoundedIcon from "@mui/icons-material/ElectricalServicesRounded";
+import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
+import FormularioConsumo from "../components/FormularioConsumo";
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -60,14 +75,28 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   borderTop: "1px solid rgba(0, 0, 0, .125)",
 }));
 
+const actions = [
+  { icon: <SolarPowerRoundedIcon />, name: "Instalacion" },
+  { icon: <ElectricalServicesRoundedIcon />, name: "Consumo Cliente" },
+  { icon: <SummarizeRoundedIcon />, name: "Resumen" },
+];
+
 export default function NuevoEstudio() {
   const [expanded, setExpanded] = React.useState("Sitio");
   const [zonas, setZonas] = React.useState([]);
+  const [pagina, setPagina] = React.useState("Instalacion");
 
   const handleAddZona = () => {
     setZonas([
       ...zonas,
-      { ancho: "", largo: "", numPaneles: "", sombras: false },
+      {
+        ancho: "",
+        largo: "",
+        numPaneles: "",
+        acimut: "",
+        inclinacion: "",
+        sombras: false,
+      },
     ]);
   };
 
@@ -93,276 +122,353 @@ export default function NuevoEstudio() {
         justifyContent: "space-between",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          width: { xs: "100vw", md: "35vw" },
-          height: { md: "100vh" },
-        }}
-      >
-        {["Sitio", "Paneles", "Inversores", "Baterias"].map((panel) => (
-          <Accordion
-            key={panel}
-            expanded={expanded === panel}
-            onChange={handleChange(panel)}
+      {/*pagina de formulario de instalacion y mapa*/}
+      {pagina == "Instalacion" && (
+        <>
+          <Box
             sx={{
-              flex: expanded === panel ? 1 : "unset",
-              transition: "flex 0.3s ease",
+              display: "flex",
+              flexDirection: "column",
+              width: { xs: "100vw", md: "35vw" },
+              height: { md: "100vh" },
             }}
           >
-            <AccordionSummary
-              aria-controls={`${panel}-content`}
-              id={`${panel}-header`}
-            >
-              <Typography component="span">{panel}</Typography>
-            </AccordionSummary>
-
-            <AccordionDetails
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                height: { xs: "auto", md: "100%" },
-                overflow: "auto",
-                p: 2,
-              }}
-            >
-              {panel === "Sitio" && (
-                <Box
-                  component="form"
-                  sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            {["Sitio", "Paneles", "Inversores", "Baterias"].map((panel) => (
+              <Accordion
+                key={panel}
+                expanded={expanded === panel}
+                onChange={handleChange(panel)}
+                sx={{
+                  flex: expanded === panel ? 1 : "unset",
+                  transition: "flex 0.3s ease",
+                }}
+              >
+                <AccordionSummary
+                  aria-controls={`${panel}-content`}
+                  id={`${panel}-header`}
                 >
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <TextField
-                      variant="standard"
-                      size="small"
-                      label="Nombre"
-                      fullWidth
-                    />
-                    <TextField
-                      variant="standard"
-                      size="small"
-                      label="Apellido"
-                      fullWidth
-                    />
-                  </Box>
-                  <Box sx={{ display: "flex", justifyContent: "center" }}>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        borderStartEndRadius: 0,
-                        borderEndEndRadius: 0,
-                        borderEndStartRadius: 10,
-                        borderStartStartRadius: 10,
-                        width: 150,
-                        height: 40,
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Direccion
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        borderStartEndRadius: 10,
-                        borderEndEndRadius: 10,
-                        borderEndStartRadius: 0,
-                        borderStartStartRadius: 0,
-                        width: 150,
-                        height: 40,
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Coordenadas
-                    </Button>
-                  </Box>
-                  <TextField
-                    variant="standard"
-                    size="small"
-                    label="Direccion"
-                    fullWidth
-                  />
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <TextField
-                      variant="standard"
-                      size="small"
-                      label="Codigo Postal"
-                      fullWidth
-                    />
-                    <TextField
-                      variant="standard"
-                      size="small"
-                      label="Poblacion"
-                      fullWidth
-                    />
-                  </Box>
-                  <FormControl variant="standard" size="small" fullWidth>
-                    <InputLabel>Colaboradores</InputLabel>
-                    <Select>
-                      <MenuItem value={10}>Colaborador 1</MenuItem>
-                      <MenuItem value={20}>Colaborador 2</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              )}
+                  <Typography component="span">{panel}</Typography>
+                </AccordionSummary>
 
-              {panel === "Paneles" && (
-                <Box
-                  component="form"
-                  sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                <AccordionDetails
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: { xs: "auto", md: "100%" },
+                    overflow: "auto",
+                    p: 2,
+                  }}
                 >
-                  {/* Acimut e Inclinación */}
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <TextField
-                      type="number"
-                      variant="standard"
-                      size="small"
-                      label="Acimut (°)"
-                      fullWidth
-                    />
-                    <TextField
-                      type="number"
-                      variant="standard"
-                      size="small"
-                      label="Inclinación (°)"
-                      fullWidth
-                    />
-                  </Box>
-
-                  {/* Tipo de Cubierta y Tipo de Panel */}
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <FormControl variant="standard" size="small" fullWidth>
-                      <InputLabel>Tipo de Cubierta</InputLabel>
-                      <Select>
-                        <MenuItem value="plana">Plana</MenuItem>
-                        <MenuItem value="inclinada">Inclinada</MenuItem>
-                        <MenuItem value="metalica">Metálica</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <FormControl variant="standard" size="small" fullWidth>
-                      <InputLabel>Tipo de Panel</InputLabel>
-                      <Select>
-                        <MenuItem value="monocristalino">
-                          Monocristalino
-                        </MenuItem>
-                        <MenuItem value="policristalino">
-                          Policristalino
-                        </MenuItem>
-                        <MenuItem value="thinfilm">Thin-Film</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-
-                  {/* Lista de Zonas */}
-                  {zonas.map((zona, index) => (
+                  {panel === "Sitio" && (
                     <Box
-                      key={index}
-                      sx={{ display: "flex", gap: 2, alignItems: "center" }}
+                      component="form"
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                     >
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <TextField
+                          variant="standard"
+                          size="small"
+                          label="Nombre"
+                          fullWidth
+                        />
+                        <TextField
+                          variant="standard"
+                          size="small"
+                          label="Apellido"
+                          fullWidth
+                        />
+                      </Box>
+                      <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            borderStartEndRadius: 0,
+                            borderEndEndRadius: 0,
+                            borderEndStartRadius: 10,
+                            borderStartStartRadius: 10,
+                            width: 150,
+                            height: 40,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Direccion
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          sx={{
+                            borderStartEndRadius: 10,
+                            borderEndEndRadius: 10,
+                            borderEndStartRadius: 0,
+                            borderStartStartRadius: 0,
+                            width: 150,
+                            height: 40,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Coordenadas
+                        </Button>
+                      </Box>
                       <TextField
-                        type="number"
                         variant="standard"
                         size="small"
-                        label="Ancho (m)"
-                        value={zona.ancho}
-                        onChange={(e) =>
-                          handleZonaChange(index, "ancho", e.target.value)
-                        }
+                        label="Direccion"
                         fullWidth
                       />
-                      <TextField
-                        type="number"
-                        variant="standard"
-                        size="small"
-                        label="Largo (m)"
-                        value={zona.largo}
-                        onChange={(e) =>
-                          handleZonaChange(index, "largo", e.target.value)
-                        }
-                        fullWidth
-                      />
-                      <TextField
-                        type="number"
-                        variant="standard"
-                        size="small"
-                        label="Nº Paneles"
-                        value={zona.numPaneles}
-                        onChange={(e) =>
-                          handleZonaChange(index, "numPaneles", e.target.value)
-                        }
-                        fullWidth
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={zona.sombras}
-                            onChange={(e) =>
-                              handleZonaChange(
-                                index,
-                                "sombras",
-                                e.target.checked
-                              )
-                            }
-                          />
-                        }
-                        label="Sombras"
-                      />
-                      <IconButton
-                        color="error"
-                        onClick={() => handleRemoveZona(index)}
-                      >
-                        <DeleteRoundedIcon />
-                      </IconButton>
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <TextField
+                          variant="standard"
+                          size="small"
+                          label="Codigo Postal"
+                          fullWidth
+                        />
+                        <TextField
+                          variant="standard"
+                          size="small"
+                          label="Poblacion"
+                          fullWidth
+                        />
+                      </Box>
+                      <FormControl variant="standard" size="small" fullWidth>
+                        <InputLabel>Colaboradores</InputLabel>
+                        <Select>
+                          <MenuItem value={10}>Colaborador 1</MenuItem>
+                          <MenuItem value={20}>Colaborador 2</MenuItem>
+                        </Select>
+                      </FormControl>
                     </Box>
-                  ))}
+                  )}
 
-                  {/* Botón para Añadir Zona */}
-                  <Button
-                    variant="contained"
-                    onClick={handleAddZona}
-                    sx={{
-                      borderRadius: 10,
-                      width: "fit-content",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      alignSelf: "center",
-                    }}
-                  >
-                    Añadir Zona
-                  </Button>
-                </Box>
-              )}
+                  {panel === "Paneles" && (
+                    <Box
+                      component="form"
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                    >
+                      {/* Tipo de Cubierta y Tipo de Panel */}
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <FormControl variant="standard" size="small" fullWidth>
+                          <InputLabel>Tipo de Cubierta</InputLabel>
+                          <Select>
+                            <MenuItem value="terreno">Terreno</MenuItem>
+                            <MenuItem value="coplanal">Coplanal</MenuItem>
+                            <MenuItem value="cubierta">Cubierta Plana</MenuItem>
+                            <MenuItem value="pergola">Pergola</MenuItem>
+                            <MenuItem value="otros">Otros</MenuItem>
+                          </Select>
+                        </FormControl>
 
-              {panel === "Inversores" && (
-                <Box
-                  component="form"
-                  sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                >
-                  <TextField label="Dirección" fullWidth />
-                  <TextField label="Código Postal" fullWidth />
-                  <Button variant="contained">Actualizar</Button>
-                </Box>
-              )}
+                        <FormControl variant="standard" size="small" fullWidth>
+                          <InputLabel>Tipo de Panel</InputLabel>
+                          <Select>
+                            <MenuItem value="panel1">Panel 1</MenuItem>
+                            <MenuItem value="panel2">Panel 2</MenuItem>
+                            <MenuItem value="panel3">Panel 3</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Box>
 
-              {panel === "Baterias" && (
-                <Box
-                  component="form"
-                  sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                >
-                  <Typography variant="h6">Configuración Avanzada</Typography>
-                  <Switch label="Activar Modo Avanzado" />
-                  <Button variant="contained">Guardar Configuración</Button>
-                </Box>
-              )}
-            </AccordionDetails>
-          </Accordion>
-        ))}
-      </Box>
-      <Box sx={{ display: "flex", width: { xs: "100vw", md: "65vw" } }}>
-        <MapCustom />
+                      {/* Lista de Zonas */}
+                      {zonas.map((zona, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="caption">
+                            Zona:{index + 1}
+                          </Typography>
+                          <Box display="flex" flexDirection="row" gap={2}>
+                            <TextField
+                              type="number"
+                              variant="standard"
+                              size="small"
+                              label="Acimut (°)"
+                              value={zona.acimut}
+                              onChange={(e) =>
+                                handleZonaChange(
+                                  index,
+                                  "acimut",
+                                  e.target.value
+                                )
+                              }
+                              fullWidth
+                            />
+                            <TextField
+                              type="number"
+                              variant="standard"
+                              size="small"
+                              label="Inclinación (°)"
+                              value={zona.inclinacion}
+                              onChange={(e) =>
+                                handleZonaChange(
+                                  index,
+                                  "inclinacion",
+                                  e.target.value
+                                )
+                              }
+                              fullWidth
+                            />
+                          </Box>
+                          <Box display="flex" flexDirection="row" gap={2}>
+                            <TextField
+                              type="number"
+                              variant="standard"
+                              size="small"
+                              label="Ancho (m)"
+                              value={zona.ancho}
+                              onChange={(e) =>
+                                handleZonaChange(index, "ancho", e.target.value)
+                              }
+                              fullWidth
+                            />
+                            <TextField
+                              type="number"
+                              variant="standard"
+                              size="small"
+                              label="Largo (m)"
+                              value={zona.largo}
+                              onChange={(e) =>
+                                handleZonaChange(index, "largo", e.target.value)
+                              }
+                              fullWidth
+                            />
+                            <TextField
+                              type="number"
+                              variant="standard"
+                              size="small"
+                              label="Nº Paneles"
+                              value={zona.numPaneles}
+                              onChange={(e) =>
+                                handleZonaChange(
+                                  index,
+                                  "numPaneles",
+                                  e.target.value
+                                )
+                              }
+                              fullWidth
+                            />
+                          </Box>
+                          <Box display="flex" flexDirection="row" gap={2}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={zona.sombras}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "sombras",
+                                      e.target.checked
+                                    )
+                                  }
+                                />
+                              }
+                              label="Sombras"
+                            />
+                            <IconButton
+                              color="error"
+                              onClick={() => handleRemoveZona(index)}
+                            >
+                              <DeleteRoundedIcon />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      ))}
+
+                      {/* Botón para Añadir Zona */}
+                      <Button
+                        variant="contained"
+                        onClick={handleAddZona}
+                        sx={{
+                          borderRadius: 10,
+                          width: "fit-content",
+                          fontSize: 14,
+                          fontWeight: 600,
+                          alignSelf: "center",
+                        }}
+                      >
+                        Añadir Zona
+                      </Button>
+                    </Box>
+                  )}
+
+                  {panel === "Inversores" && (
+                    <Box
+                      component="form"
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                    >
+                      <FormControl variant="standard" size="small" fullWidth>
+                        <InputLabel>Tipo de Inversor</InputLabel>
+                        <Select>
+                          <MenuItem value="inversor1">Inversor 1</MenuItem>
+                          <MenuItem value="inversor2">Inversor 2</MenuItem>
+                          <MenuItem value="inversor3">Inversor 3</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        type="number"
+                        variant="standard"
+                        size="small"
+                        label="Cantidad de inversores"
+                        fullWidth
+                      />
+                    </Box>
+                  )}
+
+                  {panel === "Baterias" && (
+                    <Box
+                      component="form"
+                      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                    >
+                      <FormControl variant="standard" size="small" fullWidth>
+                        <InputLabel>Tipo de Bateria</InputLabel>
+                        <Select>
+                          <MenuItem value="bateria1">Bateria 1</MenuItem>
+                          <MenuItem value="bateria2">Bateria 2</MenuItem>
+                          <MenuItem value="bateria3">Bateria 3</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        type="number"
+                        variant="standard"
+                        size="small"
+                        label="Cantidad de baterías"
+                      />
+                    </Box>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+          <Box sx={{ display: "flex", width: { xs: "100vw", md: "65vw" } }}>
+            <MapCustom />
+          </Box>
+        </>
+      )}
+      {/*pagina de formulario de consumo del cliente*/}
+      {pagina === "Consumo Cliente" && <FormularioConsumo />}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          zIndex: 1500, // Asegura que esté por encima del contenido
+        }}
+      >
+        <SpeedDial ariaLabel="Acciones rápidas" icon={<MenuBookRoundedIcon />}>
+          {actions.map((action) => (
+            <SpeedDialAction
+              key={action.name}
+              icon={action.icon}
+              tooltipTitle={action.name}
+              onClick={() => setPagina(action.name)}
+            />
+          ))}
+        </SpeedDial>
       </Box>
     </Box>
   );
