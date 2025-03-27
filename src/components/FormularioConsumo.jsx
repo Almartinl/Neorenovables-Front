@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 const FormularioConsumo = () => {
-  const [modoTecnico, setModoTecnico] = useState(false);
+  // const [modoTecnico, setModoTecnico] = useState(false);
   const [tipoTarifa, setTipoTarifa] = useState("2.0TD");
   const [consumoMensual, setConsumoMensual] = useState(
     Array(12).fill("") // Inicializa los 12 meses vacíos
@@ -46,18 +46,18 @@ const FormularioConsumo = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 3,
-        width: { xs: "100%", md: "60%" },
+        gap: 4,
+        width: { xs: "100%", md: "80vw" },
+        height: "80vh",
         mx: "auto",
-        mt: 4,
-        p: 3,
+        px: 2,
         bgcolor: "white",
         borderRadius: 2,
         boxShadow: 3,
       }}
     >
       {/* 🔘 Selector de Modo */}
-      <FormControlLabel
+      {/* <FormControlLabel
         control={
           <Switch
             checked={modoTecnico}
@@ -65,13 +65,12 @@ const FormularioConsumo = () => {
           />
         }
         label="Modo Técnico"
-      />
-
+      /> */}
       {/* 📝 Tarifa Actual */}
-      <Typography variant="h6" fontWeight="bold">
+      <Typography mt={2} variant="h6" fontWeight="bold">
         Tarifa Actual
       </Typography>
-      <FormControl variant="standard" fullWidth>
+      <FormControl variant="standard">
         <InputLabel>Tipo de Tarifa</InputLabel>
         <Select
           value={tipoTarifa}
@@ -81,7 +80,6 @@ const FormularioConsumo = () => {
           <MenuItem value="3.0TD">3.0TD</MenuItem>
         </Select>
       </FormControl>
-
       <Box sx={{ display: "flex", gap: 2 }}>
         <TextField
           type="number"
@@ -98,7 +96,6 @@ const FormularioConsumo = () => {
           onChange={(e) => handleTarifaChange("precioPotencia", e.target.value)}
         />
       </Box>
-
       <TextField
         type="number"
         variant="standard"
@@ -107,9 +104,8 @@ const FormularioConsumo = () => {
         value={tarifaDatos.precioKw}
         onChange={(e) => handleTarifaChange("precioKw", e.target.value)}
       />
-
       {/* 🔧 Tarifa de Salida (Solo en Modo Técnico) */}
-      {modoTecnico && (
+      {/* {modoTecnico && (
         <>
           <Typography variant="h6" fontWeight="bold">
             Tarifa de Salida
@@ -166,7 +162,7 @@ const FormularioConsumo = () => {
           </Box>
 
           {/* 📝 P1, P2... P6 (Solo si es tarifa 3.0) */}
-          {tipoTarifa === "3.0TD" && (
+      {/* {tipoTarifa === "3.0TD" && (
             <Box
               sx={{
                 display: "grid",
@@ -188,8 +184,7 @@ const FormularioConsumo = () => {
             </Box>
           )}
         </>
-      )}
-
+      )} */}
       {/* 📊 Consumo Mensual */}
       <Typography variant="h6" fontWeight="bold">
         Consumo Mensual (kWh)
@@ -222,11 +217,10 @@ const FormularioConsumo = () => {
           />
         ))}
       </Box>
-
       {/* ✅ Botón de Guardar */}
-      <Button variant="contained" size="large" sx={{ alignSelf: "center" }}>
+      {/* <Button variant="contained" size="large" sx={{ alignSelf: "center" }}>
         Guardar Datos
-      </Button>
+      </Button> */}
     </Box>
   );
 };

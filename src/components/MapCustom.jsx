@@ -90,7 +90,7 @@ const MapCustom = () => {
     };
   }, []);
 
-  return <div ref={mapRef} style={{ height: "100vh", width: "100vw" }}></div>;
+  return <div ref={mapRef} style={{ height: "80vh", width: "100vw" }}></div>;
 };
 
 export default MapCustom;
