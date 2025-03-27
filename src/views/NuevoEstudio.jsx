@@ -406,123 +406,130 @@ export default function NuevoEstudio() {
                         </Box>
 
                         {/* Lista de Zonas */}
-                        {zonas.map((zona, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 2,
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography variant="caption">
-                              Zona:{index + 1}
-                            </Typography>
-                            <Box display="flex" flexDirection="row" gap={2}>
-                              <TextField
-                                type="number"
-                                variant="standard"
-                                size="small"
-                                label="Acimut (°)"
-                                value={zona.acimut}
-                                onChange={(e) =>
-                                  handleZonaChange(
-                                    index,
-                                    "acimut",
-                                    e.target.value
-                                  )
-                                }
-                                fullWidth
-                              />
-                              <TextField
-                                type="number"
-                                variant="standard"
-                                size="small"
-                                label="Inclinación (°)"
-                                value={zona.inclinacion}
-                                onChange={(e) =>
-                                  handleZonaChange(
-                                    index,
-                                    "inclinacion",
-                                    e.target.value
-                                  )
-                                }
-                                fullWidth
-                              />
+                        <Box
+                          sx={{
+                            maxHeight: "38vh", // Limita la altura del área de zonas
+                            overflowY: "auto", // Activa el scroll si hay muchas zonas
+                          }}
+                        >
+                          {zonas.map((zona, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                                alignItems: "center",
+                              }}
+                            >
+                              <Typography variant="caption">
+                                Zona:{index + 1}
+                              </Typography>
+                              <Box display="flex" flexDirection="row" gap={2}>
+                                <TextField
+                                  type="number"
+                                  variant="standard"
+                                  size="small"
+                                  label="Acimut (°)"
+                                  value={zona.acimut}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "acimut",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
+                                <TextField
+                                  type="number"
+                                  variant="standard"
+                                  size="small"
+                                  label="Inclinación (°)"
+                                  value={zona.inclinacion}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "inclinacion",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
+                              </Box>
+                              <Box display="flex" flexDirection="row" gap={2}>
+                                <TextField
+                                  type="number"
+                                  variant="standard"
+                                  size="small"
+                                  label="Ancho (m)"
+                                  value={zona.ancho}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "ancho",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
+                                <TextField
+                                  type="number"
+                                  variant="standard"
+                                  size="small"
+                                  label="Largo (m)"
+                                  value={zona.largo}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "largo",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
+                                <TextField
+                                  type="number"
+                                  variant="standard"
+                                  size="small"
+                                  label="Nº Paneles"
+                                  value={zona.numPaneles}
+                                  onChange={(e) =>
+                                    handleZonaChange(
+                                      index,
+                                      "numPaneles",
+                                      e.target.value
+                                    )
+                                  }
+                                  fullWidth
+                                />
+                              </Box>
+                              <Box display="flex" flexDirection="row" gap={2}>
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={zona.sombras}
+                                      onChange={(e) =>
+                                        handleZonaChange(
+                                          index,
+                                          "sombras",
+                                          e.target.checked
+                                        )
+                                      }
+                                    />
+                                  }
+                                  label="Sombras"
+                                />
+                                <IconButton
+                                  color="error"
+                                  onClick={() => handleRemoveZona(index)}
+                                >
+                                  <DeleteRoundedIcon />
+                                </IconButton>
+                              </Box>
                             </Box>
-                            <Box display="flex" flexDirection="row" gap={2}>
-                              <TextField
-                                type="number"
-                                variant="standard"
-                                size="small"
-                                label="Ancho (m)"
-                                value={zona.ancho}
-                                onChange={(e) =>
-                                  handleZonaChange(
-                                    index,
-                                    "ancho",
-                                    e.target.value
-                                  )
-                                }
-                                fullWidth
-                              />
-                              <TextField
-                                type="number"
-                                variant="standard"
-                                size="small"
-                                label="Largo (m)"
-                                value={zona.largo}
-                                onChange={(e) =>
-                                  handleZonaChange(
-                                    index,
-                                    "largo",
-                                    e.target.value
-                                  )
-                                }
-                                fullWidth
-                              />
-                              <TextField
-                                type="number"
-                                variant="standard"
-                                size="small"
-                                label="Nº Paneles"
-                                value={zona.numPaneles}
-                                onChange={(e) =>
-                                  handleZonaChange(
-                                    index,
-                                    "numPaneles",
-                                    e.target.value
-                                  )
-                                }
-                                fullWidth
-                              />
-                            </Box>
-                            <Box display="flex" flexDirection="row" gap={2}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    checked={zona.sombras}
-                                    onChange={(e) =>
-                                      handleZonaChange(
-                                        index,
-                                        "sombras",
-                                        e.target.checked
-                                      )
-                                    }
-                                  />
-                                }
-                                label="Sombras"
-                              />
-                              <IconButton
-                                color="error"
-                                onClick={() => handleRemoveZona(index)}
-                              >
-                                <DeleteRoundedIcon />
-                              </IconButton>
-                            </Box>
-                          </Box>
-                        ))}
+                          ))}
+                        </Box>
 
                         {/* Botón para Añadir Zona */}
                         <Button
