@@ -67,6 +67,8 @@ const AccordionSummary = styled((props) => (
     },
   [`& .${accordionSummaryClasses.content}`]: {
     marginLeft: theme.spacing(1),
+    alignItems: "center",
+    gap: 40,
   },
   ...theme.applyStyles("dark", {
     backgroundColor: "rgba(255, 255, 255, .05)",
@@ -92,6 +94,7 @@ export default function NuevoEstudio() {
   // const [pagina, setPagina] = React.useState("Instalacion");
   const [activeStep, setActiveStep] = React.useState(0);
   const [modo, setModo] = React.useState("simplificado");
+  const [usarBaterias, setUsarBaterias] = React.useState(false);
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -126,6 +129,7 @@ export default function NuevoEstudio() {
   };
 
   const handleChange = (panel) => (event, newExpanded) => {
+    if (panel === "Baterias" && !usarBaterias) return;
     setExpanded(newExpanded ? panel : false);
   };
   return (
@@ -244,8 +248,25 @@ export default function NuevoEstudio() {
                   <AccordionSummary
                     aria-controls={`${panel}-content`}
                     id={`${panel}-header`}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
                   >
                     <Typography component="span">{panel}</Typography>
+                    {/* Agregar Switch solo en Baterías */}
+                    {panel === "Baterias" && (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={usarBaterias}
+                            onChange={(e) => setUsarBaterias(e.target.checked)}
+                          />
+                        }
+                        label="Usar Baterías"
+                      />
+                    )}
                   </AccordionSummary>
 
                   <AccordionDetails
@@ -547,31 +568,36 @@ export default function NuevoEstudio() {
                       </Box>
                     )}
 
-                    {panel === "Baterias" && (
-                      <Box
-                        component="form"
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 2,
-                        }}
-                      >
-                        <FormControl variant="standard" size="small" fullWidth>
-                          <InputLabel>Tipo de Bateria</InputLabel>
-                          <Select>
-                            <MenuItem value="bateria1">Bateria 1</MenuItem>
-                            <MenuItem value="bateria2">Bateria 2</MenuItem>
-                            <MenuItem value="bateria3">Bateria 3</MenuItem>
-                          </Select>
-                        </FormControl>
-                        <TextField
-                          type="number"
-                          variant="standard"
-                          size="small"
-                          label="Cantidad de baterías"
-                        />
-                      </Box>
-                    )}
+                    {panel !== "Baterias" ||
+                      (usarBaterias && (
+                        <Box
+                          component="form"
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                          }}
+                        >
+                          <FormControl
+                            variant="standard"
+                            size="small"
+                            fullWidth
+                          >
+                            <InputLabel>Tipo de Bateria</InputLabel>
+                            <Select>
+                              <MenuItem value="bateria1">Bateria 1</MenuItem>
+                              <MenuItem value="bateria2">Bateria 2</MenuItem>
+                              <MenuItem value="bateria3">Bateria 3</MenuItem>
+                            </Select>
+                          </FormControl>
+                          <TextField
+                            type="number"
+                            variant="standard"
+                            size="small"
+                            label="Cantidad de baterías"
+                          />
+                        </Box>
+                      ))}
                   </AccordionDetails>
                 </Accordion>
               ))}
