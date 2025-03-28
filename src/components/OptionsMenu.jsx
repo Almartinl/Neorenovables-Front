@@ -10,6 +10,7 @@ import ListItemIcon, { listItemIconClasses } from "@mui/material/ListItemIcon";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
+import { useNavigate } from "react-router-dom";
 
 const MenuItem = styled(MuiMenuItem)({
   margin: "2px 0",
@@ -17,10 +18,15 @@ const MenuItem = styled(MuiMenuItem)({
 
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const navigate = useNavigate();
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+  function returnLogin() {
+    handleClose();
+    navigate("/login");
+  }
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -60,7 +66,7 @@ export default function OptionsMenu() {
         <MenuItem onClick={handleClose}>Opciones</MenuItem>
         <Divider />
         <MenuItem
-          onClick={handleClose}
+          onClick={returnLogin}
           sx={{
             [`& .${listItemIconClasses.root}`]: {
               ml: "auto",
