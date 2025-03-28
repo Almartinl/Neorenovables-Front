@@ -16,7 +16,12 @@ export default function CustomizedDataGrid() {
         "& .MuiDataGrid-columnHeader:focus": {
           outline: "none", // Elimina el borde en los encabezados de columna
         },
+        "& .MuiDataGrid-columnHeaderTitle": {
+          fontWeight: 800,
+          fontSize: "1rem",
+        },
         borderRadius: 3,
+        height: { md: "88.7vh", xs: "auto" },
       }}
       getRowClassName={(params) =>
         params.indexRelativeToCurrentPage % 2 === 0 ? "even" : "odd"
