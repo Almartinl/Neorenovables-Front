@@ -11,8 +11,15 @@ import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import MenuButton from "./MenuButton";
 import MenuContent from "./MenuContent";
 import CardAlert from "./CardAlert";
+import { useNavigate } from "react-router-dom";
 
 function SideMenuMobile({ open, toggleDrawer }) {
+  const navigate = useNavigate();
+  const returnLogin = () => {
+    toggleDrawer(false)();
+    navigate("/login");
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -61,6 +68,7 @@ function SideMenuMobile({ open, toggleDrawer }) {
             variant="outlined"
             fullWidth
             startIcon={<LogoutRoundedIcon />}
+            onClick={returnLogin}
           >
             Logout
           </Button>
