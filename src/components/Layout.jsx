@@ -37,7 +37,7 @@ export default function Layout() {
           flexGrow: 1,
           // backgroundColor: "#0367c3",
           background:
-            "linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4)), url('src/assets/neo-slide3.jpg')",
+            "linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4)), url('/neo-slide3.jpg')",
           backgroundSize: "cover",
           overflow: "auto",
           height: "100vh",
