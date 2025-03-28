@@ -139,7 +139,8 @@ export default function NuevoEstudio() {
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           pt: { xs: 10, sm: 11, md: 2 },
-          justifyContent: "space-evenly",
+          px: 2,
+          justifyContent: "space-between",
         }}
       >
         {/* Selección de modo (Simplificado o Completo) */}

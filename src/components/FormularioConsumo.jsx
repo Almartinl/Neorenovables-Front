@@ -47,12 +47,12 @@ const FormularioConsumo = () => {
         display: "flex",
         flexDirection: "column",
         gap: 4,
-        width: { xs: "100%", md: "80vw" },
-        height: "80vh",
+        width: { xs: "100%", md: "100vw" },
+        height: { xs: "auto", md: "80vh" },
         mx: "auto",
         px: 2,
         bgcolor: "white",
-        borderRadius: 2,
+        // borderRadius: 2,
         boxShadow: 3,
       }}
     >

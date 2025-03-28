@@ -5,7 +5,7 @@ import Grid from "@mui/material/Grid2";
 import Header from "../components/Header";
 import CustomizedDataGrid from "../components/CustomizedDataGrid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function Estudios() {
@@ -24,29 +24,35 @@ export default function Estudios() {
       }}
     >
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         sx={{
           display: { xs: "flex" },
           width: "100%",
           alignItems: { xs: "flex-start", md: "center" },
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           maxWidth: { sm: "100%", md: "1700px" },
           pt: { xs: 3, sm: 4, md: 2 },
           pb: 0,
         }}
         spacing={2}
       >
-        <Stack direction="row" sx={{ gap: 1 }}>
-          <Button
-            variant="contained"
-            color="warning"
-            size="small"
-            startIcon={<AddRoundedIcon />}
-            onClick={() => Linkto("/crear-estudio")}
-          >
-            Crear Nuevo Estudio
-          </Button>
-        </Stack>
+        <Typography
+          variant="h5"
+          color="white"
+          fontWeight={600}
+          sx={{ textShadow: "0px 0px 20px rgb(0, 0, 0)" }}
+        >
+          Estudios
+        </Typography>
+        <Button
+          variant="contained"
+          color="warning"
+          size="small"
+          startIcon={<AddRoundedIcon />}
+          onClick={() => Linkto("/crear-estudio")}
+        >
+          Crear Nuevo Estudio
+        </Button>
       </Stack>
       <Box
         sx={{

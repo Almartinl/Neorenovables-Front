@@ -26,7 +26,7 @@ import Grid from "@mui/material/Grid2";
 //   ...treeViewCustomizations,
 // };
 
-export default function Dashboard() {
+export default function Layout() {
   return (
     <Box sx={{ display: "flex" }}>
       <SideMenu />
@@ -35,7 +35,10 @@ export default function Dashboard() {
         component="main"
         sx={{
           flexGrow: 1,
-          backgroundColor: "#0367c3",
+          // backgroundColor: "#0367c3",
+          background:
+            "linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4)), url('src/assets/neo-slide3.jpg')",
+          backgroundSize: "cover",
           overflow: "auto",
           height: "100vh",
         }}
