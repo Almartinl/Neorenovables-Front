@@ -5,6 +5,7 @@ import {
   FormControl,
   MenuItem,
   Select,
+  InputLabel,
 } from "@mui/material";
 
 export default function Resumen({ datosEstudio, actualizarDatos }) {
@@ -29,15 +30,15 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
         Resumen del Estudio
       </Typography>
 
-      {/* 📌 Sección 1: Instalación Fotovoltaica */}
+      {/* Sección 1: Instalación Fotovoltaica */}
       <Box sx={{ border: "1px solid gray", borderRadius: 2, padding: 2 }}>
         <Typography variant="h5" fontWeight="bold">
-          🔆 Instalación Fotovoltaica
+          Instalación Fotovoltaica
         </Typography>
 
         {/* Datos Generales */}
         <Typography variant="h6" sx={{ mt: 2 }}>
-          📌 Datos del Cliente
+          Datos del Cliente
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
@@ -70,9 +71,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
               actualizarDatos("cliente", { ubicacion: e.target.value })
             }
           />
-          <FormControl fullWidth>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Colaborador</InputLabel>
             <Select
-              size="small"
+              label="colaborador"
               value={datosEstudio.cliente.colaborador}
               onChange={(e) =>
                 actualizarDatos("cliente", { colaborador: e.target.value })
@@ -86,7 +88,7 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
 
         {/* Configuración del Sistema Fotovoltaico */}
         <Typography variant="h6" sx={{ mt: 3 }}>
-          ⚡ Configuración del Sistema
+          Configuración del Sistema
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
@@ -99,9 +101,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
               actualizarDatos("instalacion", { acimut: e.target.value })
             }
           />
-          <FormControl fullWidth>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Tipo de Cubierta</InputLabel>
             <Select
-              size="small"
+              label="Tipo de cubierta"
               value={datosEstudio.instalacion.tipoCubierta}
               onChange={(e) =>
                 actualizarDatos("instalacion", { tipoCubierta: e.target.value })
@@ -124,9 +127,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
               actualizarDatos("instalacion", { inclinacion: e.target.value })
             }
           />
-          <FormControl fullWidth>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Tipo de Panel</InputLabel>
             <Select
-              size="small"
+              label="Tipo de panel"
               value={datosEstudio.instalacion.tipoPanel}
               onChange={(e) =>
                 actualizarDatos("instalacion", { tipoPanel: e.target.value })
@@ -139,15 +143,15 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
         </Box>
       </Box>
 
-      {/* 📌 Sección 2: Consumo Cliente */}
+      {/* Sección 2: Consumo Cliente */}
       <Box sx={{ border: "1px solid gray", borderRadius: 2, padding: 2 }}>
         <Typography variant="h5" fontWeight="bold">
-          ⚡ Consumo Cliente
+          Consumo Cliente
         </Typography>
 
         {/* Tarifa Actual */}
         <Typography variant="h6" sx={{ mt: 2 }}>
-          📊 Tarifa Actual
+          Tarifa Actual
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
@@ -172,9 +176,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
         </Box>
 
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <FormControl fullWidth>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Tipo de Tarifa</InputLabel>
             <Select
-              size="small"
+              label="Tipo de tarifa"
               value={datosEstudio.consumo.tipoTarifa}
               onChange={(e) =>
                 actualizarDatos("consumo", { tipoTarifa: e.target.value })
@@ -187,10 +192,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
         </Box>
       </Box>
 
-      {/* 📌 Sección 3: Cálculo del Sistema */}
+      {/* Sección 3: Cálculo del Sistema */}
       <Box sx={{ border: "1px solid gray", borderRadius: 2, padding: 2 }}>
         <Typography variant="h5" fontWeight="bold">
-          📈 Cálculo del Sistema
+          Cálculo del Sistema
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2 }}>
