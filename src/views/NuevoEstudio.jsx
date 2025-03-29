@@ -40,6 +40,7 @@ import SolarPowerRoundedIcon from "@mui/icons-material/SolarPowerRounded";
 import ElectricalServicesRoundedIcon from "@mui/icons-material/ElectricalServicesRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import FormularioConsumo from "../components/FormularioConsumo";
+import Resumen from "../components/Resumen";
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -80,12 +81,6 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   borderTop: "1px solid rgba(0, 0, 0, .125)",
 }));
 
-// const actions = [
-//   { icon: <SolarPowerRoundedIcon />, name: "Instalacion" },
-//   { icon: <ElectricalServicesRoundedIcon />, name: "Consumo Cliente" },
-//   { icon: <SummarizeRoundedIcon />, name: "Resumen" },
-// ];
-
 const steps = ["Instalación", "Consumo Cliente", "Resumen"];
 
 export default function NuevoEstudio() {
@@ -95,6 +90,24 @@ export default function NuevoEstudio() {
   const [activeStep, setActiveStep] = React.useState(0);
   const [modo, setModo] = React.useState("simplificado");
   const [usarBaterias, setUsarBaterias] = React.useState(false);
+  const [datosEstudio, setDatosEstudio] = React.useState({
+    cliente: { nombre: "", apellido: "", ubicacion: "", colaborador: "" },
+    instalacion: {
+      acimut: "",
+      tipoCubierta: "",
+      inclinacion: "",
+      tipoPanel: "",
+    },
+    consumo: { cups: "", potenciaContratada: "", tipoTarifa: "" },
+    calculos: { potenciaInstalada: "", ahorro: "", precioPorVatio: "" },
+  });
+
+  const actualizarDatos = (seccion, nuevosValores) => {
+    setDatosEstudio((prev) => ({
+      ...prev,
+      [seccion]: { ...prev[seccion], ...nuevosValores },
+    }));
+  };
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -617,28 +630,13 @@ export default function NuevoEstudio() {
         )}
         {/*pagina de formulario de consumo del cliente*/}
         {activeStep === 1 && <FormularioConsumo />}
-        {/* <Box
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            right: 20,
-            zIndex: 1500, // Asegura que esté por encima del contenido
-          }}
-        >
-          <SpeedDial
-            ariaLabel="Acciones rápidas"
-            icon={<MenuBookRoundedIcon />}
-          >
-            {actions.map((action) => (
-              <SpeedDialAction
-                key={action.name}
-                icon={action.icon}
-                tooltipTitle={action.name}
-                onClick={() => setPagina(action.name)}
-              />
-            ))}
-          </SpeedDial>
-        </Box> */}
+        {/*pagina de resumen*/}
+        {activeStep === 2 && (
+          <Resumen
+            datosEstudio={datosEstudio}
+            actualizarDatos={actualizarDatos}
+          />
+        )}
       </Box>
       {/* Botones de navegación */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>

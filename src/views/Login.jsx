@@ -146,7 +146,7 @@ export default function Login(props) {
             variant="h4"
             sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
           >
-            Inciar Sesion
+            Inicio de Sesión
           </Typography>
           <Box
             component="form"
@@ -169,7 +169,6 @@ export default function Login(props) {
                 name="email"
                 placeholder="tu@email.com"
                 autoComplete="email"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -189,7 +188,6 @@ export default function Login(props) {
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
@@ -211,7 +209,7 @@ export default function Login(props) {
               onClick={validateInputs}
               color="secondary"
             >
-              Sign in
+              Iniciar Sesion
             </Button>
             <Link
               component="button"

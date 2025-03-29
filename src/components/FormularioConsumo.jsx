@@ -12,7 +12,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 
-const FormularioConsumo = () => {
+export default function FormularioConsumo() {
   // const [modoTecnico, setModoTecnico] = useState(false);
   const [tipoTarifa, setTipoTarifa] = useState("2.0TD");
   const [consumoMensual, setConsumoMensual] = useState(
@@ -223,6 +223,4 @@ const FormularioConsumo = () => {
       </Button> */}
     </Box>
   );
-};
-
-export default FormularioConsumo;
+}
