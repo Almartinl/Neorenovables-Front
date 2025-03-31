@@ -9,6 +9,7 @@ import CustomizedDataGrid from "./components/CustomizedDataGrid";
 import Estudios from "./views/Estudios";
 import NuevoEstudio from "./views/NuevoEstudio";
 import Login from "./views/Login";
+import Home from "./views/Home";
 
 function App() {
   // const [count, setCount] = useState(0);
@@ -21,6 +22,7 @@ function App() {
           <Route path="crear-estudio" element={<NuevoEstudio />} />
         </Route>
         <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Home />} />
       </Routes>
     </BrowserRouter>
   );

@@ -84,6 +84,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 const steps = ["Instalación", "Consumo Cliente", "Resumen"];
 
 export default function NuevoEstudio() {
+  const [direccion, setDireccion] = React.useState("");
   const [expanded, setExpanded] = React.useState("Sitio");
   const [zonas, setZonas] = React.useState([]);
   // const [pagina, setPagina] = React.useState("Instalacion");
@@ -352,6 +353,8 @@ export default function NuevoEstudio() {
                           size="small"
                           label="Direccion"
                           fullWidth
+                          value={direccion}
+                          onChange={(e) => setDireccion(e.target.value)} // Actualiza la dirección
                         />
                         <Box sx={{ display: "flex", gap: 2 }}>
                           <TextField
@@ -624,7 +627,7 @@ export default function NuevoEstudio() {
               ))}
             </Box>
             <Box sx={{ display: "flex", width: { xs: "100vw", md: "65vw" } }}>
-              <MapCustom />
+              <MapCustom direccion={direccion} />
             </Box>
           </>
         )}

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -22,6 +23,8 @@ import {
   SitemarkIcon,
 } from "../components/CustomIcons";
 import { useNavigate } from "react-router-dom";
+import { Image } from "@mui/icons-material";
+import { motion } from "framer-motion";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -75,8 +78,8 @@ export default function Login(props) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [user, setUser] = React.useState({
-    email: "",
-    password: "",
+    email: "test@email.com",
+    password: "123456",
   });
   const navigate = useNavigate();
 
@@ -140,6 +143,16 @@ export default function Login(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
+        <Box sx={{ mt: 2, mb: 0 }}>
+          <motion.img
+            src="../../calcsolarissinbg.png" // Asegúrate de tener el logo en esa ruta
+            alt="Logo de CalcSolaris"
+            style={{ width: "250px", objectFit: "contain" }} // Ajusta el tamaño del logo
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 2 }}
+          />
+        </Box>
         <Card variant="outlined">
           <Typography
             component="h1"

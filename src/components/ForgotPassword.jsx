@@ -33,6 +33,7 @@ function ForgotPassword({ open, handleClose }) {
           enlace para restablecer su contraseña.
         </DialogContentText>
         <TextField
+          variant="filled"
           autoFocus
           required
           id="email"
