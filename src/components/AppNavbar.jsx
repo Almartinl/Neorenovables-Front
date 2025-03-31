@@ -11,6 +11,7 @@ import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import SideMenuMobile from "./SideMenuMobile";
 import MenuButton from "./MenuButton";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
+import { Link } from "react-router-dom";
 
 const Toolbar = styled(MuiToolbar)({
   width: "100%",
@@ -63,7 +64,9 @@ export default function AppNavbar() {
             spacing={1}
             sx={{ justifyContent: "center", mr: "auto" }}
           >
-            <img src="/neorenovables_logo.png" width="50px" alt="logo" />
+            <Link to={"/home"}>
+              <img src="/neorenovables_logo.png" width="50px" alt="logo" />
+            </Link>
           </Stack>
           <MenuButton
             sx={{ mr: 2 }}

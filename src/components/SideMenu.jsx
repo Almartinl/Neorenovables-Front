@@ -11,6 +11,7 @@ import MenuContent from "./MenuContent";
 import CardAlert from "./CardAlert";
 import OptionsMenu from "./OptionsMenu";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
+import { Link } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -36,9 +37,12 @@ export default function SideMenu() {
         },
       }}
     >
-      <Box pt={2}>
-        <img src="/neorenovables_logo.png" alt="logo" width="200px" />
-      </Box>
+      <Link to={"/home"}>
+        <Box pt={2}>
+          <img src="/neorenovables_logo.png" alt="logo" width="200px" />
+        </Box>
+      </Link>
+
       <Box
         sx={{
           display: "flex",
