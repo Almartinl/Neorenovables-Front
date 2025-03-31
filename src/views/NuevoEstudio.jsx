@@ -399,7 +399,7 @@ export default function NuevoEstudio() {
                             <InputLabel>Tipo de Cubierta</InputLabel>
                             <Select>
                               <MenuItem value="terreno">Terreno</MenuItem>
-                              <MenuItem value="coplanal">Coplanal</MenuItem>
+                              <MenuItem value="coplanar">Coplanar</MenuItem>
                               <MenuItem value="cubierta">
                                 Cubierta Plana
                               </MenuItem>
@@ -415,9 +415,15 @@ export default function NuevoEstudio() {
                           >
                             <InputLabel>Tipo de Panel</InputLabel>
                             <Select>
-                              <MenuItem value="panel1">Panel 1</MenuItem>
-                              <MenuItem value="panel2">Panel 2</MenuItem>
-                              <MenuItem value="panel3">Panel 3</MenuItem>
+                              <MenuItem value="panel1">
+                                PANEL SOLAR 440W
+                              </MenuItem>
+                              <MenuItem value="panel2">
+                                PANEL SOLAR 505W
+                              </MenuItem>
+                              <MenuItem value="panel3">
+                                PANEL SOLAR 565W
+                              </MenuItem>
                             </Select>
                           </FormControl>
                         </Box>
@@ -577,9 +583,15 @@ export default function NuevoEstudio() {
                         <FormControl variant="standard" size="small" fullWidth>
                           <InputLabel>Tipo de Inversor</InputLabel>
                           <Select>
-                            <MenuItem value="inversor1">Inversor 1</MenuItem>
-                            <MenuItem value="inversor2">Inversor 2</MenuItem>
-                            <MenuItem value="inversor3">Inversor 3</MenuItem>
+                            <MenuItem value="inversor1">
+                              HUAWEI SUN2000L-2KTL-L1
+                            </MenuItem>
+                            <MenuItem value="inversor2">
+                              HUAWEI SUN2000L-3KTL-L1
+                            </MenuItem>
+                            <MenuItem value="inversor3">
+                              HUAWEI SUN2000L-4KTL-L1
+                            </MenuItem>
                           </Select>
                         </FormControl>
                         <TextField

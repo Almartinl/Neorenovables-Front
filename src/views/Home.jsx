@@ -53,7 +53,7 @@ const LandingPage = () => {
           </Typography>
         </Box>
         <Link to="/login">
-          <Button variant="contained" color="warning" size="large">
+          <Button variant="contained" color="warning">
             Iniciar Sesión
           </Button>
         </Link>
@@ -95,22 +95,15 @@ const LandingPage = () => {
       </Box>
 
       {/* FUNCIONALIDADES */}
-      <Box sx={{ width: "100%", mt: 8, px: 2 }}>
-        <Typography
-          variant="h4"
-          fontFamily="fantasy"
-          sx={{ fontWeight: "bold", mb: 4 }}
-        >
-          🌍 ¿Qué hacemos por ti?
-        </Typography>
+      <Box sx={{ width: "100%", mt: 2, px: 2 }}>
         <Grid container spacing={3} justifyContent="center">
           {[
             {
               icon: (
-                <SavingsIcon
+                <AnalyticsIcon
                   sx={{
                     fontSize: 50,
-                    color: "#4CAF50",
+                    color: "#2196F3",
                     filter: "drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.3))",
                   }}
                 />
@@ -135,10 +128,10 @@ const LandingPage = () => {
             },
             {
               icon: (
-                <AnalyticsIcon
+                <SavingsIcon
                   sx={{
                     fontSize: 50,
-                    color: "#2196F3",
+                    color: "#4CAF50",
                     filter: "drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.3))",
                   }}
                 />
@@ -148,47 +141,35 @@ const LandingPage = () => {
                 "Te mostramos cómo la instalación fotovoltaica reducirá tu factura eléctrica anual, optimizando el consumo y el gasto.",
             },
           ].map((feature, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid item xs={12} md={3} key={index}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: index * 0.3 }}
               >
-                <Card
+                <Box
                   sx={{
-                    backgroundColor: "rgb(255, 123, 0)", // Fondo con algo de transparencia
-                    backdropFilter: "blur(10px)", // Difumina lo que está detrás para simular el cristal
-                    color: "white", // Texto en blanco para que resalte
-                    p: 3,
-                    boxShadow: 10,
                     display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    height: "100%",
-                    border: "2px solid #001aff", // Borde blanco para simular el marco de la ventana
-                    borderRadius: "10px", // Bordes redondeados para mayor estilo
-                    position: "relative",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    mb: 2,
                   }}
                 >
-                  <CardContent>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        mb: 2,
-                      }}
-                    >
-                      {feature.icon}
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
-                      {feature.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 2 }}>
-                      {feature.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
+                  {feature.icon}
+                </Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 2,
+                    textShadow: "0px 0px 2px black",
+                  }}
+                >
+                  {feature.title}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {feature.description}
+                </Typography>
               </motion.div>
             </Grid>
           ))}
