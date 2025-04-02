@@ -65,7 +65,7 @@ export default function AppNavbar() {
             sx={{ justifyContent: "center", mr: "auto" }}
           >
             <Link to={"/"}>
-              <img src="/neorenovables_logo.png" width="50px" alt="logo" />
+              <img src="/calcsolaris.png" width="50px" alt="logo" />
             </Link>
           </Stack>
           <MenuButton
