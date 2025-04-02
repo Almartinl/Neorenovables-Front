@@ -64,7 +64,7 @@ export default function AppNavbar() {
             spacing={1}
             sx={{ justifyContent: "center", mr: "auto" }}
           >
-            <Link to={"/home"}>
+            <Link to={"/"}>
               <img src="/neorenovables_logo.png" width="50px" alt="logo" />
             </Link>
           </Stack>

@@ -37,7 +37,7 @@ export default function SideMenu() {
         },
       }}
     >
-      <Link to={"/home"}>
+      <Link to={"/"}>
         <Box pt={2}>
           <img src="/neorenovables_logo.png" alt="logo" width="200px" />
         </Box>

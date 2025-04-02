@@ -103,7 +103,7 @@ import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-measure";
 import "leaflet-control-geocoder";
 
-const MapCustom = ({ direccion }) => {
+const MapCustom = ({ direccion, poblacion }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
@@ -158,7 +158,7 @@ const MapCustom = ({ direccion }) => {
   useEffect(() => {
     if (direccion && mapInstance.current) {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        direccion
+        direccion + " " + poblacion
       )}`;
 
       fetch(url)
@@ -195,14 +195,9 @@ const MapCustom = ({ direccion }) => {
           console.error("Error en la búsqueda de dirección:", err)
         );
     }
-  }, [direccion]); // Se ejecuta cada vez que cambia `direccion`
+  }, [direccion, poblacion]); // Se ejecuta cada vez que cambia `direccion`
 
-  return (
-    <div
-      ref={mapRef}
-      style={{ height: "80vh", width: "100vw", borderRadius: "10px" }}
-    />
-  );
+  return <div ref={mapRef} style={{ height: "80vh", width: "100vw" }} />;
 };
 
 export default MapCustom;

@@ -16,7 +16,7 @@ import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import { useNavigate } from "react-router-dom";
 
 const mainListItems = [
-  { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/" },
+  { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/dashboard" },
   { text: "Productos", icon: <CategoryRoundedIcon /> },
   { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
   { text: "Presupuestos", icon: <AssignmentRoundedIcon /> },

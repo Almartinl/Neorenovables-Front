@@ -49,7 +49,7 @@ export default function Estudios() {
           color="warning"
           size="small"
           startIcon={<AddRoundedIcon />}
-          onClick={() => Linkto("/crear-estudio")}
+          onClick={() => Linkto("crear-estudio")}
         >
           Crear Nuevo Estudio
         </Button>

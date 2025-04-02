@@ -102,7 +102,7 @@ export default function Login(props) {
     }
     // const data = new FormData(event.currentTarget);
     if (user.email == "test@email.com" && user.password == "123456") {
-      navigate("/");
+      navigate("/dashboard");
     }
     // console.log({
     //   email: user.email,

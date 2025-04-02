@@ -85,6 +85,7 @@ const steps = ["Instalación", "Consumo Cliente", "Resumen"];
 
 export default function NuevoEstudio() {
   const [direccion, setDireccion] = React.useState("");
+  const [poblacion, setPoblacion] = React.useState("");
   const [expanded, setExpanded] = React.useState("Sitio");
   const [zonas, setZonas] = React.useState([]);
   // const [pagina, setPagina] = React.useState("Instalacion");
@@ -101,6 +102,10 @@ export default function NuevoEstudio() {
     },
     consumo: { cups: "", potenciaContratada: "", tipoTarifa: "" },
     calculos: { potenciaInstalada: "", ahorro: "", precioPorVatio: "" },
+  });
+  const [newDireccion, setNewDireccion] = React.useState({
+    direccion: "",
+    poblacion: "",
   });
 
   const actualizarDatos = (seccion, nuevosValores) => {
@@ -146,6 +151,20 @@ export default function NuevoEstudio() {
     if (panel === "Baterias" && !usarBaterias) return;
     setExpanded(newExpanded ? panel : false);
   };
+
+  function handleInputDireccion(e) {
+    const newRegistro = {
+      ...newDireccion,
+      [e.target.name]: e.target.value,
+    };
+    setNewDireccion(newRegistro);
+  }
+
+  function enviarDireccion(e) {
+    e.preventDefault();
+    setDireccion(newDireccion.direccion);
+    setPoblacion(newDireccion.poblacion);
+  }
   return (
     <Box display="flex" flexDirection="column">
       <Box
@@ -352,22 +371,27 @@ export default function NuevoEstudio() {
                           variant="standard"
                           size="small"
                           label="Direccion"
+                          name="direccion"
                           fullWidth
-                          value={direccion}
-                          onChange={(e) => setDireccion(e.target.value)} // Actualiza la dirección
+                          value={newDireccion.direccion}
+                          onChange={handleInputDireccion}
                         />
                         <Box sx={{ display: "flex", gap: 2 }}>
                           <TextField
                             variant="standard"
                             size="small"
                             label="Codigo Postal"
+                            name="codigoPostal"
                             fullWidth
                           />
                           <TextField
                             variant="standard"
                             size="small"
                             label="Poblacion"
+                            name="poblacion"
                             fullWidth
+                            value={newDireccion.poblacion}
+                            onChange={handleInputDireccion}
                           />
                         </Box>
                         <FormControl variant="standard" size="small" fullWidth>
@@ -377,6 +401,20 @@ export default function NuevoEstudio() {
                             <MenuItem value={20}>Colaborador 2</MenuItem>
                           </Select>
                         </FormControl>
+                        <Button
+                          variant="contained"
+                          sx={{
+                            borderStartEndRadius: 10,
+                            borderEndEndRadius: 10,
+                            borderEndStartRadius: 10,
+                            borderStartStartRadius: 10,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                          onClick={enviarDireccion}
+                        >
+                          Buscar Direccion
+                        </Button>
                       </Box>
                     )}
 
@@ -639,7 +677,7 @@ export default function NuevoEstudio() {
               ))}
             </Box>
             <Box sx={{ display: "flex", width: { xs: "100vw", md: "65vw" } }}>
-              <MapCustom direccion={direccion} />
+              <MapCustom direccion={direccion} poblacion={poblacion} />
             </Box>
           </>
         )}
