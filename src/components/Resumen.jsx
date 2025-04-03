@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Box,
   Typography,
@@ -6,9 +7,70 @@ import {
   MenuItem,
   Select,
   InputLabel,
+  Paper,
 } from "@mui/material";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Resumen({ datosEstudio, actualizarDatos }) {
+  // Datos de ejemplo para las gráficas
+  const dataMensual = {
+    labels: [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ],
+    datasets: [
+      {
+        label: "Consumo Mensual (kWh)",
+        data: [150, 175, 160, 145, 180, 200, 210, 220, 230, 240, 250, 260],
+        backgroundColor: "rgba(75,192,192,0.5)",
+        borderColor: "rgba(75,192,192,1)",
+        borderWidth: 1,
+      },
+      {
+        label: "Gasto Mensual (€)",
+        data: [50, 55, 45, 60, 70, 80, 90, 75, 85, 95, 100, 110],
+        backgroundColor: "rgba(255,99,132,0.5)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 1,
+      },
+      {
+        label: "Generación de Energía (kWh)",
+        data: [120, 130, 140, 150, 170, 190, 210, 230, 250, 270, 290, 310],
+        backgroundColor: "rgba(54, 162, 235, 0.5)",
+        borderColor: "rgba(54, 162, 235, 1)",
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <Box
       component="form"
@@ -21,9 +83,10 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
         mx: "auto",
         px: 2,
         bgcolor: "white",
-        // borderRadius: 2,
         boxShadow: 3,
         overflowY: "auto",
+        maxHeight: "80vh", // Limita la altura y permite scroll
+        borderRadius: 2,
       }}
     >
       <Typography variant="h4" fontWeight="bold" textAlign="center">
@@ -85,119 +148,43 @@ export default function Resumen({ datosEstudio, actualizarDatos }) {
             </Select>
           </FormControl>
         </Box>
-
-        {/* Configuración del Sistema Fotovoltaico */}
-        <Typography variant="h6" sx={{ mt: 3 }}>
-          Configuración del Sistema
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <TextField
-            size="small"
-            label="Acimut (°)"
-            type="number"
-            fullWidth
-            value={datosEstudio.instalacion.acimut}
-            onChange={(e) =>
-              actualizarDatos("instalacion", { acimut: e.target.value })
-            }
-          />
-          <FormControl size="small" fullWidth>
-            <InputLabel>Tipo de Cubierta</InputLabel>
-            <Select
-              label="Tipo de cubierta"
-              value={datosEstudio.instalacion.tipoCubierta}
-              onChange={(e) =>
-                actualizarDatos("instalacion", { tipoCubierta: e.target.value })
-              }
-            >
-              <MenuItem value="terreno">Terreno</MenuItem>
-              <MenuItem value="coplanal">Coplanal</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            size="small"
-            label="Inclinación (°)"
-            type="number"
-            fullWidth
-            value={datosEstudio.instalacion.inclinacion}
-            onChange={(e) =>
-              actualizarDatos("instalacion", { inclinacion: e.target.value })
-            }
-          />
-          <FormControl size="small" fullWidth>
-            <InputLabel>Tipo de Panel</InputLabel>
-            <Select
-              label="Tipo de panel"
-              value={datosEstudio.instalacion.tipoPanel}
-              onChange={(e) =>
-                actualizarDatos("instalacion", { tipoPanel: e.target.value })
-              }
-            >
-              <MenuItem value="panel1">Panel 1</MenuItem>
-              <MenuItem value="panel2">Panel 2</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
       </Box>
 
-      {/* Sección 2: Consumo Cliente */}
-      <Box sx={{ border: "1px solid gray", borderRadius: 2, padding: 2 }}>
+      {/* Sección 2: Gráficas */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexDirection: "column",
+          gap: 3,
+          mt: 3,
+        }}
+      >
         <Typography variant="h5" fontWeight="bold">
-          Consumo Cliente
+          Gráficas de Consumo y Generación
         </Typography>
 
-        {/* Tarifa Actual */}
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Tarifa Actual
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <TextField
-            size="small"
-            label="CUPS"
-            fullWidth
-            value={datosEstudio.consumo.cups}
-            onChange={(e) =>
-              actualizarDatos("consumo", { cups: e.target.value })
-            }
-          />
-          <TextField
-            size="small"
-            label="Potencia Contratada (kW)"
-            type="number"
-            fullWidth
-            value={datosEstudio.consumo.potenciaContratada}
-            onChange={(e) =>
-              actualizarDatos("consumo", { potenciaContratada: e.target.value })
-            }
-          />
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>Tipo de Tarifa</InputLabel>
-            <Select
-              label="Tipo de tarifa"
-              value={datosEstudio.consumo.tipoTarifa}
-              onChange={(e) =>
-                actualizarDatos("consumo", { tipoTarifa: e.target.value })
-              }
-            >
-              <MenuItem value="2.0">2.0</MenuItem>
-              <MenuItem value="3.0">3.0</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        {/* Gráfico de Consumo, Gasto y Generación */}
+        <Paper sx={{ padding: 2, width: { xs: "90vw", md: "40vw" } }}>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            textAlign="center"
+            sx={{ mb: 2 }}
+          >
+            Consumo, Gasto y Generación de Energía
+          </Typography>
+          <Bar data={dataMensual} options={{ responsive: true }} />
+        </Paper>
       </Box>
 
-      {/* Sección 3: Cálculo del Sistema */}
-      <Box sx={{ border: "1px solid gray", borderRadius: 2, padding: 2 }}>
+      {/* Sección 3: Cálculos y Ahorro Estimado */}
+      <Box
+        sx={{ border: "1px solid gray", borderRadius: 2, padding: 2, mt: 4 }}
+      >
         <Typography variant="h5" fontWeight="bold">
           Cálculo del Sistema
         </Typography>
-
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
             size="small"
