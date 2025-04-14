@@ -54,18 +54,9 @@ export default function FormularioConsumo() {
         bgcolor: "white",
         // borderRadius: 2,
         boxShadow: 3,
+        overflowY: "auto",
       }}
     >
-      {/* 🔘 Selector de Modo */}
-      {/* <FormControlLabel
-        control={
-          <Switch
-            checked={modoTecnico}
-            onChange={() => setModoTecnico(!modoTecnico)}
-          />
-        }
-        label="Modo Técnico"
-      /> */}
       {/* 📝 Tarifa Actual */}
       <Typography mt={2} variant="h6" fontWeight="bold">
         Tarifa Actual

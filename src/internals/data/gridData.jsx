@@ -7,6 +7,8 @@ import { IconButton, Tooltip } from "@mui/material";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfInforme from "../../components/PdfInforme";
 
 export function renderAvatar(params) {
   if (params.value == null) {
@@ -26,77 +28,6 @@ export function renderAvatar(params) {
     </Avatar>
   );
 }
-
-export const columns = [
-  { field: "nombre", headerName: "Nombre", flex: 1.5, minWidth: 100 },
-  {
-    field: "direccion",
-    headerName: "Direccion",
-    headerAlign: "left",
-    align: "left",
-    flex: 1,
-    minWidth: 80,
-  },
-  {
-    field: "codigoPostal",
-    headerName: "Codigo Postal",
-    headerAlign: "left",
-    align: "left",
-    flex: 1,
-    minWidth: 80,
-  },
-  {
-    field: "lugar",
-    headerName: "Lugar",
-    headerAlign: "left",
-    align: "left",
-    flex: 1,
-    minWidth: 100,
-  },
-  {
-    field: "ultimaModificacion",
-    headerName: "Ultima Modificacion",
-    headerAlign: "left",
-    align: "left",
-    flex: 1,
-    minWidth: 120,
-  },
-  {
-    field: "acciones",
-    headerName: "Acciones",
-    headerAlign: "left",
-    align: "left",
-    flex: 1,
-    minWidth: 100,
-    renderCell: () => (
-      <div
-        style={{ display: "flex", gap: "12px" }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {/* Botón Ver */}
-        <Tooltip title="Ver">
-          <IconButton size="small" sx={{ color: "#1976d2" }}>
-            <VisibilityRoundedIcon />
-          </IconButton>
-        </Tooltip>
-
-        {/* Botón Descargar */}
-        <Tooltip title="Descargar">
-          <IconButton size="small" sx={{ color: "#9c27b0" }}>
-            <DownloadRoundedIcon />
-          </IconButton>
-        </Tooltip>
-
-        {/* Botón Eliminar */}
-        <Tooltip title="Eliminar">
-          <IconButton size="small" sx={{ color: "#d32f2f" }}>
-            <DeleteRoundedIcon />
-          </IconButton>
-        </Tooltip>
-      </div>
-    ),
-  },
-];
 
 export const rows = [
   {

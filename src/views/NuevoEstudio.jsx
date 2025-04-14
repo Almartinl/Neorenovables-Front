@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import {
   Box,
   Button,
@@ -41,6 +42,8 @@ import ElectricalServicesRoundedIcon from "@mui/icons-material/ElectricalService
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import FormularioConsumo from "../components/FormularioConsumo";
 import Resumen from "../components/Resumen";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfInforme from "../components/PdfInforme";
 
 const Accordion = styled((props) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -108,6 +111,42 @@ export default function NuevoEstudio() {
     poblacion: "",
   });
 
+  const [potenciaPanel, setPotenciaPanel] = React.useState(0);
+  const [potenciaGenerada, setPotenciaGenerada] = React.useState(0);
+
+  const paneles = [
+    {
+      nombre: "Panel Solar 440W",
+      potencia: 440,
+      eficiencia: 97.5,
+      tipo: "monocristalino",
+    },
+    {
+      nombre: "Panel Solar 505W",
+      potencia: 505,
+      eficiencia: 97.5,
+      tipo: "monocristalino",
+    },
+    {
+      nombre: "Panel Solar 565W",
+      potencia: 565,
+      eficiencia: 97.5,
+      tipo: "monocristalino",
+    },
+  ];
+
+  const [wattsTotales, setWattsTotales] = React.useState(0);
+  const radAnual = 1647; //kwh/kwp -- solo Malaga
+
+  React.useEffect(() => {
+    const total = zonas.reduce(
+      (acum, zona) => acum + Number(zona.numPaneles || 0),
+      0
+    );
+    setWattsTotales(total * potenciaPanel);
+    setPotenciaGenerada((wattsTotales * radAnual) / 1000); //kwh/año
+  }, [zonas, potenciaPanel, wattsTotales]);
+
   const actualizarDatos = (seccion, nuevosValores) => {
     setDatosEstudio((prev) => ({
       ...prev,
@@ -119,9 +158,9 @@ export default function NuevoEstudio() {
     setActiveStep((prevStep) => prevStep + 1);
   };
 
-  const handleBack = () => {
+  function handleBack() {
     setActiveStep((prevStep) => prevStep - 1);
-  };
+  }
 
   const handleAddZona = () => {
     setZonas([
@@ -165,6 +204,8 @@ export default function NuevoEstudio() {
     setDireccion(newDireccion.direccion);
     setPoblacion(newDireccion.poblacion);
   }
+  console.log(wattsTotales);
+  console.log(potenciaGenerada);
   return (
     <Box display="flex" flexDirection="column">
       <Box
@@ -187,20 +228,30 @@ export default function NuevoEstudio() {
             >
               <FormControlLabel
                 value="simplificado"
+                disabled={activeStep != 0}
                 control={
                   <Radio
                     sx={{
                       color: "white",
                       "&.Mui-checked": {
                         color: "white",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#ffffff69",
                       },
                     }}
                   />
                 }
                 label="Modo Simplificado"
+                sx={{
+                  "& .MuiFormControlLabel-label.Mui-disabled": {
+                    color: "#ffffff69",
+                  },
+                }}
               />
               <FormControlLabel
                 value="completo"
+                disabled={activeStep != 0}
                 control={
                   <Radio
                     sx={{
@@ -208,10 +259,18 @@ export default function NuevoEstudio() {
                       "&.Mui-checked": {
                         color: "white",
                       },
+                      "&.Mui-disabled": {
+                        color: "#ffffff69",
+                      },
                     }}
                   />
                 }
                 label="Modo Completo"
+                sx={{
+                  "& .MuiFormControlLabel-label.Mui-disabled": {
+                    color: "#ffffff69",
+                  },
+                }}
               />
             </RadioGroup>
           </FormControl>
@@ -452,16 +511,21 @@ export default function NuevoEstudio() {
                             fullWidth
                           >
                             <InputLabel>Tipo de Panel</InputLabel>
-                            <Select>
-                              <MenuItem value="panel1">
-                                PANEL SOLAR 440W
-                              </MenuItem>
-                              <MenuItem value="panel2">
-                                PANEL SOLAR 505W
-                              </MenuItem>
-                              <MenuItem value="panel3">
-                                PANEL SOLAR 565W
-                              </MenuItem>
+                            <Select
+                              defaultValue=""
+                              onChange={(e) =>
+                                setPotenciaPanel(Number(e.target.value))
+                              }
+                            >
+                              {paneles.map((panel) => (
+                                <MenuItem
+                                  key={panel.nombre}
+                                  value={panel.potencia}
+                                  defaultValue={0}
+                                >
+                                  {panel.nombre}
+                                </MenuItem>
+                              ))}
                             </Select>
                           </FormControl>
                         </Box>
@@ -642,41 +706,41 @@ export default function NuevoEstudio() {
                       </Box>
                     )}
 
-                    {panel !== "Baterias" ||
-                      (usarBaterias && (
-                        <Box
-                          component="form"
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                          }}
-                        >
-                          <FormControl
-                            variant="standard"
-                            size="small"
-                            fullWidth
-                          >
-                            <InputLabel>Tipo de Bateria</InputLabel>
-                            <Select>
-                              <MenuItem value="bateria1">Bateria 1</MenuItem>
-                              <MenuItem value="bateria2">Bateria 2</MenuItem>
-                              <MenuItem value="bateria3">Bateria 3</MenuItem>
-                            </Select>
-                          </FormControl>
-                          <TextField
-                            type="number"
-                            variant="standard"
-                            size="small"
-                            label="Cantidad de baterías"
-                          />
-                        </Box>
-                      ))}
+                    {panel === "Baterias" && usarBaterias && (
+                      <Box
+                        component="form"
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}
+                      >
+                        <FormControl variant="standard" size="small" fullWidth>
+                          <InputLabel>Tipo de Bateria</InputLabel>
+                          <Select>
+                            <MenuItem value="bateria1">Bateria 1</MenuItem>
+                            <MenuItem value="bateria2">Bateria 2</MenuItem>
+                            <MenuItem value="bateria3">Bateria 3</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <TextField
+                          type="number"
+                          variant="standard"
+                          size="small"
+                          label="Cantidad de baterías"
+                        />
+                      </Box>
+                    )}
                   </AccordionDetails>
                 </Accordion>
               ))}
             </Box>
-            <Box sx={{ display: "flex", width: { xs: "100vw", md: "65vw" } }}>
+            <Box
+              sx={{
+                display: "flex",
+                width: { xs: "100vw", md: "55vw", xl: "65vw" },
+              }}
+            >
               <MapCustom direccion={direccion} poblacion={poblacion} />
             </Box>
           </>
@@ -716,7 +780,12 @@ export default function NuevoEstudio() {
           </Button>
         )}
         {activeStep === 2 && (
-          <Button variant="contained" color="warning" sx={{ m: 2 }}>
+          <Button
+            variant="contained"
+            color="warning"
+            sx={{ m: 2 }}
+            // onClick={handleNext}
+          >
             Guardar Estudio
           </Button>
         )}
