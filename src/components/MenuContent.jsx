@@ -17,7 +17,11 @@ import { useNavigate } from "react-router-dom";
 
 const mainListItems = [
   { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/dashboard" },
-  { text: "Productos", icon: <CategoryRoundedIcon /> },
+  {
+    text: "Productos",
+    icon: <CategoryRoundedIcon />,
+    url: "/dashboard/productos",
+  },
   { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
   { text: "Presupuestos", icon: <AssignmentRoundedIcon /> },
 ];
@@ -39,7 +43,7 @@ export default function MenuContent() {
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>
             <ListItemButton
-              selected={index === 0}
+              selected={location.pathname === item.url}
               onClick={() => Linkto(item.url)}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>

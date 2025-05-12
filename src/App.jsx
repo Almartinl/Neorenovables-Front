@@ -10,6 +10,8 @@ import Estudios from "./views/Estudios";
 import NuevoEstudio from "./views/NuevoEstudio";
 import Login from "./views/Login";
 import Home from "./views/Home";
+import Productos from "./views/Productos";
+import Paneles from "./views/Paneles";
 
 function App() {
   // const [count, setCount] = useState(0);
@@ -20,6 +22,8 @@ function App() {
         <Route path="/dashboard" element={<Layout />}>
           <Route index element={<Estudios />} />
           <Route path="crear-estudio" element={<NuevoEstudio />} />
+          <Route path="productos" element={<Productos />} />
+          <Route path="productos/paneles" element={<Paneles />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />

@@ -77,23 +77,23 @@ export default function CustomizedDataGrid() {
             </Tooltip>
 
             {/* Botón Descargar */}
-            <Tooltip title="Descargar PDF">
-              <PDFDownloadLink
-                document={<PdfInforme datosEstudio={fila} />}
-                fileName={`informe-${fila.nombre || "estudio"}.pdf`}
-                style={{
-                  textDecoration: "none",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                {({ loading }) => (
+            <PDFDownloadLink
+              document={<PdfInforme datosEstudio={fila} />}
+              fileName={`informe-${fila.nombre || "estudio"}.pdf`}
+              style={{
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              {({ loading }) => (
+                <Tooltip title="Descargar Pdf">
                   <IconButton size="small" sx={{ color: "#9c27b0" }}>
                     <DownloadRoundedIcon />
                   </IconButton>
-                )}
-              </PDFDownloadLink>
-            </Tooltip>
+                </Tooltip>
+              )}
+            </PDFDownloadLink>
 
             {/* Botón Eliminar */}
             <Tooltip title="Eliminar">

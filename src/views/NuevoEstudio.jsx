@@ -93,7 +93,6 @@ export default function NuevoEstudio() {
   const [zonas, setZonas] = React.useState([]);
   // const [pagina, setPagina] = React.useState("Instalacion");
   const [activeStep, setActiveStep] = React.useState(0);
-  const [modo, setModo] = React.useState("simplificado");
   const [usarBaterias, setUsarBaterias] = React.useState(false);
   const [datosEstudio, setDatosEstudio] = React.useState({
     cliente: { nombre: "", apellido: "", ubicacion: "", colaborador: "" },
@@ -106,32 +105,127 @@ export default function NuevoEstudio() {
     consumo: { cups: "", potenciaContratada: "", tipoTarifa: "" },
     calculos: { potenciaInstalada: "", ahorro: "", precioPorVatio: "" },
   });
-  const [newDireccion, setNewDireccion] = React.useState({
-    direccion: "",
-    poblacion: "",
+  const [estudio, setEstudio] = React.useState({
+    instalacion: {
+      sitio: {
+        nombreCliente: "",
+        apellidoCliente: "",
+        direccion: "",
+        poblacion: "",
+        codigoPostal: "",
+        coordenadas: { lat: null, lng: null },
+        colaborador: "",
+      },
+      paneles: {
+        tipoCubierta: "",
+        tipoPanel: "",
+        zonas: [], // Array vacío que se llenará con zonas
+      },
+      inversores: {
+        tipoInversor: "",
+        cantidad: "", // Valor por defecto 1
+      },
+      baterias: {
+        tieneBaterias: false,
+        tipoBateria: "",
+        cantidad: "",
+      },
+    },
+    consumo: {
+      modo: "simplificado", // "simple" o "completo"
+      datosComunes: {
+        tipoTarifaActual: "",
+        watiosContratados: 0,
+        precioPotencia: 0,
+        precioKW: 0,
+        consumoAnualEstimado: 0,
+      },
+      datosCompletos: {
+        consumoMensual: Array(12).fill(0), // 12 meses inicializados a 0
+      },
+      tarifaSalida: {
+        tipoTarifa: "",
+        precioPotencia: 0,
+        precioKW: 0,
+        watiosContratados: 0,
+        precioExcedente: 0,
+      },
+    },
   });
+  const [modoDireccion, setModoDireccion] = React.useState("direccion");
 
   const [potenciaPanel, setPotenciaPanel] = React.useState(0);
   const [potenciaGenerada, setPotenciaGenerada] = React.useState(0);
 
   const paneles = [
     {
-      nombre: "Panel Solar 440W",
+      nombre: "Panel 440W",
+      marca: "LONGi",
       potencia: 440,
       eficiencia: 97.5,
       tipo: "monocristalino",
+      largo: 1.7,
+      ancho: 1.0,
+      alto: 0.04,
     },
     {
-      nombre: "Panel Solar 505W",
+      nombre: "Panel 505W",
+      marca: "LONGi",
       potencia: 505,
       eficiencia: 97.5,
       tipo: "monocristalino",
     },
     {
-      nombre: "Panel Solar 565W",
+      nombre: "Panel 565W",
+      marca: "LONGi",
       potencia: 565,
       eficiencia: 97.5,
       tipo: "monocristalino",
+    },
+  ];
+
+  const inversores = [
+    {
+      nombre: "HUAWEI SUN2000-2KTL-L1",
+      potencia: 2000, // en vatios (W)
+      tipo: "Monofásico",
+      numMPPT: 1, // Número de trackers MPPT
+    },
+    {
+      nombre: "HUAWEI SUN2000-3KTL-L1",
+      potencia: 3000,
+      tipo: "Monofásico",
+      numMPPT: 1,
+    },
+    {
+      nombre: "HUAWEI SUN2000-5KTL-L1",
+      potencia: 5000,
+      tipo: "Monofásico",
+      numMPPT: 2,
+    },
+  ];
+
+  const baterias = [
+    {
+      nombre: "HUAWEI LUNA2000-5KWH",
+      capacidad: 5, // kWh
+      voltaje: 48, // V
+      vidaUtil: 10, // años
+      profundidadDescarga: 90, // %
+    },
+    {
+      nombre: "HUAWEI LUNA2000-10KWH",
+      capacidad: 10,
+      voltaje: 48,
+      vidaUtil: 10,
+      profundidadDescarga: 90,
+    },
+    {
+      nombre: "LG RESU10H",
+      capacidad: 9.6,
+      voltaje: 48,
+      vidaUtil: 10,
+      profundidadDescarga: 95,
     },
   ];
 
@@ -154,6 +248,21 @@ export default function NuevoEstudio() {
     }));
   };
 
+  const cambiarModoConsumo = (modo) => {
+    setEstudio((prev) => ({
+      ...prev,
+      consumo: {
+        ...prev.consumo,
+        modo,
+        // Resetear valores si cambiamos de completo a simple
+        datosCompletos:
+          modo === "simple"
+            ? { consumoMensual: Array(12).fill(0) }
+            : prev.consumo.datosCompletos,
+      },
+    }));
+  };
+
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
   };
@@ -162,28 +271,78 @@ export default function NuevoEstudio() {
     setActiveStep((prevStep) => prevStep - 1);
   }
 
-  const handleAddZona = () => {
-    setZonas([
-      ...zonas,
-      {
-        ancho: "",
-        largo: "",
-        numPaneles: "",
-        acimut: "",
-        inclinacion: "",
-        sombras: false,
+  // Función para actualizar los datos generales de paneles
+  const handlePanelChange = (field, value) => {
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        paneles: {
+          ...prev.instalacion.paneles,
+          [field]: value,
+        },
       },
-    ]);
+    }));
   };
 
+  // Función para actualizar una zona específica
   const handleZonaChange = (index, field, value) => {
-    const newZonas = [...zonas];
-    newZonas[index][field] = value;
-    setZonas(newZonas);
+    setEstudio((prev) => {
+      const nuevasZonas = [...prev.instalacion.paneles.zonas];
+      nuevasZonas[index] = {
+        ...nuevasZonas[index],
+        [field]: field === "sombras" ? value : Number(value),
+      };
+
+      return {
+        ...prev,
+        instalacion: {
+          ...prev.instalacion,
+          paneles: {
+            ...prev.instalacion.paneles,
+            zonas: nuevasZonas,
+          },
+        },
+      };
+    });
   };
 
+  // Función para añadir nueva zona
+  const handleAddZona = () => {
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        paneles: {
+          ...prev.instalacion.paneles,
+          zonas: [
+            ...prev.instalacion.paneles.zonas,
+            {
+              acimut: "",
+              inclinacion: "",
+              ancho: "",
+              largo: "",
+              numPaneles: "",
+              sombras: false,
+            },
+          ],
+        },
+      },
+    }));
+  };
+
+  // Función para eliminar zona
   const handleRemoveZona = (index) => {
-    setZonas(zonas.filter((_, i) => i !== index));
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        paneles: {
+          ...prev.instalacion.paneles,
+          zonas: prev.instalacion.paneles.zonas.filter((_, i) => i !== index),
+        },
+      },
+    }));
   };
 
   const handleChange = (panel) => (event, newExpanded) => {
@@ -191,21 +350,134 @@ export default function NuevoEstudio() {
     setExpanded(newExpanded ? panel : false);
   };
 
-  function handleInputDireccion(e) {
-    const newRegistro = {
-      ...newDireccion,
-      [e.target.name]: e.target.value,
-    };
-    setNewDireccion(newRegistro);
-  }
+  const handleSitioChange = (field, value) => {
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        sitio: {
+          ...prev.instalacion.sitio,
+          [field]: value,
+        },
+      },
+    }));
+  };
 
   function enviarDireccion(e) {
     e.preventDefault();
-    setDireccion(newDireccion.direccion);
-    setPoblacion(newDireccion.poblacion);
+    setDireccion(estudio.instalacion.sitio.direccion);
+    setPoblacion(estudio.instalacion.sitio.poblacion);
   }
-  console.log(wattsTotales);
-  console.log(potenciaGenerada);
+
+  const handleInversorChange = (field, value) => {
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        inversores: {
+          ...prev.instalacion.inversores,
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const handleModeloInversorChange = (nombreModelo) => {
+    const inversorSeleccionado = inversores.find(
+      (inv) => inv.nombre === nombreModelo
+    );
+
+    if (inversorSeleccionado) {
+      setEstudio((prev) => ({
+        ...prev,
+        instalacion: {
+          ...prev.instalacion,
+          inversores: {
+            ...prev.instalacion.inversores, // Mantenemos la cantidad existente
+            nombre: inversorSeleccionado.nombre,
+            potencia: inversorSeleccionado.potencia,
+            tipo: inversorSeleccionado.tipo,
+            numMPPT: inversorSeleccionado.numMPPT,
+          },
+        },
+      }));
+    }
+  };
+
+  // Función genérica para cambios
+  const handleBateriaChange = (field, value) => {
+    setEstudio((prev) => ({
+      ...prev,
+      instalacion: {
+        ...prev.instalacion,
+        baterias: {
+          ...prev.instalacion.baterias,
+          [field]:
+            field === "cantidad" ? Math.max(0, parseInt(value) || 0) : value,
+        },
+      },
+    }));
+  };
+
+  // Función para selección de modelo
+  const handleModeloBateriaChange = (nombreBateria) => {
+    const bateriaSeleccionada = baterias.find(
+      (bat) => bat.nombre === nombreBateria
+    );
+
+    if (bateriaSeleccionada) {
+      setEstudio((prev) => ({
+        ...prev,
+        instalacion: {
+          ...prev.instalacion,
+          baterias: {
+            ...prev.instalacion.baterias, // Mantiene la cantidad existente
+            nombre: bateriaSeleccionada.nombre,
+            capacidad: bateriaSeleccionada.capacidad,
+            voltaje: bateriaSeleccionada.voltaje,
+            vidaUtil: bateriaSeleccionada.vidaUtil,
+            profundidadDescarga: bateriaSeleccionada.profundidadDescarga,
+          },
+        },
+      }));
+    }
+  };
+
+  const handleUsarBateriasChange = (event) => {
+    setUsarBaterias(event.target.checked);
+    if (usarBaterias === true) {
+      setEstudio((prev) => ({
+        ...prev,
+        instalacion: {
+          ...prev.instalacion,
+          baterias: {
+            ...prev.instalacion.baterias,
+            tieneBaterias: false,
+            tipoBateria: "",
+            cantidad: "",
+            nombre: "",
+            vidaUtil: "",
+            voltaje: "",
+            profundidadDescarga: "",
+            capacidad: "",
+          },
+        },
+      }));
+    } else {
+      setEstudio((prev) => ({
+        ...prev,
+        instalacion: {
+          ...prev.instalacion,
+          baterias: {
+            ...prev.instalacion.baterias,
+            tieneBaterias: true,
+          },
+        },
+      }));
+    }
+  };
+
+  console.log(estudio);
   return (
     <Box display="flex" flexDirection="column">
       <Box
@@ -223,8 +495,8 @@ export default function NuevoEstudio() {
           <FormControl component="fieldset">
             <RadioGroup
               row
-              value={modo}
-              onChange={(e) => setModo(e.target.value)}
+              value={estudio.consumo.modo}
+              onChange={(e) => cambiarModoConsumo(e.target.value)}
             >
               <FormControlLabel
                 value="simplificado"
@@ -354,7 +626,7 @@ export default function NuevoEstudio() {
                         control={
                           <Switch
                             checked={usarBaterias}
-                            onChange={(e) => setUsarBaterias(e.target.checked)}
+                            onChange={(e) => handleUsarBateriasChange(e)}
                           />
                         }
                         label="Usar Baterías"
@@ -386,17 +658,32 @@ export default function NuevoEstudio() {
                             size="small"
                             label="Nombre"
                             fullWidth
+                            value={estudio.instalacion.sitio.nombreCliente}
+                            onChange={(e) =>
+                              handleSitioChange("nombreCliente", e.target.value)
+                            }
                           />
                           <TextField
                             variant="standard"
                             size="small"
                             label="Apellido"
                             fullWidth
+                            value={estudio.instalacion.sitio.apellidoCliente}
+                            onChange={(e) =>
+                              handleSitioChange(
+                                "apellidoCliente",
+                                e.target.value
+                              )
+                            }
                           />
                         </Box>
                         <Box sx={{ display: "flex", justifyContent: "center" }}>
                           <Button
-                            variant="contained"
+                            variant={
+                              modoDireccion === "direccion"
+                                ? "contained"
+                                : "outlined"
+                            }
                             sx={{
                               borderStartEndRadius: 0,
                               borderEndEndRadius: 0,
@@ -407,11 +694,16 @@ export default function NuevoEstudio() {
                               fontSize: 14,
                               fontWeight: 600,
                             }}
+                            onClick={() => setModoDireccion("direccion")}
                           >
                             Direccion
                           </Button>
                           <Button
-                            variant="outlined"
+                            variant={
+                              modoDireccion === "coordenadas"
+                                ? "contained"
+                                : "outlined"
+                            }
                             sx={{
                               borderStartEndRadius: 10,
                               borderEndEndRadius: 10,
@@ -422,42 +714,94 @@ export default function NuevoEstudio() {
                               fontSize: 14,
                               fontWeight: 600,
                             }}
+                            onClick={() => setModoDireccion("coordenadas")}
                           >
                             Coordenadas
                           </Button>
                         </Box>
-                        <TextField
-                          variant="standard"
-                          size="small"
-                          label="Direccion"
-                          name="direccion"
-                          fullWidth
-                          value={newDireccion.direccion}
-                          onChange={handleInputDireccion}
-                        />
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                          <TextField
-                            variant="standard"
-                            size="small"
-                            label="Codigo Postal"
-                            name="codigoPostal"
-                            fullWidth
-                          />
-                          <TextField
-                            variant="standard"
-                            size="small"
-                            label="Poblacion"
-                            name="poblacion"
-                            fullWidth
-                            value={newDireccion.poblacion}
-                            onChange={handleInputDireccion}
-                          />
-                        </Box>
+                        {modoDireccion === "direccion" ? (
+                          <>
+                            <TextField
+                              variant="standard"
+                              size="small"
+                              label="Dirección"
+                              fullWidth
+                              value={estudio.instalacion.sitio.direccion}
+                              onChange={(e) =>
+                                handleSitioChange("direccion", e.target.value)
+                              }
+                            />
+                            <Box sx={{ display: "flex", gap: 2 }}>
+                              <TextField
+                                variant="standard"
+                                size="small"
+                                label="Código Postal"
+                                value={
+                                  estudio.instalacion.sitio.codigoPostal || ""
+                                }
+                                onChange={(e) =>
+                                  handleSitioChange(
+                                    "codigoPostal",
+                                    e.target.value
+                                  )
+                                }
+                                fullWidth
+                              />
+                              <TextField
+                                variant="standard"
+                                size="small"
+                                label="Población"
+                                value={
+                                  estudio.instalacion.sitio.poblacion || ""
+                                }
+                                onChange={(e) =>
+                                  handleSitioChange("poblacion", e.target.value)
+                                }
+                                fullWidth
+                              />
+                            </Box>
+                          </>
+                        ) : (
+                          <Box sx={{ display: "flex", gap: 2 }}>
+                            <TextField
+                              variant="standard"
+                              size="small"
+                              label="Latitud"
+                              type="number"
+                              value={
+                                estudio.instalacion.sitio.coordenadas?.lat || ""
+                              }
+                              onChange={(e) =>
+                                handleSitioChange("coordenadas", {
+                                  ...estudio.instalacion.sitio.coordenadas,
+                                  lat: parseFloat(e.target.value),
+                                })
+                              }
+                              fullWidth
+                            />
+                            <TextField
+                              variant="standard"
+                              size="small"
+                              label="Longitud"
+                              type="number"
+                              value={
+                                estudio.instalacion.sitio.coordenadas?.lng || ""
+                              }
+                              onChange={(e) =>
+                                handleSitioChange("coordenadas", {
+                                  ...estudio.instalacion.sitio.coordenadas,
+                                  lng: parseFloat(e.target.value),
+                                })
+                              }
+                              fullWidth
+                            />
+                          </Box>
+                        )}
                         <FormControl variant="standard" size="small" fullWidth>
                           <InputLabel>Colaboradores</InputLabel>
                           <Select>
-                            <MenuItem value={10}>Colaborador 1</MenuItem>
-                            <MenuItem value={20}>Colaborador 2</MenuItem>
+                            <MenuItem value={1}>Colaborador 1</MenuItem>
+                            <MenuItem value={2}>Colaborador 2</MenuItem>
                           </Select>
                         </FormControl>
                         <Button
@@ -494,9 +838,17 @@ export default function NuevoEstudio() {
                             fullWidth
                           >
                             <InputLabel>Tipo de Cubierta</InputLabel>
-                            <Select>
+                            <Select
+                              value={estudio.instalacion.paneles.tipoCubierta}
+                              onChange={(e) =>
+                                handlePanelChange(
+                                  "tipoCubierta",
+                                  e.target.value
+                                )
+                              }
+                            >
                               <MenuItem value="terreno">Terreno</MenuItem>
-                              <MenuItem value="coplanar">Coplanar</MenuItem>
+                              <MenuItem value="coplanar">Coplanal</MenuItem>
                               <MenuItem value="cubierta">
                                 Cubierta Plana
                               </MenuItem>
@@ -512,18 +864,27 @@ export default function NuevoEstudio() {
                           >
                             <InputLabel>Tipo de Panel</InputLabel>
                             <Select
-                              defaultValue=""
-                              onChange={(e) =>
-                                setPotenciaPanel(Number(e.target.value))
-                              }
+                              value={estudio.instalacion.paneles.tipoPanel}
+                              onChange={(e) => {
+                                const panelSeleccionado = paneles.find(
+                                  (p) => p.nombre === e.target.value
+                                );
+                                handlePanelChange(
+                                  "tipoPanel",
+                                  panelSeleccionado.nombre
+                                );
+                                handlePanelChange(
+                                  "potenciaPanel",
+                                  panelSeleccionado.potencia
+                                );
+                              }}
                             >
                               {paneles.map((panel) => (
                                 <MenuItem
                                   key={panel.nombre}
-                                  value={panel.potencia}
-                                  defaultValue={0}
+                                  value={panel.nombre}
                                 >
-                                  {panel.nombre}
+                                  {panel.nombre} ({panel.potencia}W)
                                 </MenuItem>
                               ))}
                             </Select>
@@ -531,129 +892,129 @@ export default function NuevoEstudio() {
                         </Box>
 
                         {/* Lista de Zonas */}
-                        <Box
-                          sx={{
-                            maxHeight: "38vh", // Limita la altura del área de zonas
-                            overflowY: "auto", // Activa el scroll si hay muchas zonas
-                          }}
-                        >
-                          {zonas.map((zona, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 2,
-                                alignItems: "center",
-                              }}
-                            >
-                              <Typography variant="caption">
-                                Zona:{index + 1}
-                              </Typography>
-                              <Box display="flex" flexDirection="row" gap={2}>
-                                <TextField
-                                  type="number"
-                                  variant="standard"
-                                  size="small"
-                                  label="Acimut (°)"
-                                  value={zona.acimut}
-                                  onChange={(e) =>
-                                    handleZonaChange(
-                                      index,
-                                      "acimut",
-                                      e.target.value
-                                    )
-                                  }
-                                  fullWidth
-                                />
-                                <TextField
-                                  type="number"
-                                  variant="standard"
-                                  size="small"
-                                  label="Inclinación (°)"
-                                  value={zona.inclinacion}
-                                  onChange={(e) =>
-                                    handleZonaChange(
-                                      index,
-                                      "inclinacion",
-                                      e.target.value
-                                    )
-                                  }
-                                  fullWidth
-                                />
+                        <Box sx={{ maxHeight: "38vh", overflowY: "auto" }}>
+                          {estudio.instalacion.paneles.zonas.map(
+                            (zona, index) => (
+                              <Box
+                                key={zona.id || index}
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 2,
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Typography variant="caption">
+                                  Zona: {index + 1}
+                                </Typography>
+
+                                <Box display="flex" flexDirection="row" gap={2}>
+                                  <TextField
+                                    type="number"
+                                    variant="standard"
+                                    size="small"
+                                    label="Acimut (°)"
+                                    value={zona.acimut}
+                                    onChange={(e) =>
+                                      handleZonaChange(
+                                        index,
+                                        "acimut",
+                                        e.target.value
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                  <TextField
+                                    type="number"
+                                    variant="standard"
+                                    size="small"
+                                    label="Inclinación (°)"
+                                    value={zona.inclinacion}
+                                    onChange={(e) =>
+                                      handleZonaChange(
+                                        index,
+                                        "inclinacion",
+                                        e.target.value
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                </Box>
+
+                                <Box display="flex" flexDirection="row" gap={2}>
+                                  <TextField
+                                    type="number"
+                                    variant="standard"
+                                    size="small"
+                                    label="Ancho (m)"
+                                    value={zona.ancho}
+                                    onChange={(e) =>
+                                      handleZonaChange(
+                                        index,
+                                        "ancho",
+                                        e.target.value
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                  <TextField
+                                    type="number"
+                                    variant="standard"
+                                    size="small"
+                                    label="Largo (m)"
+                                    value={zona.largo}
+                                    onChange={(e) =>
+                                      handleZonaChange(
+                                        index,
+                                        "largo",
+                                        e.target.value
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                  <TextField
+                                    type="number"
+                                    variant="standard"
+                                    size="small"
+                                    label="Nº Paneles"
+                                    value={zona.numPaneles}
+                                    onChange={(e) =>
+                                      handleZonaChange(
+                                        index,
+                                        "numPaneles",
+                                        e.target.value
+                                      )
+                                    }
+                                    fullWidth
+                                  />
+                                </Box>
+
+                                <Box display="flex" flexDirection="row" gap={2}>
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={zona.sombras}
+                                        onChange={(e) =>
+                                          handleZonaChange(
+                                            index,
+                                            "sombras",
+                                            e.target.checked
+                                          )
+                                        }
+                                      />
+                                    }
+                                    label="Sombras"
+                                  />
+                                  <IconButton
+                                    color="error"
+                                    onClick={() => handleRemoveZona(index)}
+                                  >
+                                    <DeleteRoundedIcon />
+                                  </IconButton>
+                                </Box>
                               </Box>
-                              <Box display="flex" flexDirection="row" gap={2}>
-                                <TextField
-                                  type="number"
-                                  variant="standard"
-                                  size="small"
-                                  label="Ancho (m)"
-                                  value={zona.ancho}
-                                  onChange={(e) =>
-                                    handleZonaChange(
-                                      index,
-                                      "ancho",
-                                      e.target.value
-                                    )
-                                  }
-                                  fullWidth
-                                />
-                                <TextField
-                                  type="number"
-                                  variant="standard"
-                                  size="small"
-                                  label="Largo (m)"
-                                  value={zona.largo}
-                                  onChange={(e) =>
-                                    handleZonaChange(
-                                      index,
-                                      "largo",
-                                      e.target.value
-                                    )
-                                  }
-                                  fullWidth
-                                />
-                                <TextField
-                                  type="number"
-                                  variant="standard"
-                                  size="small"
-                                  label="Nº Paneles"
-                                  value={zona.numPaneles}
-                                  onChange={(e) =>
-                                    handleZonaChange(
-                                      index,
-                                      "numPaneles",
-                                      e.target.value
-                                    )
-                                  }
-                                  fullWidth
-                                />
-                              </Box>
-                              <Box display="flex" flexDirection="row" gap={2}>
-                                <FormControlLabel
-                                  control={
-                                    <Checkbox
-                                      checked={zona.sombras}
-                                      onChange={(e) =>
-                                        handleZonaChange(
-                                          index,
-                                          "sombras",
-                                          e.target.checked
-                                        )
-                                      }
-                                    />
-                                  }
-                                  label="Sombras"
-                                />
-                                <IconButton
-                                  color="error"
-                                  onClick={() => handleRemoveZona(index)}
-                                >
-                                  <DeleteRoundedIcon />
-                                </IconButton>
-                              </Box>
-                            </Box>
-                          ))}
+                            )
+                          )}
                         </Box>
 
                         {/* Botón para Añadir Zona */}
@@ -684,24 +1045,35 @@ export default function NuevoEstudio() {
                       >
                         <FormControl variant="standard" size="small" fullWidth>
                           <InputLabel>Tipo de Inversor</InputLabel>
-                          <Select>
-                            <MenuItem value="inversor1">
-                              HUAWEI SUN2000L-2KTL-L1
-                            </MenuItem>
-                            <MenuItem value="inversor2">
-                              HUAWEI SUN2000L-3KTL-L1
-                            </MenuItem>
-                            <MenuItem value="inversor3">
-                              HUAWEI SUN2000L-4KTL-L1
-                            </MenuItem>
+                          <Select
+                            value={estudio.instalacion.inversores?.nombre || ""}
+                            onChange={(e) =>
+                              handleModeloInversorChange(e.target.value)
+                            }
+                            label="Tipo de Inversor"
+                          >
+                            {inversores.map((inversor) => (
+                              <MenuItem
+                                key={inversor.nombre}
+                                value={inversor.nombre}
+                              >
+                                {inversor.nombre}
+                              </MenuItem>
+                            ))}
                           </Select>
                         </FormControl>
+
                         <TextField
                           type="number"
                           variant="standard"
                           size="small"
                           label="Cantidad de inversores"
+                          value={estudio.instalacion.inversores?.cantidad}
+                          onChange={(e) =>
+                            handleInversorChange("cantidad", e.target.value)
+                          }
                           fullWidth
+                          sx={{ mt: 2 }}
                         />
                       </Box>
                     )}
@@ -716,18 +1088,35 @@ export default function NuevoEstudio() {
                         }}
                       >
                         <FormControl variant="standard" size="small" fullWidth>
-                          <InputLabel>Tipo de Bateria</InputLabel>
-                          <Select>
-                            <MenuItem value="bateria1">Bateria 1</MenuItem>
-                            <MenuItem value="bateria2">Bateria 2</MenuItem>
-                            <MenuItem value="bateria3">Bateria 3</MenuItem>
+                          <InputLabel>Tipo de Batería</InputLabel>
+                          <Select
+                            value={estudio.instalacion.baterias?.nombre || ""}
+                            onChange={(e) =>
+                              handleModeloBateriaChange(e.target.value)
+                            }
+                            label="Tipo de Batería"
+                          >
+                            {baterias.map((bateria) => (
+                              <MenuItem
+                                key={bateria.nombre}
+                                value={bateria.nombre}
+                              >
+                                {bateria.nombre} ({bateria.capacidad}kWh)
+                              </MenuItem>
+                            ))}
                           </Select>
                         </FormControl>
+
                         <TextField
                           type="number"
                           variant="standard"
                           size="small"
                           label="Cantidad de baterías"
+                          value={estudio.instalacion.baterias?.cantidad || ""}
+                          onChange={(e) =>
+                            handleBateriaChange("cantidad", e.target.value)
+                          }
+                          fullWidth
                         />
                       </Box>
                     )}
@@ -746,7 +1135,9 @@ export default function NuevoEstudio() {
           </>
         )}
         {/*pagina de formulario de consumo del cliente*/}
-        {activeStep === 1 && <FormularioConsumo />}
+        {activeStep === 1 && (
+          <FormularioConsumo estudio={estudio} setEstudio={setEstudio} />
+        )}
         {/*pagina de resumen*/}
         {activeStep === 2 && (
           <Resumen
