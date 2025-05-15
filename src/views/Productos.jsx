@@ -67,17 +67,17 @@ export default function Productos() {
         flexWrap="wrap"
         alignItems="center"
         justifyContent="center"
-        gap={2}
+        gap={8}
         sx={{ overflowY: "auto" }}
       >
         {categorias.map((cat) => (
           <Box key={cat.id}>
             <Card
               sx={{
-                height: { xs: "150", sm: "450px" },
+                height: { xs: "150", sm: "230px", xl: "300px" },
                 borderRadius: 2,
                 boxShadow: 4,
-                width: { xs: "150", sm: "400px" },
+                width: { xs: "150", sm: "180px", xl: "250px" },
                 p: 2,
               }}
               onClick={() => navigate(`/dashboard/productos/${cat.id}`)}
@@ -89,7 +89,13 @@ export default function Productos() {
                   alt={cat.nombre}
                 />
                 <CardContent>
-                  <Typography variant="h6" fontWeight="bold" align="center">
+                  <Typography
+                    sx={{
+                      fontSize: { xs: "1.1rem", xl: "1.5rem" },
+                    }}
+                    fontWeight="bold"
+                    align="center"
+                  >
                     {cat.nombre}
                   </Typography>
                 </CardContent>

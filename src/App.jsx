@@ -12,6 +12,7 @@ import Login from "./views/Login";
 import Home from "./views/Home";
 import Productos from "./views/Productos";
 import Paneles from "./views/Paneles";
+import Inversores from "./views/Inversores";
 
 function App() {
   // const [count, setCount] = useState(0);
@@ -24,6 +25,7 @@ function App() {
           <Route path="crear-estudio" element={<NuevoEstudio />} />
           <Route path="productos" element={<Productos />} />
           <Route path="productos/paneles" element={<Paneles />} />
+          <Route path="productos/inversores" element={<Inversores />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />

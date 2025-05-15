@@ -22,24 +22,21 @@ import AddIcon from "@mui/icons-material/Add";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 
-export default function Paneles() {
+export default function Inversores() {
   const [editableRowIds, setEditableRowIds] = useState(new Set());
-  const [paneles, setPaneles] = useState([]);
+  const [inversores, setInversores] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [rowEditData, setRowEditData] = useState(null); // Datos de la fila a editar
   const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [panelChangeAdd, setPanelChangeAdd] = useState(false);
-  const [newPanelData, setNewPanelData] = useState({
+  const [inversorChangeAdd, setInversorChangeAdd] = useState(false);
+  const [newInversorData, setNewInversorData] = useState({
     nombre: "",
     marca: "",
     potencia: "",
-    vmp: "",
-    imp: "",
-    tipo: "",
-    largo: "",
-    ancho: "",
-    alto: "",
-    color: "",
+    intensidad: "",
+    nmppt: "",
+    tensionmin: "",
+    tensionmax: "",
     precio: "",
   });
 
@@ -54,61 +51,43 @@ export default function Paneles() {
       field: "marca",
       headerName: "Marca",
       editable: false,
-      flex: 1,
+      flex: 0.8,
     },
     {
       field: "potencia",
-      headerName: "Potencia (W)",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "vmp",
-      headerName: "Vmp (V)",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "imp",
-      headerName: "Imp (A)",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "tipo",
-      headerName: "Tipo",
+      headerName: "Potencia salida (W)",
       editable: false,
       flex: 1.5,
     },
     {
-      field: "largo",
-      headerName: "Largo (mm)",
+      field: "intensidad",
+      headerName: "Intensidad salida (A)",
+      editable: false,
+      flex: 1.5,
+    },
+    {
+      field: "nmppt",
+      headerName: "Nº Mppts",
       editable: false,
       flex: 1,
     },
     {
-      field: "ancho",
-      headerName: "Ancho (mm)",
+      field: "tensionmin",
+      headerName: "Tensión mínima (VDC)",
       editable: false,
-      flex: 1,
+      flex: 1.5,
     },
     {
-      field: "alto",
-      headerName: "Alto (mm)",
+      field: "tensionmax",
+      headerName: "Tensión máxima (VDC)",
       editable: false,
-      flex: 1,
-    },
-    {
-      field: "color",
-      headerName: "Color",
-      editable: false,
-      flex: 1,
+      flex: 1.5,
     },
     {
       field: "precio",
       headerName: "Precio (€)",
       editable: false,
-      flex: 1,
+      flex: 0.8,
     },
     {
       field: "acciones",
@@ -123,7 +102,7 @@ export default function Paneles() {
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
-          onClick={() => eliminarPanelEnDB(params.id)}
+          onClick={() => eliminarInversorEnDB(params.id)}
         />,
       ],
       flex: 1,
@@ -131,46 +110,48 @@ export default function Paneles() {
   ];
 
   useEffect(() => {
-    async function fetchPaneles() {
-      const response = await fetch(`http://localhost:3000/api/product/paneles`);
+    async function fetchInversores() {
+      const response = await fetch(
+        `http://localhost:3000/api/product/inversores`
+      );
       const data = await response.json();
-      setPaneles(data);
+      setInversores(data);
     }
-    fetchPaneles();
-  }, [panelChangeAdd]);
+    fetchInversores();
+  }, [inversorChangeAdd]);
 
-  const actualizarPanelEnDB = async (panelActualizado) => {
+  const actualizarInversorEnDB = async (inversorActualizado) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/paneles/${panelActualizado.id}`,
+        `http://localhost:3000/api/product/inversores/${inversorActualizado.id}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             // Authorization: `Bearer ${token}`, // Si activas auth
           },
-          body: JSON.stringify(panelActualizado),
+          body: JSON.stringify(inversorActualizado),
         }
       );
 
       if (!response.ok) {
-        throw new Error("Error al actualizar el panel");
+        throw new Error("Error al actualizar el inversor");
       }
       if (response.ok) {
-        setPanelChangeAdd(!panelChangeAdd);
+        setInversorChangeAdd(!inversorChangeAdd);
       }
 
       const result = await response.text(); // o .json() si devuelves un objeto
-      console.log("✅ Panel actualizado:", result);
+      console.log("✅ Inversor actualizado:", result);
     } catch (error) {
-      console.error("❌ Error al actualizar el panel:", error);
+      console.error("❌ Error al actualizar el inversor:", error);
     }
   };
 
-  const eliminarPanelEnDB = async (id) => {
+  const eliminarInversorEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/delete/paneles/${id}`,
+        `http://localhost:3000/api/product/delete/inversores/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -181,46 +162,47 @@ export default function Paneles() {
       );
 
       if (!response.ok) {
-        throw new Error("Error al eliminar el panel");
+        throw new Error("Error al eliminar el inversor");
       }
       if (response.ok) {
-        setPanelChangeAdd(!panelChangeAdd);
+        setInversorChangeAdd(!inversorChangeAdd);
       }
 
       const result = await response.text(); // o .json() si devuelves un objeto
-      console.log("✅ Panel eliminado:", result);
+      console.log("✅ Inversor eliminado:", result);
     } catch (error) {
-      console.error("❌ Error al eliminar el panel:", error);
+      console.error("❌ Error al eliminar el inversor:", error);
     }
   };
 
-  const crearPanelEnDB = async (panelData) => {
+  const crearInversorEnDB = async (inversorData) => {
     try {
-      const res = await fetch("http://localhost:3000/api/product/add_panel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(panelData),
-      });
+      const res = await fetch(
+        "http://localhost:3000/api/product/add_inversor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(inversorData),
+        }
+      );
       const data = await res.text();
-      console.log("✅ Panel creado:", data);
+      console.log("✅ Inversor creado:", data);
     } catch (error) {
-      console.error("❌ Error al crear panel:", error);
+      console.error("❌ Error al crear inversor:", error);
     }
   };
 
   const handleOpenAddDialog = () => {
-    setNewPanelData({
+    setNewInversorData({
       nombre: "",
       marca: "",
-      vmp: "",
-      imp: "",
-      tipo: "",
-      largo: "",
-      ancho: "",
-      alto: "",
-      color: "",
+      potencia: "",
+      intensidad: "",
+      nmppt: "",
+      tensionmin: "",
+      tensionmax: "",
       precio: "",
     });
     setOpenAddDialog(true);
@@ -228,7 +210,7 @@ export default function Paneles() {
 
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
-    setPanelChangeAdd(!panelChangeAdd);
+    setInversorChangeAdd(!inversorChangeAdd);
   };
 
   const handleOpenDialog = (row) => {
@@ -241,23 +223,23 @@ export default function Paneles() {
     setRowEditData(null);
   };
 
-  const handleUpdatePanel = (updatedRow) => {
-    setPaneles((prev) =>
+  const handleUpdateInversor = (updatedRow) => {
+    setInversores((prev) =>
       prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
     );
-    actualizarPanelEnDB(updatedRow); // Tu función fetch al backend
+    actualizarInversorEnDB(updatedRow); // Tu función fetch al backend
   };
 
   const handleRowUpdate = (newRow) => {
-    const updatedRows = paneles.map((panel) =>
-      panel.id === newRow.id ? newRow : panel
+    const updatedRows = inversores.map((inversor) =>
+      inversor.id === newRow.id ? newRow : inversor
     );
-    setPaneles(updatedRows);
+    setInversores(updatedRows);
     return newRow;
   };
 
   const handleDelete = (id) => {
-    setPaneles((prev) => prev.filter((row) => row.id !== id));
+    setInversores((prev) => prev.filter((row) => row.id !== id));
   };
 
   const handleRowActiveUpdate = (id) => {
@@ -272,8 +254,8 @@ export default function Paneles() {
     });
   };
 
-  const enhancedRows = paneles.map((panel) => ({
-    ...panel,
+  const enhancedRows = inversores.map((inversor) => ({
+    ...inversor,
     handleRowActiveUpdate,
     handleDelete,
   }));
@@ -307,7 +289,7 @@ export default function Paneles() {
           fontWeight={600}
           sx={{ textShadow: "0px 0px 20px rgb(0, 0, 0)" }}
         >
-          Paneles Solares
+          Inversores
         </Typography>
         <Button
           variant="contained"
@@ -316,7 +298,7 @@ export default function Paneles() {
           startIcon={<AddRoundedIcon />}
           onClick={handleOpenAddDialog}
         >
-          Añadir Panel
+          Añadir Inversor
         </Button>
       </Stack>
 
@@ -368,27 +350,40 @@ export default function Paneles() {
             },
           }}
         />
-        {/* Dialog para editar paneles */}
+        {/* Dialog para editar inversores */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Editar Panel</DialogTitle>
+          <DialogTitle>Editar Inversor</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
                 { label: "Nombre", key: "nombre" },
                 { label: "Marca", key: "marca" },
-                { label: "Potencia (W)", key: "potencia", type: "number" },
-                { label: "Vmp (V)", key: "vmp", type: "number" },
-                { label: "Imp (A)", key: "imp", type: "number" },
-                { label: "Tipo", key: "tipo" },
-                { label: "Largo (mm)", key: "largo", type: "number" },
-                { label: "Ancho (mm)", key: "ancho", type: "number" },
-                { label: "Alto (mm)", key: "alto", type: "number" },
-                { label: "Color", key: "color" },
+                {
+                  label: "Potencia de salida (W)",
+                  key: "potencia",
+                  type: "number",
+                },
+                {
+                  label: "Intesidad de salida (A)",
+                  key: "intensidad",
+                  type: "number",
+                },
+                { label: "Nº de MPPT", key: "nmppt", type: "number" },
+                {
+                  label: "Tension Minima (VDC)",
+                  key: "tensionmin",
+                  type: "number",
+                },
+                {
+                  label: "Tension Maxima (VDC)",
+                  key: "tensionmax",
+                  type: "number",
+                },
                 { label: "Precio (€)", key: "precio", type: "number" },
               ].map(({ label, key, type }) => (
                 <Grid item xs={12} sm={6} key={key}>
@@ -412,7 +407,7 @@ export default function Paneles() {
             <Button onClick={handleCloseDialog}>Cancelar</Button>
             <Button
               onClick={() => {
-                handleUpdatePanel(rowEditData);
+                handleUpdateInversor(rowEditData);
                 handleCloseDialog();
               }}
               variant="contained"
@@ -422,27 +417,40 @@ export default function Paneles() {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* Dialog para añadir paneles */}
+        {/* Dialog para añadir Inversores */}
         <Dialog
           open={openAddDialog}
           onClose={handleCloseAddDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Añadir Nuevo Panel</DialogTitle>
+          <DialogTitle>Añadir Nuevo Inversor</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
                 { label: "Nombre", key: "nombre" },
                 { label: "Marca", key: "marca" },
-                { label: "Potencia (W)", key: "potencia", type: "number" },
-                { label: "Vmp (V)", key: "vmp", type: "number" },
-                { label: "Imp (A)", key: "imp", type: "number" },
-                { label: "Tipo", key: "tipo" },
-                { label: "Largo (mm)", key: "largo", type: "number" },
-                { label: "Ancho (mm)", key: "ancho", type: "number" },
-                { label: "Alto (mm)", key: "alto", type: "number" },
-                { label: "Color", key: "color" },
+                {
+                  label: "Potencia de salida (W)",
+                  key: "potencia",
+                  type: "number",
+                },
+                {
+                  label: "Intesidad de salida (A)",
+                  key: "intensidad",
+                  type: "number",
+                },
+                { label: "Nº de MPPT", key: "nmppt", type: "number" },
+                {
+                  label: "Tension Minima (VDC)",
+                  key: "tensionmin",
+                  type: "number",
+                },
+                {
+                  label: "Tension Maxima (VDC)",
+                  key: "tensionmax",
+                  type: "number",
+                },
                 { label: "Precio (€)", key: "precio", type: "number" },
               ].map(({ label, key, type }) => (
                 <Grid item xs={12} sm={6} key={key}>
@@ -451,9 +459,9 @@ export default function Paneles() {
                     required
                     type={type || "text"}
                     label={label}
-                    value={newPanelData[key]}
+                    value={newInversorData[key]}
                     onChange={(e) =>
-                      setNewPanelData((prev) => ({
+                      setNewInversorData((prev) => ({
                         ...prev,
                         [key]:
                           type === "number"
@@ -472,21 +480,21 @@ export default function Paneles() {
               variant="contained"
               color="success"
               onClick={() => {
-                const newId = paneles.length
-                  ? Math.max(...paneles.map((r) => r.id)) + 1
+                const newId = inversores.length
+                  ? Math.max(...inversores.map((r) => r.id)) + 1
                   : 1;
-                const newPanel = { id: newId, ...newPanelData };
+                const newInversor = { id: newId, ...newInversorData };
 
                 // Actualiza en el frontend
-                setPaneles((prev) => [...prev, newPanel]);
+                setInversores((prev) => [...prev, newInversor]);
 
                 // Enviar al backend
-                crearPanelEnDB(newPanel);
+                crearInversorEnDB(newInversor);
 
                 handleCloseAddDialog();
               }}
             >
-              Guardar Panel
+              Guardar Inversor
             </Button>
           </DialogActions>
         </Dialog>
