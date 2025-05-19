@@ -21,6 +21,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 export default function Inversores() {
   const [editableRowIds, setEditableRowIds] = useState(new Set());
@@ -38,6 +39,7 @@ export default function Inversores() {
     tensionmin: "",
     tensionmax: "",
     precio: "",
+    ficha: "",
   });
 
   const columns = [
@@ -99,6 +101,16 @@ export default function Inversores() {
           label="Editar"
           onClick={() => handleOpenDialog(params.row)}
         />,
+        params.row && (
+          <GridActionsCellItem
+            icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
+            disabled={params.row.ficha == null || params.row.ficha === ""}
+            label="Ver PDF"
+            onClick={() =>
+              window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+            }
+          />
+        ),
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
@@ -119,34 +131,6 @@ export default function Inversores() {
     }
     fetchInversores();
   }, [inversorChangeAdd]);
-
-  const actualizarInversorEnDB = async (inversorActualizado) => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/api/product/inversores/${inversorActualizado.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`, // Si activas auth
-          },
-          body: JSON.stringify(inversorActualizado),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al actualizar el inversor");
-      }
-      if (response.ok) {
-        setInversorChangeAdd(!inversorChangeAdd);
-      }
-
-      const result = await response.text(); // o .json() si devuelves un objeto
-      console.log("✅ Inversor actualizado:", result);
-    } catch (error) {
-      console.error("❌ Error al actualizar el inversor:", error);
-    }
-  };
 
   const eliminarInversorEnDB = async (id) => {
     try {
@@ -175,25 +159,6 @@ export default function Inversores() {
     }
   };
 
-  const crearInversorEnDB = async (inversorData) => {
-    try {
-      const res = await fetch(
-        "http://localhost:3000/api/product/add_inversor",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(inversorData),
-        }
-      );
-      const data = await res.text();
-      console.log("✅ Inversor creado:", data);
-    } catch (error) {
-      console.error("❌ Error al crear inversor:", error);
-    }
-  };
-
   const handleOpenAddDialog = () => {
     setNewInversorData({
       nombre: "",
@@ -204,6 +169,7 @@ export default function Inversores() {
       tensionmin: "",
       tensionmax: "",
       precio: "",
+      ficha: "",
     });
     setOpenAddDialog(true);
   };
@@ -223,11 +189,38 @@ export default function Inversores() {
     setRowEditData(null);
   };
 
-  const handleUpdateInversor = (updatedRow) => {
-    setInversores((prev) =>
-      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
-    );
-    actualizarInversorEnDB(updatedRow); // Tu función fetch al backend
+  const handleUpdateInversor = async (datos) => {
+    const formData = new FormData();
+
+    // Añade cada campo
+    formData.append("nombre", datos.nombre);
+    formData.append("marca", datos.marca);
+    formData.append("potencia", datos.potencia);
+    formData.append("intensidad", datos.intensidad);
+    formData.append("nmppt", datos.nmppt);
+    formData.append("tensionmin", datos.tensionmin);
+    formData.append("tensionmax", datos.tensionmax);
+    formData.append("precio", datos.precio);
+
+    // Solo si se ha subido un nuevo PDF
+    if (datos.nuevaFicha) {
+      formData.append("ficha", datos.nuevaFicha);
+    }
+
+    try {
+      await fetch(`http://localhost:3000/api/product/inversores/${datos.id}`, {
+        method: "PATCH",
+        body: formData,
+      }).then((res) => {
+        if (res.status == 200) {
+          setInversorChangeAdd(!inversorChangeAdd);
+        }
+      });
+
+      // Si quieres actualizar el frontend aquí...
+    } catch (error) {
+      console.error("Error al actualizar el inversor:", error);
+    }
   };
 
   const handleRowUpdate = (newRow) => {
@@ -401,6 +394,31 @@ export default function Inversores() {
                   />
                 </Grid>
               ))}
+              {/* Campo para subir nuevo PDF */}
+              <Grid item xs={12}>
+                <Button variant="outlined" component="label" fullWidth>
+                  Subir Nueva Ficha Técnica (PDF)
+                  <input
+                    type="file"
+                    hidden
+                    accept="application/pdf"
+                    onChange={(e) =>
+                      setRowEditData((prev) => ({
+                        ...prev,
+                        nuevaFicha: e.target.files[0], // guardamos el File
+                      }))
+                    }
+                  />
+                </Button>
+                {rowEditData?.nuevaFicha && (
+                  <Typography
+                    variant="caption"
+                    sx={{ mt: 1, display: "block", color: "gray" }}
+                  >
+                    Archivo seleccionado: {rowEditData.nuevaFicha.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -472,6 +490,33 @@ export default function Inversores() {
                   />
                 </Grid>
               ))}
+              {/* Input para subir PDF */}
+              <Grid item xs={12}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                >
+                  Subir ficha técnica (PDF)
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    hidden
+                    onChange={(e) =>
+                      setNewInversorData((prev) => ({
+                        ...prev,
+                        ficha: e.target.files[0], // Guardamos el archivo
+                      }))
+                    }
+                  />
+                </Button>
+                {newInversorData?.ficha && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Archivo seleccionado: {newInversorData.ficha.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -480,18 +525,37 @@ export default function Inversores() {
               variant="contained"
               color="success"
               onClick={() => {
-                const newId = inversores.length
-                  ? Math.max(...inversores.map((r) => r.id)) + 1
-                  : 1;
-                const newInversor = { id: newId, ...newInversorData };
+                const formData = new FormData();
 
-                // Actualiza en el frontend
-                setInversores((prev) => [...prev, newInversor]);
+                // Añadimos los campos
+                formData.append("nombre", newInversorData.nombre);
+                formData.append("marca", newInversorData.marca);
+                formData.append("potencia", newInversorData.potencia);
+                formData.append("intensidad", newInversorData.intensidad);
+                formData.append("nmppt", newInversorData.nmppt);
+                formData.append("tensionmin", newInversorData.tensionmin);
+                formData.append("tensionmax", newInversorData.tensionmax);
+                formData.append("precio", newInversorData.precio);
+
+                // Si hay PDF, lo añadimos también
+                if (newInversorData.ficha) {
+                  formData.append("ficha", newInversorData.ficha);
+                }
 
                 // Enviar al backend
-                crearInversorEnDB(newInversor);
-
-                handleCloseAddDialog();
+                fetch("http://localhost:3000/api/product/add_inversor", {
+                  method: "POST",
+                  body: formData,
+                })
+                  .then((res) => {
+                    if (res.status == 200) {
+                      setInversorChangeAdd(!inversorChangeAdd);
+                      handleCloseAddDialog();
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Error al subir batería:", err);
+                  });
               }}
             >
               Guardar Inversor

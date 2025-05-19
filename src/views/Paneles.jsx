@@ -21,6 +21,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
 export default function Paneles() {
   const [editableRowIds, setEditableRowIds] = useState(new Set());
@@ -41,6 +42,7 @@ export default function Paneles() {
     alto: "",
     color: "",
     precio: "",
+    ficha: "",
   });
 
   const columns = [
@@ -120,6 +122,16 @@ export default function Paneles() {
           label="Editar"
           onClick={() => handleOpenDialog(params.row)}
         />,
+        params.row && (
+          <GridActionsCellItem
+            icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
+            disabled={params.row.ficha == null || params.row.ficha === ""}
+            label="Ver PDF"
+            onClick={() =>
+              window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+            }
+          />
+        ),
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
@@ -138,34 +150,6 @@ export default function Paneles() {
     }
     fetchPaneles();
   }, [panelChangeAdd]);
-
-  const actualizarPanelEnDB = async (panelActualizado) => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/api/product/paneles/${panelActualizado.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            // Authorization: `Bearer ${token}`, // Si activas auth
-          },
-          body: JSON.stringify(panelActualizado),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al actualizar el panel");
-      }
-      if (response.ok) {
-        setPanelChangeAdd(!panelChangeAdd);
-      }
-
-      const result = await response.text(); // o .json() si devuelves un objeto
-      console.log("✅ Panel actualizado:", result);
-    } catch (error) {
-      console.error("❌ Error al actualizar el panel:", error);
-    }
-  };
 
   const eliminarPanelEnDB = async (id) => {
     try {
@@ -191,22 +175,6 @@ export default function Paneles() {
       console.log("✅ Panel eliminado:", result);
     } catch (error) {
       console.error("❌ Error al eliminar el panel:", error);
-    }
-  };
-
-  const crearPanelEnDB = async (panelData) => {
-    try {
-      const res = await fetch("http://localhost:3000/api/product/add_panel", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(panelData),
-      });
-      const data = await res.text();
-      console.log("✅ Panel creado:", data);
-    } catch (error) {
-      console.error("❌ Error al crear panel:", error);
     }
   };
 
@@ -241,11 +209,41 @@ export default function Paneles() {
     setRowEditData(null);
   };
 
-  const handleUpdatePanel = (updatedRow) => {
-    setPaneles((prev) =>
-      prev.map((row) => (row.id === updatedRow.id ? updatedRow : row))
-    );
-    actualizarPanelEnDB(updatedRow); // Tu función fetch al backend
+  const handleUpdatePanel = async (datos) => {
+    const formData = new FormData();
+
+    // Añade cada campo
+    formData.append("nombre", datos.nombre);
+    formData.append("marca", datos.marca);
+    formData.append("potencia", datos.potencia);
+    formData.append("vmp", datos.vmp);
+    formData.append("imp", datos.imp);
+    formData.append("tipo", datos.tipo);
+    formData.append("largo", datos.largo);
+    formData.append("ancho", datos.ancho);
+    formData.append("alto", datos.alto);
+    formData.append("color", datos.color);
+    formData.append("precio", datos.precio);
+
+    // Solo si se ha subido un nuevo PDF
+    if (datos.nuevaFicha) {
+      formData.append("ficha", datos.nuevaFicha);
+    }
+
+    try {
+      await fetch(`http://localhost:3000/api/product/paneles/${datos.id}`, {
+        method: "PATCH",
+        body: formData,
+      }).then((res) => {
+        if (res.status == 200) {
+          setPanelChangeAdd(!panelChangeAdd);
+        }
+      });
+
+      // Si quieres actualizar el frontend aquí...
+    } catch (error) {
+      console.error("Error al actualizar el panel:", error);
+    }
   };
 
   const handleRowUpdate = (newRow) => {
@@ -406,6 +404,31 @@ export default function Paneles() {
                   />
                 </Grid>
               ))}
+              {/* Campo para subir nuevo PDF */}
+              <Grid item xs={12}>
+                <Button variant="outlined" component="label" fullWidth>
+                  Subir Nueva Ficha Técnica (PDF)
+                  <input
+                    type="file"
+                    hidden
+                    accept="application/pdf"
+                    onChange={(e) =>
+                      setRowEditData((prev) => ({
+                        ...prev,
+                        nuevaFicha: e.target.files[0], // guardamos el File
+                      }))
+                    }
+                  />
+                </Button>
+                {rowEditData?.nuevaFicha && (
+                  <Typography
+                    variant="caption"
+                    sx={{ mt: 1, display: "block", color: "gray" }}
+                  >
+                    Archivo seleccionado: {rowEditData.nuevaFicha.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -464,6 +487,33 @@ export default function Paneles() {
                   />
                 </Grid>
               ))}
+              {/* Input para subir PDF */}
+              <Grid item xs={12}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                >
+                  Subir ficha técnica (PDF)
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    hidden
+                    onChange={(e) =>
+                      setNewPanelData((prev) => ({
+                        ...prev,
+                        ficha: e.target.files[0], // Guardamos el archivo
+                      }))
+                    }
+                  />
+                </Button>
+                {newPanelData?.ficha && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Archivo seleccionado: {newPanelData.ficha.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -472,18 +522,40 @@ export default function Paneles() {
               variant="contained"
               color="success"
               onClick={() => {
-                const newId = paneles.length
-                  ? Math.max(...paneles.map((r) => r.id)) + 1
-                  : 1;
-                const newPanel = { id: newId, ...newPanelData };
+                const formData = new FormData();
 
-                // Actualiza en el frontend
-                setPaneles((prev) => [...prev, newPanel]);
+                // Añadimos los campos
+                formData.append("nombre", newPanelData.nombre);
+                formData.append("marca", newPanelData.marca);
+                formData.append("potencia", newPanelData.potencia);
+                formData.append("vmp", newPanelData.vmp);
+                formData.append("imp", newPanelData.imp);
+                formData.append("tipo", newPanelData.tipo);
+                formData.append("largo", newPanelData.largo);
+                formData.append("ancho", newPanelData.ancho);
+                formData.append("alto", newPanelData.alto);
+                formData.append("color", newPanelData.color);
+                formData.append("precio", newPanelData.precio);
+
+                // Si hay PDF, lo añadimos también
+                if (newPanelData.ficha) {
+                  formData.append("ficha", newPanelData.ficha);
+                }
 
                 // Enviar al backend
-                crearPanelEnDB(newPanel);
-
-                handleCloseAddDialog();
+                fetch("http://localhost:3000/api/product/add_panel", {
+                  method: "POST",
+                  body: formData,
+                })
+                  .then((res) => {
+                    if (res.status == 200) {
+                      setPanelChangeAdd(!panelChangeAdd);
+                      handleCloseAddDialog();
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Error al subir panel:", err);
+                  });
               }}
             >
               Guardar Panel
