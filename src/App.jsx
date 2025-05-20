@@ -14,6 +14,14 @@ import Productos from "./views/Productos";
 import Paneles from "./views/Paneles";
 import Inversores from "./views/Inversores";
 import Baterias from "./views/Baterias";
+import Presupuestos from "./views/Presupuestos";
+import CustomDatePicker from "./components/CustomDatePicker";
+import HighlightedCard from "./components/HighlightedCard";
+import CustomizedTreeView from "./components/CustomizedTreeView";
+import Search from "./components/Search";
+import ForgotPassword from "./components/ForgotPassword";
+import StatCard from "./components/StatCard";
+import MainGrid from "./components/MainGrid";
 
 function App() {
   // const [count, setCount] = useState(0);
@@ -28,7 +36,10 @@ function App() {
           <Route path="productos/paneles" element={<Paneles />} />
           <Route path="productos/inversores" element={<Inversores />} />
           <Route path="productos/baterias" element={<Baterias />} />
+          {/* <Route path="clientes" element={<Presupuestos />} /> */}
+          <Route path="presupuestos" element={<Presupuestos />} />
         </Route>
+        {/* <Route path="/test" element={<MainGrid />} /> */}
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
       </Routes>

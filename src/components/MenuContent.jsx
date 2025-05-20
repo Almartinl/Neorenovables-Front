@@ -23,7 +23,11 @@ const mainListItems = [
     url: "/dashboard/productos",
   },
   { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
-  { text: "Presupuestos", icon: <AssignmentRoundedIcon /> },
+  {
+    text: "Presupuestos",
+    icon: <AssignmentRoundedIcon />,
+    url: "/dashboard/presupuestos",
+  },
 ];
 
 const secondaryListItems = [

@@ -20,26 +20,26 @@ const categorias = [
     nombre: "Inversores",
     imagen: "/inversores.webp",
   },
-  {
-    id: "micro-inversores",
-    nombre: "Micro Inversores",
-    imagen: "/micro-inversores.webp",
-  },
+  // {
+  //   id: "micro-inversores",
+  //   nombre: "Micro Inversores",
+  //   imagen: "/micro-inversores.webp",
+  // },
   {
     id: "baterias",
     nombre: "Baterías",
     imagen: "/baterias.webp",
   },
-  {
-    id: "estructuras",
-    nombre: "Estructuras",
-    imagen: "/estructuras.webp",
-  },
-  {
-    id: "otros",
-    nombre: "Otros",
-    imagen: "/otros.webp",
-  },
+  // {
+  //   id: "estructuras",
+  //   nombre: "Estructuras",
+  //   imagen: "/estructuras.webp",
+  // },
+  // {
+  //   id: "otros",
+  //   nombre: "Otros",
+  //   imagen: "/otros.webp",
+  // },
 ];
 
 export default function Productos() {
