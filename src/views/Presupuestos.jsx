@@ -29,12 +29,19 @@ import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import EditIcon from "@mui/icons-material/Edit";
+import html2pdf from "html2pdf.js";
+import PdfPresupuesto from "../components/PdfPresupuesto";
+import AddCliente from "../components/AddCliente";
 
 export default function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [reload, setReload] = useState(false);
+  const [openEditarDialog, setOpenEditarDialog] = useState(false);
+  const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState(null);
+  const [openAddCliente, setOpenAddCliente] = useState(false);
   const [productos, setProductos] = useState({
     paneles: [],
     inversores: [],
@@ -46,9 +53,11 @@ export default function Presupuestos() {
     nombreCliente: "",
     direccionInstalacion: "",
     poblacionInstalacion: "",
+    codigoPostal: "",
     iva: "",
-    fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
+    fecha: new Date().toISOString(), // formato YYYY-MM-DD
     num_presupuesto: "",
+    estado: "",
     productos: [],
   });
 
@@ -57,6 +66,8 @@ export default function Presupuestos() {
     productoId: "",
     nombreManual: "",
     precio: "",
+    descuento: "",
+    descuento_porcentaje: "",
     cantidad: 1,
   });
 
@@ -115,7 +126,8 @@ export default function Presupuestos() {
       direccionInstalacion: "",
       poblacionInstalacion: "",
       iva: "",
-      fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
+      fecha: new Date().toISOString(), // formato YYYY-MM-DD
+      estado: "",
       productos: [],
     });
     setProductoSeleccionado({
@@ -123,11 +135,27 @@ export default function Presupuestos() {
       productoId: "",
       nombreManual: "",
       precio: "",
+      descuento: "",
+      descuento_porcentaje: "",
       cantidad: 1,
     });
     setOpenDialog(false);
     setReload(!reload);
   }
+
+  const cerrarDialogoEdicion = () => {
+    setPresupuestoSeleccionado(null); // 👈 Resetea solo el de edición
+    setProductoSeleccionado({
+      categoria: "",
+      productoId: "",
+      nombreManual: "",
+      precio: "",
+      descuento: "",
+      descuento_porcentaje: "",
+      cantidad: 1,
+    });
+    setOpenEditarDialog(false);
+  };
 
   const fetchProductos = async () => {
     const paneles = await (
@@ -143,7 +171,7 @@ export default function Presupuestos() {
     setProductos({ paneles, inversores, baterias });
   };
 
-  const handleAddProducto = () => {
+  const handleAddProductoNuevo = () => {
     if (
       productoSeleccionado.categoria &&
       (productoSeleccionado.nombreManual || productoSeleccionado.productoId)
@@ -156,49 +184,134 @@ export default function Presupuestos() {
             )
           : productoSeleccionado.nombreManual;
 
-      // Asigna el tipo_producto según la categoría
+      // Mapea la categoría al tipo_producto
       const tipoProductoMap = {
         paneles: "panel",
         inversores: "inversor",
         baterias: "bateria",
         manual: "manual",
       };
-
       const tipo_producto = tipoProductoMap[productoSeleccionado.categoria];
 
+      const precioOriginal = parseFloat(productoSeleccionado.precio) || 0;
+      const descuento_porcentaje =
+        parseFloat(productoSeleccionado.descuento_porcentaje) || 0;
+      const cantidad = parseInt(productoSeleccionado.cantidad) || 1;
+
+      const descuento = precioOriginal * (descuento_porcentaje / 100);
+      const precioFinal = precioOriginal - descuento;
+
+      // Añade el producto al nuevo presupuesto
       setNuevoPresupuesto((prev) => ({
         ...prev,
         productos: [
           ...prev.productos,
           {
-            ...productoSeleccionado,
             id: Date.now(),
             nombre,
-            tipo_producto, // 👈 Añadimos el tipo_producto
+            tipo_producto,
+            cantidad,
+            precioOriginal: precioOriginal.toFixed(2),
+            descuento_porcentaje,
+            descuento: descuento.toFixed(2),
+            precio: precioFinal.toFixed(2),
           },
         ],
       }));
 
+      // Reinicia formulario del producto
       setProductoSeleccionado({
         categoria: "",
         productoId: "",
         nombreManual: "",
         precio: "",
+        descuento_porcentaje: "",
         cantidad: 1,
       });
     }
   };
+
+  const handleAddProductoEdicion = () => {
+    if (
+      productoSeleccionado.categoria &&
+      (productoSeleccionado.nombreManual || productoSeleccionado.productoId)
+    ) {
+      const nombre =
+        productoSeleccionado.productoId !== ""
+          ? obtenerNombrePorId(
+              productoSeleccionado.categoria,
+              productoSeleccionado.productoId
+            )
+          : productoSeleccionado.nombreManual;
+
+      // Mapea la categoría al tipo_producto
+      const tipoProductoMap = {
+        paneles: "panel",
+        inversores: "inversor",
+        baterias: "bateria",
+        manual: "manual",
+      };
+      const tipo_producto = tipoProductoMap[productoSeleccionado.categoria];
+
+      const precioOriginal = parseFloat(productoSeleccionado.precio) || 0;
+      const descuento_porcentaje =
+        parseFloat(productoSeleccionado.descuento_porcentaje) || 0;
+      const cantidad = parseInt(productoSeleccionado.cantidad) || 1;
+
+      const descuento = precioOriginal * (descuento_porcentaje / 100);
+      const precioFinal = precioOriginal - descuento;
+
+      // Añade el producto al presupuesto seleccionado (en edición)
+      setPresupuestoSeleccionado((prev) => ({
+        ...prev,
+        productos: [
+          ...(prev?.productos || []),
+          {
+            id: Date.now(),
+            nombre,
+            tipo_producto,
+            cantidad,
+            precioOriginal: precioOriginal.toFixed(2),
+            descuento_porcentaje,
+            descuento: descuento.toFixed(2),
+            precio: precioFinal.toFixed(2),
+          },
+        ],
+      }));
+
+      // Reinicia formulario del producto
+      setProductoSeleccionado({
+        categoria: "",
+        productoId: "",
+        nombreManual: "",
+        precio: "",
+        descuento_porcentaje: "",
+        cantidad: 1,
+      });
+    }
+  };
+
+  console.log(productoSeleccionado);
 
   const obtenerNombrePorId = (categoria, id) => {
     const item = productos[categoria]?.find((p) => p.id === parseInt(id));
     return item?.nombre || "";
   };
 
-  const eliminarItem = (id) => {
-    setNuevoPresupuesto((prev) => ({
-      ...prev,
-      productos: prev.productos.filter((item) => item.id !== id),
-    }));
+  const eliminarItem = (id, esEdicion = false) => {
+    if (esEdicion) {
+      // Eliminar del presupuesto seleccionado (en edición)
+      setPresupuestoSeleccionado((prev) => ({
+        ...prev,
+        productos: prev.productos.filter((item) => item.id !== id),
+      }));
+    } else {
+      // Eliminar del nuevo presupuesto
+      setNuevoPresupuesto((prev) => ({
+        ...prev,
+        productos: prev.productos.filter((item) => item.id !== id),
+      }));
+    }
   };
 
   const handleGuardarPresupuesto = async () => {
@@ -209,6 +322,7 @@ export default function Presupuestos() {
         nombreCliente,
         direccionInstalacion,
         poblacionInstalacion,
+        codigoPostal,
         iva,
         fecha,
         productos,
@@ -227,7 +341,8 @@ export default function Presupuestos() {
         nombre_cliente_manual: nombreCliente || null,
         direccion_instalacion: direccionInstalacion || null,
         poblacion_instalacion: poblacionInstalacion || null,
-        iva: (totalBruto * iva) / 100,
+        codigo_postal: codigoPostal || null,
+        iva: ((totalBruto * iva) / 100).toFixed(2),
         iva_porcentaje: iva,
         total_bruto: totalBruto,
         total: totalBruto + (totalBruto * iva) / 100,
@@ -243,6 +358,8 @@ export default function Presupuestos() {
         cantidad: parseInt(p.cantidad),
         precio_unitario: parseFloat(p.precio),
         total: parseFloat(p.precio) * parseInt(p.cantidad),
+        descuento: parseFloat(p.descuento),
+        descuento_porcentaje: parseFloat(p.descuento_porcentaje),
       }));
 
       // Llamada al backend
@@ -264,35 +381,119 @@ export default function Presupuestos() {
   };
 
   const calcularSubtotal = (items) => {
-    return items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+    if (!Array.isArray(items)) return 0;
+    return items.reduce((sum, item) => {
+      const precio = parseFloat(item.precio) || 0;
+      const cantidad = parseInt(item.cantidad) || 0;
+      return sum + precio * cantidad;
+    }, 0);
+  };
+
+  const calcularSubtotalModificado = (items) => {
+    if (!Array.isArray(items)) return 0;
+
+    return items.reduce((sum, item) => {
+      const precio = safeNumber(
+        item.precio_unitario || item.precio || item.precioOriginal
+      );
+      const cantidad = safeNumber(item.cantidad, 1);
+      return sum + precio * cantidad;
+    }, 0);
+  };
+
+  const calcularDescuento = (items) => {
+    if (!Array.isArray(items)) return 0;
+    return items.reduce((sum, item) => {
+      const descuento = parseFloat(item.descuento) || 0;
+      return sum + descuento;
+    }, 0);
   };
 
   const calcularTotalConIVA = (presupuesto) => {
-    const subtotal = calcularSubtotal(presupuesto.productos);
-    const iva = presupuesto.iva || 0;
+    const subtotal = calcularSubtotal(presupuesto?.productos || []);
+    const iva = presupuesto?.iva || 0;
+    return subtotal + subtotal * (iva / 100);
+  };
+
+  const calcularTotalConIVAModificado = (presupuesto) => {
+    const subtotal = calcularSubtotalModificado(presupuesto?.productos || []);
+    const iva = presupuesto?.iva_porcentaje || 0;
     return subtotal + subtotal * (iva / 100);
   };
 
   const columns = [
-    { field: "num_presupuesto", headerName: "Nº Presupuesto", flex: 1 },
-    { field: "nombre", headerName: "Nombre Cliente", flex: 1 },
-    { field: "direccion_instalacion", headerName: "Dirección", flex: 1.5 },
+    {
+      field: "fecha",
+      headerName: "Fecha",
+      align: "center",
+      headerAlign: "center",
+      flex: 1,
+    },
+    {
+      field: "num_presupuesto",
+      headerName: "Nº Prto.",
+      align: "center",
+      headerAlign: "center",
+      flex: 1,
+    },
+    { field: "nombre", headerName: "Cliente", flex: 1 },
+    // { field: "apellidos", headerName: "Apellidos", flex: 1 },
+    {
+      field: "telefono",
+      headerName: "Telefono",
+      align: "center",
+      headerAlign: "center",
+      flex: 1,
+    },
+    {
+      field: "direccion_instalacion",
+      headerName: "Dirección Instalacion",
+      flex: 1.5,
+    },
     { field: "poblacion_instalacion", headerName: "Población", flex: 1 },
-    { field: "fecha", headerName: "Fecha", flex: 1 },
-    { field: "total_bruto", headerName: "Total Bruto (€)", flex: 1 },
-    { field: "iva", headerName: "IVA (€)", flex: 1 },
-    { field: "total", headerName: "Total (€)", flex: 1 },
+    { field: "codigo_postal", headerName: "C.P.", flex: 1 },
+    {
+      field: "total_bruto",
+      headerName: "Neto (€)",
+      align: "right",
+      headerAlign: "right",
+      flex: 1,
+    },
+    {
+      field: "iva",
+      headerName: "IVA (€)",
+      align: "right",
+      headerAlign: "right",
+      flex: 1,
+    },
+    {
+      field: "total",
+      headerName: "Total (€)",
+      align: "right",
+      headerAlign: "right",
+      flex: 1,
+    },
+    {
+      field: "estado",
+      headerName: "Estado",
+      align: "center",
+      headerAlign: "center",
+      flex: 1,
+    },
     {
       field: "acciones",
       type: "actions",
       headerName: "Acciones",
       getActions: (params) => [
         <GridActionsCellItem
+          icon={<EditIcon color="primary" />}
+          label="Editar"
+          onClick={() => abrirDialogoEdicion(params.row)}
+        />,
+        <GridActionsCellItem
           icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
           label="Ver PDF"
-          onClick={() =>
-            window.open(`/api/pdf/presupuesto/${params.id}`, "_blank")
-          }
+          onClick={() => handleOpenPDF(params.row)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
@@ -305,11 +506,397 @@ export default function Presupuestos() {
   ];
 
   const eliminarPresupuesto = async (id) => {
-    await fetch(`http://localhost:3000/api/product/delete/presupuesto/${id}`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      `http://localhost:3000/api/presupuestos/delete/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    if (res.ok) {
+      setReload(!reload);
+    }
   };
 
+  const abrirDialogoEdicion = (presupuesto) => {
+    const productosLimpios = presupuesto.items.map((item) => ({
+      ...item,
+      cantidad: safeNumber(item.cantidad, 1),
+      precio_unitario: safeNumber(item.precio_unitario),
+      descuento: safeNumber(item.descuento),
+      descuento_porcentaje: safeNumber(item.descuento_porcentaje),
+    }));
+
+    setPresupuestoSeleccionado({
+      ...presupuesto,
+      iva_porcentaje: safeNumber(presupuesto.iva_porcentaje, 21),
+      productos: productosLimpios,
+    });
+
+    setOpenEditarDialog(true);
+  };
+
+  const safeNumber = (value, fallback = 0) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? fallback : parsed;
+  };
+
+  const handleActualizarPresupuesto = async () => {
+    try {
+      const {
+        id,
+        cliente_id,
+        nombre_cliente_manual,
+        direccion_instalacion,
+        poblacion_instalacion,
+        codigo_postal,
+        iva_porcentaje,
+        fecha,
+        estado,
+        productos,
+      } = presupuestoSeleccionado;
+
+      // Calcular subtotal seguro
+      const totalBruto = calcularSubtotalModificado(productos);
+      const ivaPorcentaje = safeNumber(iva_porcentaje);
+
+      // Calcular IVA
+      const totalIva = ((totalBruto * ivaPorcentaje) / 100).toFixed(2);
+
+      // Objeto final del presupuesto
+      const presupuestoActualizado = {
+        id,
+        num_presupuesto: presupuestoSeleccionado.num_presupuesto,
+        cliente_id: cliente_id || null,
+        direccion_instalacion: direccion_instalacion || null,
+        poblacion_instalacion: poblacion_instalacion || null,
+        codigo_postal: codigo_postal || null,
+        iva: safeNumber(totalIva),
+        iva_porcentaje: ivaPorcentaje,
+        total_bruto: safeNumber(totalBruto),
+        total: safeNumber(totalBruto + safeNumber(totalIva)),
+        fecha,
+        estado,
+      };
+
+      // Mapear items con protección
+      const items = presupuestoSeleccionado.productos.map((p) => {
+        const cantidad = safeNumber(p.cantidad, 1);
+        const precio = safeNumber(
+          p.precio_unitario || p.precio || p.precioOriginal
+        );
+        const descuento = safeNumber(p.descuento);
+        const descuento_porcentaje = safeNumber(p.descuento_porcentaje);
+
+        return {
+          tipo_producto: p.tipo_producto,
+          producto_id: p.productoId ? parseInt(p.productoId) : null,
+          nombre: p.nombre || "",
+          descripcion: "",
+          cantidad,
+          precio_unitario: precio,
+          total: precio * cantidad,
+          descuento,
+          descuento_porcentaje,
+        };
+      });
+
+      console.log("Datos enviados:", {
+        presupuesto: presupuestoActualizado,
+        items,
+      });
+
+      const res = await fetch(
+        `http://localhost:3000/api/presupuestos/update/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ presupuesto: presupuestoActualizado, items }),
+        }
+      );
+
+      if (res.ok) {
+        setPresupuestoSeleccionado(null);
+        setOpenEditarDialog(false);
+        setReload(!reload);
+      }
+    } catch (error) {
+      console.error("Error al actualizar el presupuesto:", error);
+    }
+  };
+
+  const generarYDescargarPDF = (presupuesto) => {
+    // Datos del cliente
+    const nombreCliente =
+      presupuesto.nombre_cliente_manual ||
+      `${presupuesto.nombre} ${presupuesto.apellidos}`;
+    const direccionInstalacion = presupuesto.direccion_instalacion || "";
+    const poblacionInstalacion = presupuesto.poblacion_instalacion || "";
+    const codigoPostal = presupuesto.codigo_postal || "";
+
+    // Datos del presupuesto
+    const num_presupuesto = presupuesto.num_presupuesto || "—";
+    const fecha = new Date(presupuesto.fecha).toLocaleDateString("es-ES");
+    const totalBruto =
+      parseFloat(presupuesto.total_bruto).toFixed(2).replace(".", ",") + " €";
+    const iva = parseFloat(presupuesto.iva).toFixed(2).replace(".", ",") + " €";
+    const total =
+      parseFloat(presupuesto.total).toFixed(2).replace(".", ",") + " €";
+    const iva_porcentaje = parseFloat(presupuesto.iva_porcentaje) || 0;
+
+    // Items del presupuesto
+    const itemsHtml = presupuesto.items
+      .map((item) => {
+        const precioUnitario =
+          parseFloat(item.precio_unitario).toFixed(2).replace(".", ",") + " €";
+        const totalItem =
+          parseFloat(item.total).toFixed(2).replace(".", ",") + " €";
+
+        return `
+        <tr>
+          <td style="font-size: 10px; border-left: none; border-top: none; border-right: 1px solid #000;">${
+            item.nombre
+          }</td>
+          <td style="font-size: 10px;  border-left: none; border-top: none; border-right: 1px solid #000;">${
+            item.descripcion || ""
+          }</td>
+          <td align="center" style="font-size: 10px; border-left: none; border-top: none; border-right: 1px solid #000;">${
+            item.cantidad
+          }</td>
+          <td align="right" style="font-size: 10px;  border-left: none; border-top: none; border-right: 1px solid #000;">${precioUnitario}</td>
+          <td align="right" style="font-size: 10px; border: none;">${totalItem}</td>
+        </tr>`;
+      })
+      .join("");
+
+    const contenido = `
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Presupuesto ${num_presupuesto}</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+      }
+
+      .header img {
+        height: 80px;
+        float: right;
+      }
+
+      .info-table,
+      .main-table {
+        width: 100%;
+        margin-top: 20px;
+        border: 2px solid;
+        border-collapse: collapse;
+      }
+      .info-table {
+        border-color: #fd8700;
+      }
+
+      .info-table td {
+        padding: 4px;
+        font-size: 10px;
+      }
+
+      .main-table th,
+      .main-table td {
+
+        padding: 8px;
+        text-align: center;
+        vertical-align: top;
+        font-size: 10px;
+      }
+      
+      .main-table td {
+        text-align: center;
+      }
+
+      .main-table thead tr th {
+        background-color: #fd8700;
+        font-weight: bold;
+      }
+
+      .main-table tbody tr {
+        page-break-inside: avoid;
+      }
+
+      .main-table tbody tr:not(:last-child) td {
+        border-bottom: none !important;
+      }
+
+      .main-table tbody tr.total-fila td {
+        font-weight: bold;
+        background-color: #ffffff;
+        border-top: 1px solid #000;
+      }
+
+      .section-title {
+        background-color: #eee;
+        font-weight: bold;
+        padding: 6px;
+        text-align: center;
+        margin-top: 30px;
+        font-size: 12px;
+        border: 1px solid #000
+      }
+
+      .conditions {
+        margin-top: 30px;
+        font-size: 10px;
+      }
+
+      .footer {
+        margin-top: 50px;
+        font-size: 10px;
+        text-align: center;
+        border: 2px solid #fd8700;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- CABECERA -->
+    <div class="header">
+      <table class="info-table">
+        <tr>
+          <td><strong>Presupuesto nº:</strong> ${num_presupuesto}</td>
+          <td><strong>Fecha:</strong> ${fecha}</td>
+          <td rowspan="4" style="text-align: right">
+            <img src="/neorenovables_logo.png" alt="Logo Neo Renovables" />
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Cliente:</strong> ${nombreCliente}</td>
+          <td><strong>DNI:</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Dirección:</strong> ${direccionInstalacion}</td>
+          <td><strong>C.P.:</strong> ${codigoPostal}</td>
+        </tr>
+        <tr>
+          <td><strong>Población:</strong> ${poblacionInstalacion}</td>
+          <td><strong>Teléfono:</strong></td>
+        </tr>
+      </table>
+
+      <div class="section-title">Instalación Fotovoltaica</div>
+    </div>
+
+    <!-- TABLA DE PRODUCTOS Y TOTALES UNIFICADOS -->
+    <table class="main-table">
+      <thead>
+        <tr>
+          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Descripción</th>
+          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Especificación Técnica</th>
+          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Und.</th>
+          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Precio</th>
+          <th style="border: none; border-bottom: 1px solid #000;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+
+        <!-- FILA DE TOTALES DENTRO DE LA MISMA TABLA -->
+        <tr class="total-fila">
+          <td colspan="3" style="border-top: 1px solid #000; border-right: 1px solid #000;"></td>
+          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">Importe:</td>
+          <td style="text-align: center; background-color: #ffffff">
+            ${totalBruto}
+          </td>
+        </tr>
+        <tr class="total-fila">
+          <td colspan="3" style=" border: none; border-right: 1px solid #000;"></td>
+          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">
+            IVA (${iva_porcentaje}%):
+          </td>
+          <td style="text-align: center; background-color: #ffffff;">${iva}</td>
+        </tr>
+        <tr class="total-fila">
+          <td colspan="3" style="border: none; border-right: 1px solid #000;"></td>
+          <td
+            style="
+              text-align: center;
+              background-color: #ffffff;
+              font-weight: bold;
+              border-right: 1px solid #000;
+            "
+          >
+            TOTAL:
+          </td>
+          <td
+            style="
+              text-align: center;
+              background-color: #ffffff;
+              font-weight: bold;
+            "
+          >
+            ${total}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CONDICIONES FINALES -->
+    <div class="conditions">
+      <strong>Condiciones generales:</strong><br />
+      - Forma de pago:<br />
+      &nbsp;&nbsp;50% en la aceptación del presupuesto.<br />
+      &nbsp;&nbsp;50% en la finalización de la instalación (pruebas de
+      funcionamiento y entrega de certificados, memorias o proyectos).<br />
+      - Cuenta bancaria BBVA: ES52 0182 7881 3201 6201 644610<br />
+      - No incluye cualquier material o trabajos no especificados en el presente
+      presupuesto (obras civiles o movimientos de tierras).<br />
+      - La licencia de obra deberá estar tramitada e ir a cargo de la propiedad,
+      siendo solo la empresa instaladora la que aportará toda la documentación
+      necesaria para dicha tramitación.<br />
+      - Comienzo aproximado de la instalación en 15 días posteriores a la
+      aceptación (plazo variable según carga de trabajo).<br />
+      - Oferta válida 15 días desde la fecha del presupuesto.
+    </div>
+
+    <!-- PIE -->
+    <div class="footer" style="clear: both">
+      <p>
+        <strong>SOLAR SANTOS GONZALEZ S.L.</strong><br />
+        Carretera de Cártama, 38, Alhaurín El Grande CIF: B56218951<br />
+        Móvil: 722 781 541<br />
+        email: info@neorenovables.com
+      </p>
+    </div>
+  </body>
+</html>
+
+`;
+
+    // Generamos el PDF
+    html2pdf()
+      .set({
+        margin: [10, 10],
+        filename: `${num_presupuesto}.pdf`,
+        image: { type: "jpeg", quality: 1 },
+        html2canvas: { scale: 1, backgroundColor: "#fff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .from(contenido)
+      .toPdf()
+      .get("pdf")
+      .then((pdf) => {
+        pdf.output("dataurlnewwindow");
+      });
+  };
+
+  const handleOpenPDF = (presupuesto) => {
+    generarYDescargarPDF(presupuesto);
+  };
+
+  const handleOpenAddCliente = (open) => {
+    setOpenAddCliente(open);
+  };
+
+  console.log(presupuestos);
+  console.log(nuevoPresupuesto);
   return (
     <Box
       sx={{
@@ -372,10 +959,22 @@ export default function Presupuestos() {
           disableRowSelectionOnClick
           density="compact"
           sx={{
+            "& .MuiDataGrid-cell": {
+              fontSize: "11px",
+              borderColor: "#757575",
+            },
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: 800,
-              fontSize: "14px",
+              fontSize: "12px",
             },
+            "& .MuiDataGrid-columnHeaders": {
+              "--DataGrid-containerBackground": "#d3f7ff",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderColor: "#757575",
+              backgroundColor: "#d3f7ff",
+            },
+
             borderRadius: 3,
             height: { md: "88.7vh", xs: "auto" },
           }}
@@ -396,6 +995,10 @@ export default function Presupuestos() {
             },
           }}
         />
+        {/* COMPONENTE OCULTO PARA GENERAR EL PDF */}
+        {presupuestoSeleccionado && (
+          <PdfPresupuesto presupuesto={presupuestoSeleccionado} />
+        )}
       </Box>
 
       {/* Dialog de creación */}
@@ -423,25 +1026,22 @@ export default function Presupuestos() {
                 >
                   {clientes.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
-                      {c.nombre}
+                      {c.nombre + " " + c.apellidos}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
+              <Button
+                variant="contained"
+                color="warning"
+                startIcon={<AddRoundedIcon />}
+                onClick={() => setOpenAddCliente(true)}
                 size="small"
-                label="Nombre Cliente (manual)"
-                value={nuevoPresupuesto.nombreCliente}
-                onChange={(e) =>
-                  setNuevoPresupuesto((prev) => ({
-                    ...prev,
-                    nombreCliente: e.target.value,
-                  }))
-                }
-                fullWidth
-              />
+              >
+                Crear Cliente
+              </Button>
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -458,7 +1058,7 @@ export default function Presupuestos() {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 size="small"
                 label="Población Instalación"
@@ -473,7 +1073,23 @@ export default function Presupuestos() {
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                size="small"
+                label="Codigo Postal"
+                type="number"
+                value={nuevoPresupuesto.codigoPostal}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    codigoPostal: e.target.value,
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={2}>
               <TextField
                 size="small"
                 label="Fecha"
@@ -491,7 +1107,7 @@ export default function Presupuestos() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={1}>
               <FormControl size="small" fullWidth>
                 <InputLabel>IVA</InputLabel>
                 <Select
@@ -531,6 +1147,8 @@ export default function Presupuestos() {
                       productoId: "",
                       nombreManual: "",
                       precio: "",
+                      descuento: "",
+                      descuento_porcentaje: "",
                       cantidad: 1,
                     }))
                   }
@@ -543,33 +1161,36 @@ export default function Presupuestos() {
               </FormControl>
             </Grid>
 
-            {productoSeleccionado.categoria &&
-              productoSeleccionado.categoria !== "manual" && (
-                <Grid item xs={12} sm={4}>
-                  <FormControl size="small" fullWidth>
-                    <InputLabel>Producto</InputLabel>
-                    <Select
-                      value={productoSeleccionado.productoId}
-                      label="Producto"
-                      onChange={(e) =>
-                        setProductoSeleccionado((prev) => ({
-                          ...prev,
-                          productoId: e.target.value,
-                          precio: productos[productoSeleccionado.categoria]
-                            ?.find((p) => p.id === parseInt(e.target.value))
-                            ?.precio.toString(),
-                        }))
-                      }
-                    >
-                      {productos[productoSeleccionado.categoria]?.map((p) => (
-                        <MenuItem key={p.id} value={p.id}>
-                          {p.nombre}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              )}
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={4}>
+                <FormControl
+                  disabled={!productoSeleccionado.categoria}
+                  size="small"
+                  fullWidth
+                >
+                  <InputLabel>Producto</InputLabel>
+                  <Select
+                    value={productoSeleccionado.productoId}
+                    label="Producto"
+                    onChange={(e) =>
+                      setProductoSeleccionado((prev) => ({
+                        ...prev,
+                        productoId: e.target.value,
+                        precio: productos[productoSeleccionado.categoria]
+                          ?.find((p) => p.id === parseInt(e.target.value))
+                          ?.precio.toString(),
+                      }))
+                    }
+                  >
+                    {productos[productoSeleccionado.categoria]?.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
 
             {productoSeleccionado.categoria === "manual" && (
               <Grid item xs={12} sm={4}>
@@ -603,7 +1224,7 @@ export default function Presupuestos() {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={6} sm={2}>
+            <Grid item xs={6} sm={1}>
               <TextField
                 size="small"
                 label="Cantidad"
@@ -618,75 +1239,116 @@ export default function Presupuestos() {
                 fullWidth
               />
             </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="Dto.(%)"
+                type="number"
+                value={productoSeleccionado.descuento_porcentaje}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    descuento_porcentaje: parseInt(e.target.value),
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
 
             <Grid item xs={12}>
-              <Button variant="outlined" onClick={handleAddProducto}>
+              <Button variant="outlined" onClick={handleAddProductoNuevo}>
                 Añadir Producto
               </Button>
             </Grid>
           </Grid>
 
           {/* Tabla de productos añadidos */}
-          {nuevoPresupuesto.productos.length > 0 && (
-            <>
-              <TableContainer component={Paper} sx={{ mt: 3 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Producto</TableCell>
-                      <TableCell align="right">Cantidad</TableCell>
-                      <TableCell align="right">Precio</TableCell>
-                      <TableCell align="right">Total</TableCell>
-                      <TableCell align="center">Acción</TableCell>
+
+          <>
+            <TableContainer component={Paper} sx={{ mt: 3 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Producto</TableCell>
+                    <TableCell align="right">Cantidad</TableCell>
+                    <TableCell align="right">Precio</TableCell>
+                    <TableCell align="right">Dto (%)</TableCell>
+                    <TableCell align="right">Dto (€)</TableCell>
+
+                    <TableCell align="right">Total</TableCell>
+                    <TableCell align="center">Acción</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {nuevoPresupuesto.productos.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.nombre}</TableCell>
+                      <TableCell align="right">{item.cantidad}</TableCell>
+                      <TableCell align="right">
+                        {(parseFloat(item.precioOriginal) || 0).toFixed(2)} €
+                      </TableCell>
+                      <TableCell align="right">
+                        {item.descuento_porcentaje} %
+                      </TableCell>
+                      <TableCell align="right">
+                        -{(parseFloat(item.descuento) || 0).toFixed(2)} €
+                      </TableCell>
+                      <TableCell align="right">
+                        {(
+                          parseFloat(item.precio) * parseInt(item.cantidad)
+                        ).toFixed(2)}{" "}
+                        €
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          onClick={() => eliminarItem(item.id, false)}
+                        >
+                          <DeleteIcon color="error" />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {nuevoPresupuesto.productos.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.nombre}</TableCell>
-                        <TableCell align="right">{item.cantidad}</TableCell>
-                        <TableCell align="right">{item.precio} €</TableCell>
-                        <TableCell align="right">
-                          {item.precio * item.cantidad} €
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton onClick={() => eliminarItem(item.id)}>
-                            <DeleteIcon color="error" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              {/* Totales */}
-              <Box sx={{ mt: 2, textAlign: "right", pr: 2 }}>
-                <Typography variant="body1">
-                  Subtotal:{" "}
-                  <strong>
-                    {calcularSubtotal(nuevoPresupuesto.productos).toFixed(2)} €
-                  </strong>
-                </Typography>
-                <Typography variant="body1">
-                  IVA ({nuevoPresupuesto.iva || 0}%):{" "}
-                  <strong>
-                    {(
-                      (calcularSubtotal(nuevoPresupuesto.productos) *
-                        (nuevoPresupuesto.iva || 0)) /
-                      100
-                    ).toFixed(2)}{" "}
-                    €
-                  </strong>
-                </Typography>
-                <Typography variant="h6" fontWeight="bold">
-                  Total con IVA:{" "}
-                  <strong>
-                    {calcularTotalConIVA(nuevoPresupuesto).toFixed(2)} €
-                  </strong>
-                </Typography>
-              </Box>
-            </>
-          )}
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {/* Totales */}
+            <Box sx={{ mt: 2, textAlign: "right", pr: 2 }}>
+              <Typography variant="h6" fontWeight="bold">
+                Resumen del Presupuesto
+              </Typography>
+              <Divider sx={{ mb: 1 }} />
+              <Typography variant="body1">
+                Importe sin IVA:{" "}
+                <strong>
+                  {calcularSubtotal(nuevoPresupuesto.productos).toFixed(2)} €
+                </strong>
+              </Typography>
+              <Typography variant="body1">
+                Dto.:{" "}
+                <strong>
+                  {calcularDescuento(nuevoPresupuesto.productos).toFixed(2)} €
+                </strong>
+              </Typography>
+
+              <Typography variant="body1">
+                IVA ({nuevoPresupuesto.iva || 0}%):{" "}
+                <strong>
+                  {(
+                    (calcularSubtotal(nuevoPresupuesto.productos) *
+                      (nuevoPresupuesto.iva || 0)) /
+                    100
+                  ).toFixed(2)}{" "}
+                  €
+                </strong>
+              </Typography>
+              <Typography variant="h6" fontWeight="bold">
+                Total con IVA:{" "}
+                <strong>
+                  {calcularTotalConIVA(nuevoPresupuesto).toFixed(2)} €
+                </strong>
+              </Typography>
+            </Box>
+          </>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => resetFormulario()}>Cancelar</Button>
@@ -694,11 +1356,418 @@ export default function Presupuestos() {
             variant="contained"
             onClick={handleGuardarPresupuesto}
             color="success"
+            disabled={
+              nuevoPresupuesto.clienteId == "" ||
+              nuevoPresupuesto.productos.length <= 0
+                ? true
+                : false
+            }
           >
             Guardar Presupuesto
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Dialog de edición */}
+      <Dialog
+        open={openEditarDialog}
+        onClose={() => setOpenEditarDialog(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>Editar Presupuesto</DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Cliente existente</InputLabel>
+                <Select
+                  value={presupuestoSeleccionado?.cliente_id || ""}
+                  label="Cliente existente"
+                  onChange={(e) =>
+                    setPresupuestoSeleccionado((prev) => ({
+                      ...prev,
+                      cliente_id: e.target.value,
+                    }))
+                  }
+                >
+                  {clientes.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>
+                      {c.nombre + " " + c.apellidos}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              {/* <TextField
+                size="small"
+                label="Nombre Cliente (manual)"
+                value={presupuestoSeleccionado?.nombre_cliente_manual || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    nombre_cliente_manual: e.target.value,
+                  }))
+                }
+                fullWidth
+              /> */}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                size="small"
+                label="Dirección Instalación"
+                value={presupuestoSeleccionado?.direccion_instalacion || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    direccion_instalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                size="small"
+                label="Población Instalación"
+                value={presupuestoSeleccionado?.poblacion_instalacion || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    poblacion_instalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                size="small"
+                label="Codigo Postal"
+                type="number"
+                value={presupuestoSeleccionado?.codigo_postal || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    codigo_postal: e.target.value,
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={2}>
+              <TextField
+                size="small"
+                label="Fecha"
+                type="date"
+                value={presupuestoSeleccionado?.fecha.split("T")[0] || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    fecha: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>IVA</InputLabel>
+                <Select
+                  value={presupuestoSeleccionado?.iva_porcentaje || 10}
+                  label="IVA"
+                  onChange={(e) =>
+                    setPresupuestoSeleccionado((prev) => ({
+                      ...prev,
+                      iva_porcentaje: parseInt(e.target.value),
+                    }))
+                  }
+                >
+                  <MenuItem value={10}>10%</MenuItem>
+                  <MenuItem value={21}>21%</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {/* Campo para editar estado */}
+            <Grid item xs={12} sm={2}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Estado</InputLabel>
+                <Select
+                  value={presupuestoSeleccionado?.estado || "Pendiente"}
+                  label="Estado"
+                  onChange={(e) =>
+                    setPresupuestoSeleccionado((prev) => ({
+                      ...prev,
+                      estado: e.target.value,
+                    }))
+                  }
+                >
+                  <MenuItem value="pendiente">Pendiente</MenuItem>
+                  <MenuItem value="aceptado">Aceptado</MenuItem>
+                  <MenuItem value="rechazado">Rechazado</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Añadir Producto al Presupuesto
+          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Categoría</InputLabel>
+                <Select
+                  value={productoSeleccionado.categoria}
+                  label="Categoría"
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      categoria: e.target.value,
+                      productoId: "",
+                      nombreManual: "",
+                      precio: "",
+                      descuento_porcentaje: "",
+                      cantidad: 1,
+                    }))
+                  }
+                >
+                  <MenuItem value="paneles">Panel Solar</MenuItem>
+                  <MenuItem value="inversores">Inversor</MenuItem>
+                  <MenuItem value="baterias">Batería</MenuItem>
+                  <MenuItem value="manual">Otro (manual)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={4}>
+                <FormControl
+                  disabled={!productoSeleccionado.categoria}
+                  size="small"
+                  fullWidth
+                >
+                  <InputLabel>Producto</InputLabel>
+                  <Select
+                    value={productoSeleccionado.productoId}
+                    label="Producto"
+                    onChange={(e) =>
+                      setProductoSeleccionado((prev) => ({
+                        ...prev,
+                        productoId: e.target.value,
+                        precio: productos[productoSeleccionado.categoria]
+                          ?.find((p) => p.id === parseInt(e.target.value))
+                          ?.precio.toString(),
+                      }))
+                    }
+                  >
+                    {productos[productoSeleccionado.categoria]?.map((p) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.nombre}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {productoSeleccionado.categoria === "manual" && (
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  size="small"
+                  label="Nombre Manual"
+                  value={productoSeleccionado.nombreManual}
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      nombreManual: e.target.value,
+                    }))
+                  }
+                  fullWidth
+                />
+              </Grid>
+            )}
+
+            <Grid item xs={6} sm={2}>
+              <TextField
+                size="small"
+                label="Precio"
+                type="number"
+                value={productoSeleccionado.precio}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    precio: parseFloat(e.target.value),
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6} sm={1}>
+              <TextField
+                size="small"
+                label="Cantidad"
+                type="number"
+                value={productoSeleccionado.cantidad}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    cantidad: parseInt(e.target.value),
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="Dto.(%)"
+                type="number"
+                value={productoSeleccionado.descuento_porcentaje}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    descuento_porcentaje: parseInt(e.target.value),
+                  }))
+                }
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button variant="outlined" onClick={handleAddProductoEdicion}>
+                Añadir Producto
+              </Button>
+            </Grid>
+          </Grid>
+
+          <TableContainer component={Paper} sx={{ mt: 3 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Producto</TableCell>
+                  <TableCell align="right">Cantidad</TableCell>
+                  <TableCell align="right">Precio</TableCell>
+                  <TableCell align="right">Dto (%)</TableCell>
+                  <TableCell align="right">Dto (€)</TableCell>
+                  <TableCell align="right">Total</TableCell>
+                  <TableCell align="center">Acción</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {presupuestoSeleccionado?.productos.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.nombre}</TableCell>
+                    <TableCell align="right">{item.cantidad}</TableCell>
+                    <TableCell align="right">
+                      {(
+                        parseFloat(
+                          item.precioOriginal || item.precio_unitario
+                        ) || 0
+                      ).toFixed(2)}{" "}
+                      €
+                    </TableCell>
+                    <TableCell align="right">
+                      {item.descuento_porcentaje} %
+                    </TableCell>
+                    <TableCell align="right">
+                      -{(parseFloat(item.descuento) || 0).toFixed(2)} €
+                    </TableCell>
+                    <TableCell align="right">
+                      {(
+                        parseFloat(item.total || item.precio) *
+                        parseInt(item.cantidad)
+                      ).toFixed(2)}{" "}
+                      €
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton onClick={() => eliminarItem(item.id, true)}>
+                        <DeleteIcon color="error" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Totales */}
+          <Box sx={{ mt: 2, textAlign: "right", pr: 2 }}>
+            <Typography variant="h6" fontWeight="bold">
+              Resumen del Presupuesto
+            </Typography>
+            <Divider sx={{ mb: 1 }} />
+
+            <Typography variant="body1">
+              Importe sin IVA:{" "}
+              <strong>
+                {calcularSubtotalModificado(
+                  presupuestoSeleccionado?.productos || []
+                ).toFixed(2)}{" "}
+                €
+              </strong>
+            </Typography>
+            <Typography variant="body1">
+              Descuento:{" "}
+              <strong>
+                {calcularDescuento(
+                  presupuestoSeleccionado?.productos || []
+                ).toFixed(2)}{" "}
+                €
+              </strong>
+            </Typography>
+            <Typography variant="body1">
+              IVA ({presupuestoSeleccionado?.iva_porcentaje || 0}%):{" "}
+              <strong>
+                {(
+                  (calcularSubtotalModificado(
+                    presupuestoSeleccionado?.productos || []
+                  ) *
+                    (presupuestoSeleccionado?.iva_porcentaje || 0)) /
+                  100
+                ).toFixed(2)}{" "}
+                €
+              </strong>
+            </Typography>
+            <Typography variant="h6" fontWeight="bold">
+              Total con IVA:{" "}
+              <strong>
+                {calcularTotalConIVAModificado(
+                  presupuestoSeleccionado || {}
+                ).toFixed(2)}{" "}
+                €
+              </strong>
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => cerrarDialogoEdicion()}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={handleActualizarPresupuesto}
+            color="success"
+            disabled={
+              presupuestoSeleccionado?.productos.length <= 0 ? true : false
+            }
+          >
+            Guardar Cambios
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <AddCliente
+        open={openAddCliente}
+        onClose={(clienteGuardado) => {
+          setOpenAddCliente(false);
+
+          // Si se guardó un cliente, recarga la lista
+          if (clienteGuardado) {
+            setReload(!reload);
+          }
+        }}
+      />
     </Box>
   );
 }

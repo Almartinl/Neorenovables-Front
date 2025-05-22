@@ -31,6 +31,24 @@
   }
 }
 
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  table, tr, td, th {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  @page {
+    size: auto;
+    margin: 1cm;
+  }
+}
+
 .card {
   padding: 2em;
 }

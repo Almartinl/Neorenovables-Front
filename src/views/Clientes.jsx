@@ -23,23 +23,19 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-export default function Inversores() {
+export default function Clientes() {
   const [editableRowIds, setEditableRowIds] = useState(new Set());
-  const [inversores, setInversores] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [rowEditData, setRowEditData] = useState(null); // Datos de la fila a editar
   const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [inversorChangeAdd, setInversorChangeAdd] = useState(false);
-  const [newInversorData, setNewInversorData] = useState({
+  const [clienteChangeAdd, setClienteChangeAdd] = useState(false);
+  const [newClienteData, setNewClienteData] = useState({
     nombre: "",
-    marca: "",
-    potencia: "",
-    intensidad: "",
-    nmppt: "",
-    tensionmin: "",
-    tensionmax: "",
-    precio: "",
-    ficha: "",
+    apellidos: "",
+    telefono: "",
+    email: "",
+    direccion: "",
   });
 
   const columns = [
@@ -56,32 +52,8 @@ export default function Inversores() {
       flex: 0.8,
     },
     {
-      field: "potencia",
-      headerName: "Potencia salida (W)",
-      editable: false,
-      flex: 1.5,
-    },
-    {
-      field: "intensidad",
-      headerName: "Intensidad salida (A)",
-      editable: false,
-      flex: 1.5,
-    },
-    {
-      field: "nmppt",
-      headerName: "Nº Mppts",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "tensionmin",
-      headerName: "Tensión mínima (VDC)",
-      editable: false,
-      flex: 1.5,
-    },
-    {
-      field: "tensionmax",
-      headerName: "Tensión máxima (VDC)",
+      field: "capacidad",
+      headerName: "Capacidad (WH)",
       editable: false,
       flex: 1.5,
     },
@@ -114,7 +86,7 @@ export default function Inversores() {
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
-          onClick={() => eliminarInversorEnDB(params.id)}
+          onClick={() => eliminarBateriaEnDB(params.id)}
         />,
       ],
       flex: 1,
@@ -122,20 +94,19 @@ export default function Inversores() {
   ];
 
   useEffect(() => {
-    async function fetchInversores() {
-      const response = await fetch(
-        `http://localhost:3000/api/product/inversores`
-      );
+    async function fetchClientes() {
+      const response = await fetch(`http://localhost:3000/api/clientes/`);
       const data = await response.json();
-      setInversores(data);
-    }
-    fetchInversores();
-  }, [inversorChangeAdd]);
 
-  const eliminarInversorEnDB = async (id) => {
+      setClientes(data);
+    }
+    fetchClientes();
+  }, [clienteChangeAdd]);
+
+  const eliminarBateriaEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/delete/inversores/${id}`,
+        `http://localhost:3000/api/product/delete/baterias/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -146,37 +117,33 @@ export default function Inversores() {
       );
 
       if (!response.ok) {
-        throw new Error("Error al eliminar el inversor");
+        throw new Error("Error al eliminar el bateria");
       }
       if (response.ok) {
-        setInversorChangeAdd(!inversorChangeAdd);
+        setClienteChangeAdd(!clienteChangeAdd);
       }
 
       const result = await response.text(); // o .json() si devuelves un objeto
-      console.log("✅ Inversor eliminado:", result);
+      console.log("✅ Bateria eliminado:", result);
     } catch (error) {
-      console.error("❌ Error al eliminar el inversor:", error);
+      console.error("❌ Error al eliminar el bateria:", error);
     }
   };
 
   const handleOpenAddDialog = () => {
-    setNewInversorData({
+    setNewClienteData({
       nombre: "",
-      marca: "",
-      potencia: "",
-      intensidad: "",
-      nmppt: "",
-      tensionmin: "",
-      tensionmax: "",
-      precio: "",
-      ficha: "",
+      apellidos: "",
+      telefono: "",
+      email: "",
+      direccion: "",
     });
     setOpenAddDialog(true);
   };
 
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
-    setInversorChangeAdd(!inversorChangeAdd);
+    setClienteChangeAdd(!clienteChangeAdd);
   };
 
   const handleOpenDialog = (row) => {
@@ -189,17 +156,13 @@ export default function Inversores() {
     setRowEditData(null);
   };
 
-  const handleUpdateInversor = async (datos) => {
+  const handleUpdateCliente = async (datos) => {
     const formData = new FormData();
 
     // Añade cada campo
     formData.append("nombre", datos.nombre);
     formData.append("marca", datos.marca);
-    formData.append("potencia", datos.potencia);
-    formData.append("intensidad", datos.intensidad);
-    formData.append("nmppt", datos.nmppt);
-    formData.append("tensionmin", datos.tensionmin);
-    formData.append("tensionmax", datos.tensionmax);
+    formData.append("capacidad", datos.capacidad);
     formData.append("precio", datos.precio);
 
     // Solo si se ha subido un nuevo PDF
@@ -208,31 +171,31 @@ export default function Inversores() {
     }
 
     try {
-      await fetch(`http://localhost:3000/api/product/inversores/${datos.id}`, {
+      await fetch(`http://localhost:3000/api/clientes/cliente/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
         if (res.status == 200) {
-          setInversorChangeAdd(!inversorChangeAdd);
+          setClienteChangeAdd(!clienteChangeAdd);
         }
       });
 
       // Si quieres actualizar el frontend aquí...
     } catch (error) {
-      console.error("Error al actualizar el inversor:", error);
+      console.error("Error al actualizar la batería:", error);
     }
   };
 
   const handleRowUpdate = (newRow) => {
-    const updatedRows = inversores.map((inversor) =>
-      inversor.id === newRow.id ? newRow : inversor
+    const updatedRows = clientes.map((cliente) =>
+      cliente.id === newRow.id ? newRow : cliente
     );
-    setInversores(updatedRows);
+    setClientes(updatedRows);
     return newRow;
   };
 
   const handleDelete = (id) => {
-    setInversores((prev) => prev.filter((row) => row.id !== id));
+    setClientes((prev) => prev.filter((row) => row.id !== id));
   };
 
   const handleRowActiveUpdate = (id) => {
@@ -247,8 +210,8 @@ export default function Inversores() {
     });
   };
 
-  const enhancedRows = inversores.map((inversor) => ({
-    ...inversor,
+  const enhancedRows = clientes.map((cliente) => ({
+    ...cliente,
     handleRowActiveUpdate,
     handleDelete,
   }));
@@ -282,7 +245,7 @@ export default function Inversores() {
           fontWeight={600}
           sx={{ textShadow: "0px 0px 20px rgb(0, 0, 0)" }}
         >
-          Inversores
+          Clientes
         </Typography>
         <Button
           variant="contained"
@@ -291,7 +254,7 @@ export default function Inversores() {
           startIcon={<AddRoundedIcon />}
           onClick={handleOpenAddDialog}
         >
-          Añadir Inversor
+          Añadir Cliente
         </Button>
       </Stack>
 
@@ -355,38 +318,22 @@ export default function Inversores() {
             },
           }}
         />
-        {/* Dialog para editar inversores */}
+        {/* Dialog para editar baterias */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Editar Inversor</DialogTitle>
+          <DialogTitle>Editar Batería</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
                 { label: "Nombre", key: "nombre" },
                 { label: "Marca", key: "marca" },
                 {
-                  label: "Potencia de salida (W)",
-                  key: "potencia",
-                  type: "number",
-                },
-                {
-                  label: "Intesidad de salida (A)",
-                  key: "intensidad",
-                  type: "number",
-                },
-                { label: "Nº de MPPT", key: "nmppt", type: "number" },
-                {
-                  label: "Tension Minima (VDC)",
-                  key: "tensionmin",
-                  type: "number",
-                },
-                {
-                  label: "Tension Maxima (VDC)",
-                  key: "tensionmax",
+                  label: "Capacidad de la Batería (WH)",
+                  key: "capacidad",
                   type: "number",
                 },
                 { label: "Precio (€)", key: "precio", type: "number" },
@@ -406,6 +353,7 @@ export default function Inversores() {
                   />
                 </Grid>
               ))}
+
               {/* Campo para subir nuevo PDF */}
               <Grid item xs={12}>
                 <Button variant="outlined" component="label" fullWidth>
@@ -437,7 +385,7 @@ export default function Inversores() {
             <Button onClick={handleCloseDialog}>Cancelar</Button>
             <Button
               onClick={() => {
-                handleUpdateInversor(rowEditData);
+                handleUpdateCliente(rowEditData); // Le pasas también el nuevo archivo
                 handleCloseDialog();
               }}
               variant="contained"
@@ -447,41 +395,25 @@ export default function Inversores() {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* Dialog para añadir Inversores */}
+        {/* Dialog para añadir Clientes */}
         <Dialog
           open={openAddDialog}
           onClose={handleCloseAddDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Añadir Nuevo Inversor</DialogTitle>
+          <DialogTitle>Añadir Nuevo Cliente</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
                 { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
+                { label: "Apellidos", key: "apellidos" },
                 {
-                  label: "Potencia de salida (W)",
-                  key: "potencia",
-                  type: "number",
+                  label: "Teléfono",
+                  key: "telefono",
                 },
-                {
-                  label: "Intesidad de salida (A)",
-                  key: "intensidad",
-                  type: "number",
-                },
-                { label: "Nº de MPPT", key: "nmppt", type: "number" },
-                {
-                  label: "Tension Minima (VDC)",
-                  key: "tensionmin",
-                  type: "number",
-                },
-                {
-                  label: "Tension Maxima (VDC)",
-                  key: "tensionmax",
-                  type: "number",
-                },
-                { label: "Precio (€)", key: "precio", type: "number" },
+                { label: "Email", key: "email" },
+                { label: "Dirección", key: "direccion" },
               ].map(({ label, key, type }) => (
                 <Grid item xs={12} sm={6} key={key}>
                   <TextField
@@ -489,9 +421,9 @@ export default function Inversores() {
                     required
                     type={type || "text"}
                     label={label}
-                    value={newInversorData[key]}
+                    value={newClienteData[key]}
                     onChange={(e) =>
-                      setNewInversorData((prev) => ({
+                      setNewClienteData((prev) => ({
                         ...prev,
                         [key]:
                           type === "number"
@@ -502,33 +434,6 @@ export default function Inversores() {
                   />
                 </Grid>
               ))}
-              {/* Input para subir PDF */}
-              <Grid item xs={12}>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  color="primary"
-                  fullWidth
-                >
-                  Subir ficha técnica (PDF)
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    hidden
-                    onChange={(e) =>
-                      setNewInversorData((prev) => ({
-                        ...prev,
-                        ficha: e.target.files[0], // Guardamos el archivo
-                      }))
-                    }
-                  />
-                </Button>
-                {newInversorData?.ficha && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Archivo seleccionado: {newInversorData.ficha.name}
-                  </Typography>
-                )}
-              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -537,40 +442,23 @@ export default function Inversores() {
               variant="contained"
               color="success"
               onClick={() => {
-                const formData = new FormData();
-
-                // Añadimos los campos
-                formData.append("nombre", newInversorData.nombre);
-                formData.append("marca", newInversorData.marca);
-                formData.append("potencia", newInversorData.potencia);
-                formData.append("intensidad", newInversorData.intensidad);
-                formData.append("nmppt", newInversorData.nmppt);
-                formData.append("tensionmin", newInversorData.tensionmin);
-                formData.append("tensionmax", newInversorData.tensionmax);
-                formData.append("precio", newInversorData.precio);
-
-                // Si hay PDF, lo añadimos también
-                if (newInversorData.ficha) {
-                  formData.append("ficha", newInversorData.ficha);
-                }
-
                 // Enviar al backend
-                fetch("http://localhost:3000/api/product/add_inversor", {
+                fetch("http://localhost:3000/api/product/add_cliente", {
                   method: "POST",
-                  body: formData,
+                  body: newClienteData,
                 })
                   .then((res) => {
                     if (res.status == 200) {
-                      setInversorChangeAdd(!inversorChangeAdd);
+                      setClienteChangeAdd(!clienteChangeAdd);
                       handleCloseAddDialog();
                     }
                   })
                   .catch((err) => {
-                    console.error("Error al subir batería:", err);
+                    console.error("Error al subir cliente:", err);
                   });
               }}
             >
-              Guardar Inversor
+              Guardar Cliente
             </Button>
           </DialogActions>
         </Dialog>

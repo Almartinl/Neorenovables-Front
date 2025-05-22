@@ -13,21 +13,29 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import { useNavigate } from "react-router-dom";
+import { Box, Divider } from "@mui/material";
 
 const mainListItems = [
   { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/dashboard" },
-  {
-    text: "Productos",
-    icon: <CategoryRoundedIcon />,
-    url: "/dashboard/productos",
-  },
-  { text: "Colaboradores", icon: <PeopleRoundedIcon /> },
   {
     text: "Presupuestos",
     icon: <AssignmentRoundedIcon />,
     url: "/dashboard/presupuestos",
   },
+];
+
+const itemList = [
+  { text: "Clientes", icon: <GroupsRoundedIcon /> },
+  {
+    text: "Productos",
+    icon: <CategoryRoundedIcon />,
+    url: "/dashboard/productos",
+  },
+
+  { text: "Colaboradores", icon: <BusinessRoundedIcon /> },
 ];
 
 const secondaryListItems = [
@@ -43,19 +51,41 @@ export default function MenuContent() {
   }
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: "space-between" }}>
-      <List dense>
-        {mainListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              selected={location.pathname === item.url}
-              onClick={() => Linkto(item.url)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <List dense>
+          {mainListItems.map((item, index) => (
+            <ListItem key={index} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                selected={location.pathname === item.url}
+                onClick={() => Linkto(item.url)}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+        <List dense>
+          {itemList.map((item, index) => (
+            <ListItem key={index} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                selected={location.pathname === item.url}
+                onClick={() => Linkto(item.url)}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+
       <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: "block" }}>

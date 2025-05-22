@@ -284,10 +284,22 @@ export default function Baterias() {
           disableRowSelectionOnClick
           density="compact"
           sx={{
+            "& .MuiDataGrid-cell": {
+              fontSize: "11px",
+              borderColor: "#757575",
+            },
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: 800,
-              fontSize: "14px",
+              fontSize: "12px",
             },
+            "& .MuiDataGrid-columnHeaders": {
+              "--DataGrid-containerBackground": "#d3f7ff",
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderColor: "#757575",
+              backgroundColor: "#d3f7ff",
+            },
+
             borderRadius: 3,
             height: { md: "88.7vh", xs: "auto" },
           }}
