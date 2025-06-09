@@ -436,8 +436,20 @@ export default function Presupuestos() {
       headerAlign: "center",
       flex: 1,
     },
-    { field: "nombre", headerName: "Cliente", flex: 1 },
-    // { field: "apellidos", headerName: "Apellidos", flex: 1 },
+    {
+      field: "nombre",
+      headerName: "Nombre",
+      flex: 1.5,
+      headerAlign: "right",
+      align: "right",
+    },
+    {
+      field: "apellidos",
+      headerName: "Apellidos",
+      flex: 1.5,
+      headerAlign: "left",
+      align: "left",
+    },
     {
       field: "telefono",
       headerName: "Telefono",
@@ -642,6 +654,8 @@ export default function Presupuestos() {
     const total =
       parseFloat(presupuesto.total).toFixed(2).replace(".", ",") + " €";
     const iva_porcentaje = parseFloat(presupuesto.iva_porcentaje) || 0;
+    const descuento =
+      calcularDescuento(presupuesto.items).toFixed(2).replace(".", ",") + " €";
 
     // Items del presupuesto
     const itemsHtml = presupuesto.items
@@ -806,6 +820,17 @@ export default function Presupuestos() {
             ${totalBruto}
           </td>
         </tr>
+        ${
+          descuento !== "0,00 €"
+            ? `<tr class="total-fila">
+          <td colspan="3" style="border-top: 1px solid #000; border-right: 1px solid #000;"></td>
+          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">Descuento:</td>
+          <td style="text-align: center; background-color: #ffffff">
+            ${descuento}
+          </td>
+        </tr>`
+            : ``
+        }
         <tr class="total-fila">
           <td colspan="3" style=" border: none; border-right: 1px solid #000;"></td>
           <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">
@@ -877,7 +902,11 @@ export default function Presupuestos() {
         filename: `${num_presupuesto}.pdf`,
         image: { type: "jpeg", quality: 1 },
         html2canvas: { scale: 1, backgroundColor: "#fff" },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
       })
       .from(contenido)
       .toPdf()
@@ -888,14 +917,15 @@ export default function Presupuestos() {
   };
 
   const handleOpenPDF = (presupuesto) => {
+    console.log(presupuesto);
     generarYDescargarPDF(presupuesto);
   };
 
-  const handleOpenAddCliente = (open) => {
-    setOpenAddCliente(open);
-  };
+  // const handleOpenAddCliente = (open) => {
+  //   setOpenAddCliente(open);
+  // };
 
-  console.log(presupuestos);
+  console.log(presupuestoSeleccionado);
   console.log(nuevoPresupuesto);
   return (
     <Box
@@ -1291,7 +1321,7 @@ export default function Presupuestos() {
                         {item.descuento_porcentaje} %
                       </TableCell>
                       <TableCell align="right">
-                        -{(parseFloat(item.descuento) || 0).toFixed(2)} €
+                        {(parseFloat(item.descuento) || 0).toFixed(2)} €
                       </TableCell>
                       <TableCell align="right">
                         {(
@@ -1374,7 +1404,20 @@ export default function Presupuestos() {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Editar Presupuesto</DialogTitle>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <DialogTitle>Editar Presupuesto</DialogTitle>
+          <Typography variant="overline" p={2}>
+            Presupuesto nº: {presupuestoSeleccionado?.num_presupuesto || "—"}
+          </Typography>
+        </Box>
+
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6}>
@@ -1398,20 +1441,7 @@ export default function Presupuestos() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              {/* <TextField
-                size="small"
-                label="Nombre Cliente (manual)"
-                value={presupuestoSeleccionado?.nombre_cliente_manual || ""}
-                onChange={(e) =>
-                  setPresupuestoSeleccionado((prev) => ({
-                    ...prev,
-                    nombre_cliente_manual: e.target.value,
-                  }))
-                }
-                fullWidth
-              /> */}
-            </Grid>
+            <Grid item xs={12} sm={6}></Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 size="small"
@@ -1674,12 +1704,13 @@ export default function Presupuestos() {
                       {item.descuento_porcentaje} %
                     </TableCell>
                     <TableCell align="right">
-                      -{(parseFloat(item.descuento) || 0).toFixed(2)} €
+                      {(parseFloat(item.descuento) || 0).toFixed(2)} €
                     </TableCell>
                     <TableCell align="right">
                       {(
-                        parseFloat(item.total || item.precio) *
-                        parseInt(item.cantidad)
+                        parseFloat(item.precio_unitario) *
+                          parseInt(item.cantidad) -
+                        parseFloat(item.descuento || 0)
                       ).toFixed(2)}{" "}
                       €
                     </TableCell>

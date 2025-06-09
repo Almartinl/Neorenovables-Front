@@ -23,53 +23,42 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-export default function Clientes() {
+export default function Colaboradores() {
   const [editableRowIds, setEditableRowIds] = useState(new Set());
-  const [clientes, setClientes] = useState([]);
+  const [colaborador, setColaborador] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [rowEditData, setRowEditData] = useState(null); // Datos de la fila a editar
   const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [clienteChangeAdd, setClienteChangeAdd] = useState(false);
-  const [newClienteData, setNewClienteData] = useState({
-    nombre: "",
-    apellidos: "",
-    telefono: "",
-    email: "",
-    direccion: "",
+  const [colaboradorChangeAdd, setColaboradorChangeAdd] = useState(false);
+  const [newColaboradorData, setNewColaboradorData] = useState({
+    colaborador: "",
+    logo: "",
   });
 
   const columns = [
     {
-      field: "nombre",
-      headerName: "Nombre",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "apellidos",
-      headerName: "Apellidos",
-      editable: false,
-      flex: 1,
-    },
-    {
-      field: "telefono",
-      headerName: "Teléfono",
-      editable: false,
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "email",
-      headerName: "Email",
+      field: "colaborador",
+      headerName: "Colaborador",
       editable: false,
       flex: 1.5,
     },
     {
-      field: "direccion",
-      headerName: "Dirección",
+      field: "logo",
+      headerName: "Logo",
       editable: false,
-      flex: 1.5,
+      flex: 1,
+      renderCell: (params) => {
+        if (params.row.logo) {
+          return (
+            <img
+              src={`http://localhost:3000/${params.row.logo}`}
+              alt="Logo"
+              style={{ width: "150px", height: "50px", objectFit: "contain" }}
+            />
+          );
+        }
+        return <Typography>No hay logo</Typography>;
+      },
     },
     {
       field: "acciones",
@@ -85,7 +74,7 @@ export default function Clientes() {
         //   <GridActionsCellItem
         //     icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
         //     disabled={params.row.ficha == null || params.row.ficha === ""}
-        //     label="Ver PDF"
+        //     label="Ver Logo"
         //     onClick={() =>
         //       window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
         //     }
@@ -94,8 +83,7 @@ export default function Clientes() {
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
-          disabled
-          onClick={() => eliminarBateriaEnDB(params.id)}
+          onClick={() => eliminarColaboradorEnDB(params.id)}
         />,
       ],
       flex: 1,
@@ -103,19 +91,19 @@ export default function Clientes() {
   ];
 
   useEffect(() => {
-    async function fetchClientes() {
-      const response = await fetch(`http://localhost:3000/api/clientes/`);
+    async function fetchBaterias() {
+      const response = await fetch(`http://localhost:3000/api/colaborador`);
       const data = await response.json();
 
-      setClientes(data);
+      setColaborador(data);
     }
-    fetchClientes();
-  }, [clienteChangeAdd]);
+    fetchBaterias();
+  }, [colaboradorChangeAdd]);
 
-  const eliminarBateriaEnDB = async (id) => {
+  const eliminarColaboradorEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/clientes/delete/${id}`,
+        `http://localhost:3000/api/colaborador/delete_colaborador/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -129,7 +117,7 @@ export default function Clientes() {
         throw new Error("Error al eliminar el bateria");
       }
       if (response.ok) {
-        setClienteChangeAdd(!clienteChangeAdd);
+        setColaboradorChangeAdd(!colaboradorChangeAdd);
       }
 
       const result = await response.text(); // o .json() si devuelves un objeto
@@ -140,19 +128,16 @@ export default function Clientes() {
   };
 
   const handleOpenAddDialog = () => {
-    setNewClienteData({
-      nombre: "",
-      apellidos: "",
-      telefono: "",
-      email: "",
-      direccion: "",
+    setNewColaboradorData({
+      colaborador: "",
+      logo: "",
     });
     setOpenAddDialog(true);
   };
 
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
-    setClienteChangeAdd(!clienteChangeAdd);
+    setColaboradorChangeAdd(!colaboradorChangeAdd);
   };
 
   const handleOpenDialog = (row) => {
@@ -165,23 +150,27 @@ export default function Clientes() {
     setRowEditData(null);
   };
 
-  const handleUpdateCliente = async (datos) => {
+  const handleUpdateColaborador = async (datos) => {
     const formData = new FormData();
 
     // Añade cada campo
-    formData.append("nombre", datos.nombre);
-    formData.append("apellidos", datos.apellidos);
-    formData.append("telefono", datos.telefono);
-    formData.append("email", datos.email);
-    formData.append("direccion", datos.direccion);
+    formData.append("colaborador", datos.colaborador);
+
+    // Solo si se ha subido un nuevo PDF
+    if (datos.logo) {
+      formData.append("logo", datos.logo);
+    }
 
     try {
-      await fetch(`http://localhost:3000/api/clientes/update/${datos.id}`, {
-        method: "PATCH",
-        body: formData,
-      }).then((res) => {
+      await fetch(
+        `http://localhost:3000/api/colaborador/update_colaborador/${datos.id}`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      ).then((res) => {
         if (res.status == 200) {
-          setClienteChangeAdd(!clienteChangeAdd);
+          setColaboradorChangeAdd(!colaboradorChangeAdd);
         }
       });
 
@@ -192,15 +181,15 @@ export default function Clientes() {
   };
 
   const handleRowUpdate = (newRow) => {
-    const updatedRows = clientes.map((cliente) =>
-      cliente.id === newRow.id ? newRow : cliente
+    const updatedRows = colaborador.map((bateria) =>
+      bateria.id === newRow.id ? newRow : bateria
     );
-    setClientes(updatedRows);
+    setColaborador(updatedRows);
     return newRow;
   };
 
   const handleDelete = (id) => {
-    setClientes((prev) => prev.filter((row) => row.id !== id));
+    setColaborador((prev) => prev.filter((row) => row.id !== id));
   };
 
   const handleRowActiveUpdate = (id) => {
@@ -215,8 +204,8 @@ export default function Clientes() {
     });
   };
 
-  const enhancedRows = clientes.map((cliente) => ({
-    ...cliente,
+  const enhancedRows = colaborador.map((bateria) => ({
+    ...bateria,
     handleRowActiveUpdate,
     handleDelete,
   }));
@@ -250,7 +239,7 @@ export default function Clientes() {
           fontWeight={600}
           sx={{ textShadow: "0px 0px 20px rgb(0, 0, 0)" }}
         >
-          Clientes
+          Colaboradores
         </Typography>
         <Button
           variant="contained"
@@ -259,7 +248,7 @@ export default function Clientes() {
           startIcon={<AddRoundedIcon />}
           onClick={handleOpenAddDialog}
         >
-          Añadir Cliente
+          Añadir Colaborador
         </Button>
       </Stack>
 
@@ -285,7 +274,7 @@ export default function Clientes() {
           processRowUpdate={handleRowUpdate}
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
-          density="compact"
+          density="standard"
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
@@ -323,48 +312,67 @@ export default function Clientes() {
             },
           }}
         />
-        {/* Dialog para editar Clientes */}
+        {/* Dialog para editar baterias */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Editar Batería</DialogTitle>
+          <DialogTitle>Editar Colaborador</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
-              {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Apellidos", key: "apellidos" },
-                {
-                  label: "Teléfono",
-                  key: "telefono",
-                },
-                { label: "Email", key: "email" },
-                { label: "Dirección", key: "direccion" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
-                  <TextField
-                    fullWidth
-                    type={type || "text"}
-                    label={label}
-                    value={rowEditData?.[key] || ""}
+              {[{ label: "Colaborador", key: "colaborador" }].map(
+                ({ label, key, type }) => (
+                  <Grid item xs={12} sm={6} key={key}>
+                    <TextField
+                      fullWidth
+                      type={type || "text"}
+                      label={label}
+                      value={rowEditData?.[key] || ""}
+                      onChange={(e) =>
+                        setRowEditData((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                )
+              )}
+
+              {/* Campo para subir nuevo logo */}
+              <Grid item xs={12}>
+                <Button variant="outlined" component="label" fullWidth>
+                  Subir Nuevo Logo (Img)
+                  <input
+                    type="file"
+                    hidden
+                    accept="application/image" // Aceptamos cualquier imagen
                     onChange={(e) =>
                       setRowEditData((prev) => ({
                         ...prev,
-                        [key]: e.target.value,
+                        logo: e.target.files[0], // guardamos el File
                       }))
                     }
                   />
-                </Grid>
-              ))}
+                </Button>
+                {rowEditData?.logo && (
+                  <Typography
+                    variant="caption"
+                    sx={{ mt: 1, display: "block", color: "gray" }}
+                  >
+                    Archivo seleccionado: {rowEditData.logo.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Cancelar</Button>
             <Button
               onClick={() => {
-                handleUpdateCliente(rowEditData); // Le pasas también el nuevo archivo
+                handleUpdateColaborador(rowEditData); // Le pasas también el nuevo archivo
                 handleCloseDialog();
               }}
               variant="contained"
@@ -374,45 +382,65 @@ export default function Clientes() {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* Dialog para añadir Clientes */}
+        {/* Dialog para añadir Colaboradores */}
         <Dialog
           open={openAddDialog}
           onClose={handleCloseAddDialog}
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>Añadir Nuevo Cliente</DialogTitle>
+          <DialogTitle>Añadir Nuevo Colaborador</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2}>
-              {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Apellidos", key: "apellidos" },
-                {
-                  label: "Teléfono",
-                  key: "telefono",
-                },
-                { label: "Email", key: "email" },
-                { label: "Dirección", key: "direccion" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
-                  <TextField
-                    fullWidth
-                    required
-                    type={type || "text"}
-                    label={label}
-                    value={newClienteData[key]}
+              {[{ label: "Colaborador", key: "colaborador" }].map(
+                ({ label, key, type }) => (
+                  <Grid item xs={12} sm={6} key={key}>
+                    <TextField
+                      fullWidth
+                      required
+                      type={type || "text"}
+                      label={label}
+                      value={newColaboradorData[key]}
+                      onChange={(e) =>
+                        setNewColaboradorData((prev) => ({
+                          ...prev,
+                          [key]:
+                            type === "number"
+                              ? Number(e.target.value)
+                              : e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                )
+              )}
+              {/* Input para subir Logo*/}
+              <Grid item xs={12}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                >
+                  Subir Logo (Img)
+                  <input
+                    type="file"
+                    accept="application/image" // Aceptamos cualquier imagen
+                    hidden
                     onChange={(e) =>
-                      setNewClienteData((prev) => ({
+                      setNewColaboradorData((prev) => ({
                         ...prev,
-                        [key]:
-                          type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value,
+                        logo: e.target.files[0], // Guardamos el archivo
                       }))
                     }
                   />
-                </Grid>
-              ))}
+                </Button>
+                {newColaboradorData?.logo && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Archivo seleccionado: {newColaboradorData.logo.name}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
@@ -421,26 +449,32 @@ export default function Clientes() {
               variant="contained"
               color="success"
               onClick={() => {
+                const formData = new FormData();
+
+                // Añadimos los campos
+                formData.append("colaborador", newColaboradorData.colaborador);
+                // Si hay logo, lo añadimos también
+                if (newColaboradorData.logo) {
+                  formData.append("logo", newColaboradorData.logo);
+                }
+
                 // Enviar al backend
-                fetch("http://localhost:3000/api/clientes/add_cliente", {
+                fetch("http://localhost:3000/api/colaborador/add_colaborador", {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(newClienteData),
+                  body: formData,
                 })
                   .then((res) => {
                     if (res.status == 200) {
-                      setClienteChangeAdd(!clienteChangeAdd);
+                      setColaboradorChangeAdd(!colaboradorChangeAdd);
                       handleCloseAddDialog();
                     }
                   })
                   .catch((err) => {
-                    console.error("Error al subir cliente:", err);
+                    console.error("Error al subir colaborador:", err);
                   });
               }}
             >
-              Guardar Cliente
+              Guardar Colaborador
             </Button>
           </DialogActions>
         </Dialog>

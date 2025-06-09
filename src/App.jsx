@@ -22,10 +22,10 @@ import Search from "./components/Search";
 import ForgotPassword from "./components/ForgotPassword";
 import StatCard from "./components/StatCard";
 import MainGrid from "./components/MainGrid";
+import Clientes from "./views/Clientes";
+import Colaboradores from "./views/Colaboradores";
 
 function App() {
-  // const [count, setCount] = useState(0);
-
   return (
     <BrowserRouter>
       <Routes>
@@ -36,8 +36,9 @@ function App() {
           <Route path="productos/paneles" element={<Paneles />} />
           <Route path="productos/inversores" element={<Inversores />} />
           <Route path="productos/baterias" element={<Baterias />} />
-          {/* <Route path="clientes" element={<Presupuestos />} /> */}
+          <Route path="clientes" element={<Clientes />} />
           <Route path="presupuestos" element={<Presupuestos />} />
+          <Route path="colaboradores" element={<Colaboradores />} />
         </Route>
         {/* <Route path="/test" element={<MainGrid />} /> */}
         <Route path="/login" element={<Login />} />

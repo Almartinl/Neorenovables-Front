@@ -28,14 +28,18 @@ const mainListItems = [
 ];
 
 const itemList = [
-  { text: "Clientes", icon: <GroupsRoundedIcon /> },
+  { text: "Clientes", icon: <GroupsRoundedIcon />, url: "/dashboard/clientes" },
   {
     text: "Productos",
     icon: <CategoryRoundedIcon />,
     url: "/dashboard/productos",
   },
 
-  { text: "Colaboradores", icon: <BusinessRoundedIcon /> },
+  {
+    text: "Colaboradores",
+    icon: <BusinessRoundedIcon />,
+    url: "/dashboard/colaboradores",
+  },
 ];
 
 const secondaryListItems = [

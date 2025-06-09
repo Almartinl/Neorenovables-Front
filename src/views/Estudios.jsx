@@ -5,14 +5,88 @@ import Grid from "@mui/material/Grid2";
 import Header from "../components/Header";
 import CustomizedDataGrid from "../components/CustomizedDataGrid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Typography } from "@mui/material";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import ModeEditIcon from "@mui/icons-material/ModeEdit";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { Button, IconButton, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { rows } from "../internals/data/gridData";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 
 export default function Estudios() {
   const navigate = useNavigate();
   function Linkto(ruta) {
     navigate(ruta);
   }
+
+  const columns = [
+    {
+      field: "ultimaModificacion",
+      headerName: "Fecha",
+      headerAlign: "center",
+      align: "center",
+      flex: 0.5,
+      minWidth: 120,
+    },
+    { field: "nombre", headerName: "Nombre", flex: 1, minWidth: 100 },
+    {
+      field: "direccion",
+      headerName: "Direccion",
+      headerAlign: "left",
+      align: "left",
+      flex: 1.5,
+      minWidth: 80,
+    },
+    {
+      field: "codigoPostal",
+      headerName: "Codigo Postal",
+      headerAlign: "center",
+      align: "center",
+      flex: 0.5,
+      minWidth: 80,
+    },
+    {
+      field: "lugar",
+      headerName: "Lugar",
+      headerAlign: "left",
+      align: "left",
+      flex: 0.5,
+      minWidth: 100,
+    },
+    {
+      field: "acciones",
+      type: "actions",
+      headerName: "Acciones",
+      headerAlign: "center",
+      align: "center",
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={<ModeEditIcon color="primary" />}
+          label="Editar"
+          // onClick={() => handleOpenDialog(params.row)}
+        />,
+        params.row && (
+          <GridActionsCellItem
+            icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
+            disabled={params.row.ficha == null || params.row.ficha === ""}
+            label="Ver PDF"
+            // onClick={() =>
+            //   window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+            // }
+          />
+        ),
+        <GridActionsCellItem
+          icon={<DeleteRoundedIcon color="error" />}
+          label="Eliminar"
+          // onClick={() => eliminarPanelEnDB(params.id)}
+        />,
+      ],
+      flex: 0.5,
+    },
+  ];
+
   return (
     <Stack
       spacing={2}
@@ -64,7 +138,49 @@ export default function Estudios() {
         }}
       >
         <Grid size={{ xs: 12 }}>
-          <CustomizedDataGrid />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            experimentalFeatures={{ newEditingApi: true }}
+            disableRowSelectionOnClick
+            density="compact"
+            sx={{
+              "& .MuiDataGrid-cell": {
+                fontSize: "11px",
+                borderColor: "#757575",
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: 800,
+                fontSize: "12px",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                "--DataGrid-containerBackground": "#d3f7ff",
+              },
+              "& .MuiDataGrid-footerContainer": {
+                borderColor: "#757575",
+                backgroundColor: "#d3f7ff",
+              },
+
+              borderRadius: 3,
+              height: { md: "88.7vh", xs: "auto" },
+            }}
+            localeText={{
+              columnMenuSortAsc: "Ordenar Ascendente",
+              columnMenuSortDesc: "Ordenar Descendente",
+              columnMenuUnsort: "Quitar Orden",
+              columnMenuFilter: "Filtrar",
+              columnMenuHideColumn: "Ocultar Columna",
+              columnMenuShowColumns: "Mostrar Columnas",
+              toolbarFilters: "Filtros",
+              toolbarDensity: "Densidad",
+              toolbarExport: "Exportar",
+              toolbarColumns: "Columnas",
+              footerRowSelected: (count) => `${count} fila(s) seleccionada(s)`,
+              MuiTablePagination: {
+                labelRowsPerPage: "Filas por página",
+              },
+            }}
+          />
         </Grid>
       </Box>
     </Stack>
