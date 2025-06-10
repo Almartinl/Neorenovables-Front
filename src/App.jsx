@@ -24,27 +24,39 @@ import StatCard from "./components/StatCard";
 import MainGrid from "./components/MainGrid";
 import Clientes from "./views/Clientes";
 import Colaboradores from "./views/Colaboradores";
+import { AuthContextProvider } from "./contexts/AuthContext";
+import { ROLES } from "./const/roles";
+import PrivateRoute from "./components/routes/PrivatRoute/PrivateRoute";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/dashboard" element={<Layout />}>
-          <Route index element={<Estudios />} />
-          <Route path="crear-estudio" element={<NuevoEstudio />} />
-          <Route path="productos" element={<Productos />} />
-          <Route path="productos/paneles" element={<Paneles />} />
-          <Route path="productos/inversores" element={<Inversores />} />
-          <Route path="productos/baterias" element={<Baterias />} />
-          <Route path="clientes" element={<Clientes />} />
-          <Route path="presupuestos" element={<Presupuestos />} />
-          <Route path="colaboradores" element={<Colaboradores />} />
-        </Route>
-        {/* <Route path="/test" element={<MainGrid />} /> */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Home />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthContextProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute
+                allowedRoles={[ROLES.User, ROLES.Admin, ROLES.SuperAdmin]}
+              />
+            }
+          >
+            <Route index element={<Estudios />} />
+            <Route path="crear-estudio" element={<NuevoEstudio />} />
+            <Route path="productos" element={<Productos />} />
+            <Route path="productos/paneles" element={<Paneles />} />
+            <Route path="productos/inversores" element={<Inversores />} />
+            <Route path="productos/baterias" element={<Baterias />} />
+            <Route path="clientes" element={<Clientes />} />
+            <Route path="presupuestos" element={<Presupuestos />} />
+            <Route path="colaboradores" element={<Colaboradores />} />
+          </Route>
+          {/* <Route path="/test" element={<MainGrid />} /> */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthContextProvider>
   );
 }
 

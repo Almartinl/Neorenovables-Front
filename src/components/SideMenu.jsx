@@ -12,6 +12,7 @@ import CardAlert from "./CardAlert";
 import OptionsMenu from "./OptionsMenu";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 import { Link } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const drawerWidth = 240;
 
@@ -27,6 +28,7 @@ const Drawer = styled(MuiDrawer)({
 });
 
 export default function SideMenu() {
+  const { dataToken } = useAuthContext();
   return (
     <Drawer
       variant="permanent"
@@ -75,20 +77,42 @@ export default function SideMenu() {
       >
         <Avatar
           sizes="small"
-          alt="Alejandro Martin"
-          src="/static/images/avatar/7.jpg"
-          sx={{ width: 36, height: 36 }}
+          alt={dataToken.nombre}
+          src="/default-avatar.png"
+          sx={{ width: 36, height: 36, backgroundColor: "#163b5a" }}
         />
         <Box sx={{ mr: "auto" }}>
           <Typography
             variant="body2"
             sx={{ fontWeight: 500, lineHeight: "16px" }}
           >
-            Alejandro Martin
+            {dataToken.nombre + " " + dataToken.apellido}
           </Typography>
-          <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            Almartin@email.com
-          </Typography>
+          {/* {(dataToken.email.length > 22) & (dataToken.email.lenght < 30) ? (
+            <Typography
+              variant="caption"
+              fontSize={9}
+              sx={{ color: "text.secondary" }}
+            >
+              {dataToken.email}
+            </Typography>
+          ) : dataToken.email.lenght <= 22 ? (
+            <Typography
+              variant="caption"
+              fontSize={11}
+              sx={{ color: "text.secondary" }}
+            >
+              {dataToken.email}
+            </Typography>
+          ) : (
+            <Typography
+              variant="caption"
+              fontSize={6}
+              sx={{ color: "text.secondary" }}
+            >
+              {dataToken.email}
+            </Typography>
+          )} */}
         </Box>
         <OptionsMenu />
       </Stack>

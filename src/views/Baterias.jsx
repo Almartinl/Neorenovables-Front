@@ -79,7 +79,10 @@ export default function Baterias() {
             disabled={params.row.ficha == null || params.row.ficha === ""}
             label="Ver PDF"
             onClick={() =>
-              window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+              window.open(
+                `https://almartindev.com/api${params.row.ficha}`,
+                "_blank"
+              )
             }
           />
         ),
@@ -96,7 +99,7 @@ export default function Baterias() {
   useEffect(() => {
     async function fetchBaterias() {
       const response = await fetch(
-        `http://localhost:3000/api/product/baterias`
+        `https://almartindev.com/api/product/baterias`
       );
       const data = await response.json();
 
@@ -108,7 +111,7 @@ export default function Baterias() {
   const eliminarBateriaEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/delete/baterias/${id}`,
+        `https://almartindev.com/api/product/delete/baterias/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -173,7 +176,7 @@ export default function Baterias() {
     }
 
     try {
-      await fetch(`http://localhost:3000/api/product/baterias/${datos.id}`, {
+      await fetch(`https://almartindev.com/api/product/baterias/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
@@ -485,7 +488,7 @@ export default function Baterias() {
                 }
 
                 // Enviar al backend
-                fetch("http://localhost:3000/api/product/add_bateria", {
+                fetch("https://almartindev.com/api/product/add_bateria", {
                   method: "POST",
                   body: formData,
                 })

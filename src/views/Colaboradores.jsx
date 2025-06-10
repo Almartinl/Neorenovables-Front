@@ -51,7 +51,7 @@ export default function Colaboradores() {
         if (params.row.logo) {
           return (
             <img
-              src={`http://localhost:3000/${params.row.logo}`}
+              src={`https://almartindev.com/api${params.row.logo}`}
               alt="Logo"
               style={{ width: "150px", height: "50px", objectFit: "contain" }}
             />
@@ -76,7 +76,7 @@ export default function Colaboradores() {
         //     disabled={params.row.ficha == null || params.row.ficha === ""}
         //     label="Ver Logo"
         //     onClick={() =>
-        //       window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+        //       window.open(`https://almartindev.com/${params.row.ficha}`, "_blank")
         //     }
         //   />
         // ),
@@ -92,7 +92,7 @@ export default function Colaboradores() {
 
   useEffect(() => {
     async function fetchBaterias() {
-      const response = await fetch(`http://localhost:3000/api/colaborador`);
+      const response = await fetch(`https://almartindev.com/api/colaborador`);
       const data = await response.json();
 
       setColaborador(data);
@@ -103,7 +103,7 @@ export default function Colaboradores() {
   const eliminarColaboradorEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/colaborador/delete_colaborador/${id}`,
+        `https://almartindev.com/api/colaborador/delete_colaborador/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -163,7 +163,7 @@ export default function Colaboradores() {
 
     try {
       await fetch(
-        `http://localhost:3000/api/colaborador/update_colaborador/${datos.id}`,
+        `https://almartindev.com/api/colaborador/update_colaborador/${datos.id}`,
         {
           method: "PATCH",
           body: formData,
@@ -459,10 +459,13 @@ export default function Colaboradores() {
                 }
 
                 // Enviar al backend
-                fetch("http://localhost:3000/api/colaborador/add_colaborador", {
-                  method: "POST",
-                  body: formData,
-                })
+                fetch(
+                  "https://almartindev.com/api/colaborador/add_colaborador",
+                  {
+                    method: "POST",
+                    body: formData,
+                  }
+                )
                   .then((res) => {
                     if (res.status == 200) {
                       setColaboradorChangeAdd(!colaboradorChangeAdd);

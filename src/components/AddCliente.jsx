@@ -35,7 +35,7 @@ export default function AddCliente({ open, onClose }) {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/api/clientes/add_cliente",
+        "https://almartindev.com/api/clientes/add_cliente",
         {
           method: "POST",
           headers: {

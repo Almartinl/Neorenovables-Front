@@ -128,7 +128,10 @@ export default function Paneles() {
             disabled={params.row.ficha == null || params.row.ficha === ""}
             label="Ver PDF"
             onClick={() =>
-              window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+              window.open(
+                `https://almartindev.com/api${params.row.ficha}`,
+                "_blank"
+              )
             }
           />
         ),
@@ -144,7 +147,9 @@ export default function Paneles() {
 
   useEffect(() => {
     async function fetchPaneles() {
-      const response = await fetch(`http://localhost:3000/api/product/paneles`);
+      const response = await fetch(
+        `https://almartindev.com/api/product/paneles`
+      );
       const data = await response.json();
       setPaneles(data);
     }
@@ -154,7 +159,7 @@ export default function Paneles() {
   const eliminarPanelEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/delete/paneles/${id}`,
+        `https://almartindev.com/api/product/delete/paneles/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -231,7 +236,7 @@ export default function Paneles() {
     }
 
     try {
-      await fetch(`http://localhost:3000/api/product/paneles/${datos.id}`, {
+      await fetch(`https://almartindev.com/api/product/paneles/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
@@ -555,7 +560,7 @@ export default function Paneles() {
                 }
 
                 // Enviar al backend
-                fetch("http://localhost:3000/api/product/add_panel", {
+                fetch("https://almartindev.com/api/product/add_panel", {
                   method: "POST",
                   body: formData,
                 })

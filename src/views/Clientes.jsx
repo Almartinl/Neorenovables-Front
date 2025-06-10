@@ -87,7 +87,7 @@ export default function Clientes() {
         //     disabled={params.row.ficha == null || params.row.ficha === ""}
         //     label="Ver PDF"
         //     onClick={() =>
-        //       window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+        //       window.open(`https://almartindev.com/${params.row.ficha}`, "_blank")
         //     }
         //   />
         // ),
@@ -104,7 +104,7 @@ export default function Clientes() {
 
   useEffect(() => {
     async function fetchClientes() {
-      const response = await fetch(`http://localhost:3000/api/clientes/`);
+      const response = await fetch(`https://almartindev.com/api/clientes/`);
       const data = await response.json();
 
       setClientes(data);
@@ -115,7 +115,7 @@ export default function Clientes() {
   const eliminarBateriaEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/clientes/delete/${id}`,
+        `https://almartindev.com/api/clientes/delete/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -176,7 +176,7 @@ export default function Clientes() {
     formData.append("direccion", datos.direccion);
 
     try {
-      await fetch(`http://localhost:3000/api/clientes/update/${datos.id}`, {
+      await fetch(`https://almartindev.com/api/clientes/update/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
@@ -422,7 +422,7 @@ export default function Clientes() {
               color="success"
               onClick={() => {
                 // Enviar al backend
-                fetch("http://localhost:3000/api/clientes/add_cliente", {
+                fetch("https://almartindev.com/api/clientes/add_cliente", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",

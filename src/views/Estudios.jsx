@@ -73,7 +73,7 @@ export default function Estudios() {
             disabled={params.row.ficha == null || params.row.ficha === ""}
             label="Ver PDF"
             // onClick={() =>
-            //   window.open(`http://localhost:3000/${params.row.ficha}`, "_blank")
+            //   window.open(`https://almartindev.com/${params.row.ficha}`, "_blank")
             // }
           />
         ),

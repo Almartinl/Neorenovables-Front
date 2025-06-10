@@ -11,6 +11,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import MenuButton from "./MenuButton";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const MenuItem = styled(MuiMenuItem)({
   margin: "2px 0",
@@ -18,12 +19,14 @@ const MenuItem = styled(MuiMenuItem)({
 
 export default function OptionsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const { logout } = useAuthContext();
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
   function returnLogin() {
+    logout();
     handleClose();
     navigate("/login");
   }

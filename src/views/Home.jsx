@@ -12,8 +12,10 @@ import SolarPowerRoundedIcon from "@mui/icons-material/SolarPowerRounded";
 import SavingsIcon from "@mui/icons-material/Savings";
 import AnalyticsIcon from "@mui/icons-material/Analytics"; // Para gráficas de consumo
 import { Link } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const LandingPage = () => {
+  const { authorization } = useAuthContext();
   return (
     <Box
       sx={{
@@ -52,11 +54,19 @@ const LandingPage = () => {
             CalcSolaris
           </Typography>
         </Box>
-        <Link to="/login">
-          <Button variant="contained" color="warning">
-            Iniciar Sesión
-          </Button>
-        </Link>
+        {authorization ? (
+          <Link to="/dashboard">
+            <Button variant="contained" color="primary">
+              Ir al Dashboard
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/login">
+            <Button variant="contained" color="warning">
+              Iniciar Sesión
+            </Button>
+          </Link>
+        )}
       </Box>
 
       {/* CARRUSEL DE IMAGEN DE FONDO */}

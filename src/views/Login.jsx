@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import * as React from "react";
 import Box from "@mui/material/Box";
@@ -25,6 +26,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Image } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useEffect } from "react";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -77,9 +80,11 @@ export default function Login(props) {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [open, setOpen] = React.useState(false);
+  const { login, authorization } = useAuthContext();
+
   const [user, setUser] = React.useState({
-    email: "test@email.com",
-    password: "123456",
+    email: "",
+    password: "",
   });
   const navigate = useNavigate();
 
@@ -94,6 +99,12 @@ export default function Login(props) {
   function handleInput(e) {
     setUser({ ...user, [e.target.name]: e.target.value });
   }
+
+  useEffect(() => {
+    if (authorization) {
+      navigate("/dashboard");
+    }
+  }, [authorization]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -143,7 +154,7 @@ export default function Login(props) {
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
-        <Box sx={{ mt: 2, mb: 0 }}>
+        <Box sx={{ mt: 2, mb: 0 }} onClick={() => navigate("/")}>
           <motion.img
             src="../../calcsolarissinbg.png" // Asegúrate de tener el logo en esa ruta
             alt="Logo de CalcSolaris"
@@ -163,7 +174,7 @@ export default function Login(props) {
           </Typography>
           <Box
             component="form"
-            onSubmit={handleSubmit}
+            onSubmit={(e) => login(e, user)}
             noValidate
             sx={{
               display: "flex",
@@ -234,17 +245,6 @@ export default function Login(props) {
               ¿Olvidó su Contraseña?
             </Link>
           </Box>
-          {/* <Divider>or</Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign in with Google")}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
-          </Box> */}
         </Card>
       </SignInContainer>
     </AppTheme>
