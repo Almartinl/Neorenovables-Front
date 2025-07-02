@@ -128,7 +128,7 @@ export default function Inversores() {
   useEffect(() => {
     async function fetchInversores() {
       const response = await fetch(
-        `http://localhost:3000/api/product/inversores`
+        `https://almartindev.com/api/product/inversores`
       );
       const data = await response.json();
       setInversores(data);
@@ -139,7 +139,7 @@ export default function Inversores() {
   const eliminarInversorEnDB = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/product/delete/inversores/${id}`,
+        `https://almartindev.com/api/product/delete/inversores/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -214,10 +214,13 @@ export default function Inversores() {
     }
 
     try {
-      await fetch(`http://localhost:3000/api/product/inversores/${datos.id}`, {
-        method: "PATCH",
-        body: formData,
-      }).then((res) => {
+      await fetch(
+        `https://almartindev.com/api/product/inversores/${datos.id}`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      ).then((res) => {
         if (res.status == 200) {
           setInversorChangeAdd(!inversorChangeAdd);
         }
@@ -682,7 +685,7 @@ export default function Inversores() {
                 }
 
                 // Enviar al backend
-                fetch("http://localhost:3000/api/product/add_inversor", {
+                fetch("https://almartindev.com/api/product/add_inversor", {
                   method: "POST",
                   body: formData,
                 })

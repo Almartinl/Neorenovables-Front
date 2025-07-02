@@ -86,10 +86,10 @@ export default function Presupuestos() {
 
       if (dataToken.role === "usuario" || verSoloMisPresupuestos) {
         // Usuarios normales o admins que quieren ver solo los suyos
-        url = `http://localhost:3000/api/presupuestos/user/${dataToken.id}`;
+        url = `https://almartindev.com/api/presupuestos/user/${dataToken.id}`;
       } else {
         // Admin o Superadmin que quieren ver todos
-        url = "http://localhost:3000/api/presupuestos/";
+        url = "https://almartindev.com/api/presupuestos/";
       }
 
       const res = await fetch(url);
@@ -98,7 +98,7 @@ export default function Presupuestos() {
     };
 
     const fetchPresupuestos = async () => {
-      const url = "http://localhost:3000/api/presupuestos/";
+      const url = "https://almartindev.com/api/presupuestos/";
       const res = await fetch(url);
       const data = await res.json();
       setNumPresupuestos(data);
@@ -188,13 +188,13 @@ export default function Presupuestos() {
 
   const fetchProductos = async () => {
     const paneles = await (
-      await fetch("http://localhost:3000/api/product/paneles")
+      await fetch("https://almartindev.com/api/product/paneles")
     ).json();
     const inversores = await (
-      await fetch("http://localhost:3000/api/product/inversores")
+      await fetch("https://almartindev.com/api/product/inversores")
     ).json();
     const baterias = await (
-      await fetch("http://localhost:3000/api/product/baterias")
+      await fetch("https://almartindev.com/api/product/baterias")
     ).json();
 
     setProductos({ paneles, inversores, baterias });
@@ -400,7 +400,7 @@ export default function Presupuestos() {
 
       // Llamada al backend
       const res = await fetch(
-        "http://localhost:3000/api/presupuestos/add_presupuesto",
+        "https://almartindev.com/api/presupuestos/add_presupuesto",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -555,7 +555,7 @@ export default function Presupuestos() {
 
   const eliminarPresupuesto = async (id) => {
     const res = await fetch(
-      `http://localhost:3000/api/presupuestos/delete/${id}`,
+      `https://almartindev.com/api/presupuestos/delete/${id}`,
       {
         method: "DELETE",
       }
@@ -654,7 +654,7 @@ export default function Presupuestos() {
       });
 
       const res = await fetch(
-        `http://localhost:3000/api/presupuestos/update/${id}`,
+        `https://almartindev.com/api/presupuestos/update/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
