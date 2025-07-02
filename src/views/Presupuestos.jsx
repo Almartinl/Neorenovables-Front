@@ -24,8 +24,10 @@ import {
   TableRow,
   Paper,
   Stack,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridFooter } from "@mui/x-data-grid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -33,15 +35,22 @@ import EditIcon from "@mui/icons-material/Edit";
 import html2pdf from "html2pdf.js";
 import PdfPresupuesto from "../components/PdfPresupuesto";
 import AddCliente from "../components/AddCliente";
+import { useMediaQuery } from "@mui/material";
+import { useAuthContext } from "../contexts/AuthContext";
 
 export default function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
+  const [numPresupuestos, setNumPresupuestos] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [reload, setReload] = useState(false);
   const [openEditarDialog, setOpenEditarDialog] = useState(false);
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState(null);
   const [openAddCliente, setOpenAddCliente] = useState(false);
+  const { dataToken } = useAuthContext();
+  const [verSoloMisPresupuestos, setVerSoloMisPresupuestos] = useState(false);
+
+  const isMobile = useMediaQuery("(max-width:1600px)");
   const [productos, setProductos] = useState({
     paneles: [],
     inversores: [],
@@ -55,7 +64,7 @@ export default function Presupuestos() {
     poblacionInstalacion: "",
     codigoPostal: "",
     iva: "",
-    fecha: new Date().toISOString(), // formato YYYY-MM-DD
+    fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
     num_presupuesto: "",
     estado: "",
     productos: [],
@@ -68,20 +77,38 @@ export default function Presupuestos() {
     precio: "",
     descuento: "",
     descuento_porcentaje: "",
+    descripcion: "",
     cantidad: 1,
   });
-
   useEffect(() => {
-    const fetchPresupuestos = async () => {
-      const res = await fetch("https://almartindev.com/api/presupuestos/");
+    const fetchPresupuestosByUser = async () => {
+      let url = "";
+
+      if (dataToken.role === "usuario" || verSoloMisPresupuestos) {
+        // Usuarios normales o admins que quieren ver solo los suyos
+        url = `http://localhost:3000/api/presupuestos/user/${dataToken.id}`;
+      } else {
+        // Admin o Superadmin que quieren ver todos
+        url = "http://localhost:3000/api/presupuestos/";
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
       setPresupuestos(data);
     };
 
+    const fetchPresupuestos = async () => {
+      const url = "http://localhost:3000/api/presupuestos/";
+      const res = await fetch(url);
+      const data = await res.json();
+      setNumPresupuestos(data);
+    };
+
     fetchPresupuestos();
+    fetchPresupuestosByUser();
     fetchClientes();
     fetchProductos();
-  }, [reload]);
+  }, [dataToken.id, dataToken.role, reload, verSoloMisPresupuestos]);
 
   const generarNumeroPresupuesto = () => {
     const hoy = new Date();
@@ -90,14 +117,14 @@ export default function Presupuestos() {
     const prefix = `${year}${month}`;
 
     // Filtra presupuestos del mismo mes y año
-    const presupuestosDelMes = presupuestos.filter((p) => {
+    const presupuestosDelMes = numPresupuestos.filter((p) => {
       const fechaPresupuesto = new Date(p.fecha);
       return (
         fechaPresupuesto.getFullYear() === year &&
         String(fechaPresupuesto.getMonth() + 1).padStart(2, "0") === month
       );
     });
-
+    console.log(presupuestosDelMes);
     // Encuentra el último número usado (por ejemplo, 202504003)
     let maxNum = 0;
     presupuestosDelMes.forEach((p) => {
@@ -126,7 +153,7 @@ export default function Presupuestos() {
       direccionInstalacion: "",
       poblacionInstalacion: "",
       iva: "",
-      fecha: new Date().toISOString(), // formato YYYY-MM-DD
+      fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
       estado: "",
       productos: [],
     });
@@ -137,6 +164,7 @@ export default function Presupuestos() {
       precio: "",
       descuento: "",
       descuento_porcentaje: "",
+      descripcion: "",
       cantidad: 1,
     });
     setOpenDialog(false);
@@ -152,6 +180,7 @@ export default function Presupuestos() {
       precio: "",
       descuento: "",
       descuento_porcentaje: "",
+      descripcion: "",
       cantidad: 1,
     });
     setOpenEditarDialog(false);
@@ -159,13 +188,13 @@ export default function Presupuestos() {
 
   const fetchProductos = async () => {
     const paneles = await (
-      await fetch("https://almartindev.com/api/product/paneles")
+      await fetch("http://localhost:3000/api/product/paneles")
     ).json();
     const inversores = await (
-      await fetch("https://almartindev.com/api/product/inversores")
+      await fetch("http://localhost:3000/api/product/inversores")
     ).json();
     const baterias = await (
-      await fetch("https://almartindev.com/api/product/baterias")
+      await fetch("http://localhost:3000/api/product/baterias")
     ).json();
 
     setProductos({ paneles, inversores, baterias });
@@ -192,6 +221,7 @@ export default function Presupuestos() {
         manual: "manual",
       };
       const tipo_producto = tipoProductoMap[productoSeleccionado.categoria];
+      const descripcion = productoSeleccionado.descripcion || "";
 
       const precioOriginal = parseFloat(productoSeleccionado.precio) || 0;
       const descuento_porcentaje =
@@ -210,6 +240,7 @@ export default function Presupuestos() {
             id: Date.now(),
             nombre,
             tipo_producto,
+            descripcion,
             cantidad,
             precioOriginal: precioOriginal.toFixed(2),
             descuento_porcentaje,
@@ -226,6 +257,7 @@ export default function Presupuestos() {
         nombreManual: "",
         precio: "",
         descuento_porcentaje: "",
+        descripcion: "",
         cantidad: 1,
       });
     }
@@ -252,6 +284,7 @@ export default function Presupuestos() {
         manual: "manual",
       };
       const tipo_producto = tipoProductoMap[productoSeleccionado.categoria];
+      const descripcion = productoSeleccionado.descripcion || "";
 
       const precioOriginal = parseFloat(productoSeleccionado.precio) || 0;
       const descuento_porcentaje =
@@ -270,6 +303,7 @@ export default function Presupuestos() {
             id: Date.now(),
             nombre,
             tipo_producto,
+            descripcion,
             cantidad,
             precioOriginal: precioOriginal.toFixed(2),
             descuento_porcentaje,
@@ -286,6 +320,7 @@ export default function Presupuestos() {
         nombreManual: "",
         precio: "",
         descuento_porcentaje: "",
+        dexcripcion: "",
         cantidad: 1,
       });
     }
@@ -338,6 +373,7 @@ export default function Presupuestos() {
       const presupuestoData = {
         num_presupuesto: num_presupuesto,
         cliente_id: clienteId || null,
+        usuario_id: dataToken.id || null,
         nombre_cliente_manual: nombreCliente || null,
         direccion_instalacion: direccionInstalacion || null,
         poblacion_instalacion: poblacionInstalacion || null,
@@ -354,7 +390,7 @@ export default function Presupuestos() {
         tipo_producto: p.tipo_producto, // panel, inversor, bateria, manual
         producto_id: p.productoId ? parseInt(p.productoId) : null,
         nombre: p.nombre,
-        descripcion: "", // si no usas descripción, puedes dejar vacío o eliminar este campo
+        descripcion: p.descripcion, // si no usas descripción, puedes dejar vacío o eliminar este campo
         cantidad: parseInt(p.cantidad),
         precio_unitario: parseFloat(p.precio),
         total: parseFloat(p.precio) * parseInt(p.cantidad),
@@ -364,7 +400,7 @@ export default function Presupuestos() {
 
       // Llamada al backend
       const res = await fetch(
-        "https://almartindev.com/api/presupuestos/add_presupuesto",
+        "http://localhost:3000/api/presupuestos/add_presupuesto",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -459,7 +495,7 @@ export default function Presupuestos() {
     },
     {
       field: "direccion_instalacion",
-      headerName: "Dirección Instalacion",
+      headerName: "Dirección Ins",
       flex: 1.5,
     },
     { field: "poblacion_instalacion", headerName: "Población", flex: 1 },
@@ -519,7 +555,7 @@ export default function Presupuestos() {
 
   const eliminarPresupuesto = async (id) => {
     const res = await fetch(
-      `https://almartindev.com/api/presupuestos/delete/${id}`,
+      `http://localhost:3000/api/presupuestos/delete/${id}`,
       {
         method: "DELETE",
       }
@@ -603,7 +639,7 @@ export default function Presupuestos() {
           tipo_producto: p.tipo_producto,
           producto_id: p.productoId ? parseInt(p.productoId) : null,
           nombre: p.nombre || "",
-          descripcion: "",
+          descripcion: p.descripcion || "",
           cantidad,
           precio_unitario: precio,
           total: precio * cantidad,
@@ -618,7 +654,7 @@ export default function Presupuestos() {
       });
 
       const res = await fetch(
-        `https://almartindev.com/api/presupuestos/update/${id}`,
+        `http://localhost:3000/api/presupuestos/update/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -667,17 +703,21 @@ export default function Presupuestos() {
 
         return `
         <tr>
-          <td style="font-size: 10px; border-left: none; border-top: none; border-right: 1px solid #000;">${
+          <td style="font-size: 8px; border-left: none; border-top: none; border-right: 0.1px solid #000;">${
             item.nombre
           }</td>
-          <td style="font-size: 10px;  border-left: none; border-top: none; border-right: 1px solid #000;">${
+          <td style="text-align: left; font-size: 8px;  border-left: none; border-top: none; border-right: 0.1px solid #000;">${
             item.descripcion || ""
           }</td>
-          <td align="center" style="font-size: 10px; border-left: none; border-top: none; border-right: 1px solid #000;">${
+          <td style="font-size: 8px; border-left: none; border-top: none; border-right: 0.1px solid #000;">${
             item.cantidad
           }</td>
-          <td align="right" style="font-size: 10px;  border-left: none; border-top: none; border-right: 1px solid #000;">${precioUnitario}</td>
-          <td align="right" style="font-size: 10px; border: none;">${totalItem}</td>
+          <td style=" text-align: right; font-size: 8px;  border-left: none; border-top: none; border-right: 0.1px solid #000;">${
+            precioUnitario != "0,00 €" ? precioUnitario : ""
+          }</td>
+          <td style=" text-align: right; font-size: 8px; border: none;">${
+            totalItem != "0,00 €" ? totalItem : ""
+          }</td>
         </tr>`;
       })
       .join("");
@@ -692,6 +732,7 @@ export default function Presupuestos() {
       body {
         font-family: Arial, sans-serif;
         margin: 40px;
+        color: #000;
       }
 
       .header img {
@@ -703,15 +744,16 @@ export default function Presupuestos() {
       .main-table {
         width: 100%;
         margin-top: 20px;
-        border: 2px solid;
+        border: 1px solid #000;
         border-collapse: collapse;
+        text-color: #000;
       }
       .info-table {
         border-color: #fd8700;
       }
 
       .info-table td {
-        padding: 4px;
+        padding: 2px;
         font-size: 10px;
       }
 
@@ -729,8 +771,9 @@ export default function Presupuestos() {
       }
 
       .main-table thead tr th {
-        background-color: #fd8700;
-        font-weight: bold;
+        background-color: #8a8a8a3b;
+        font-weight: 900;
+        padding: 0px;
       }
 
       .main-table tbody tr {
@@ -745,15 +788,17 @@ export default function Presupuestos() {
         font-weight: bold;
         background-color: #ffffff;
         border-top: 1px solid #000;
+        padding: 1px;
+        font-size: 8px;
       }
 
       .section-title {
-        background-color: #eee;
-        font-weight: bold;
-        padding: 6px;
+        background-color: #8a8a8a3b;
+        font-weight: 900;
+        padding: 0px;
         text-align: center;
         margin-top: 30px;
-        font-size: 12px;
+        font-size: 11px;
         border: 1px solid #000
       }
 
@@ -766,7 +811,7 @@ export default function Presupuestos() {
         margin-top: 50px;
         font-size: 10px;
         text-align: center;
-        border: 2px solid #fd8700;
+        border: 1px solid #fd8700;
       }
     </style>
   </head>
@@ -776,21 +821,23 @@ export default function Presupuestos() {
       <table class="info-table">
         <tr>
           <td><strong>Presupuesto nº:</strong> ${num_presupuesto}</td>
-          <td><strong>Fecha:</strong> ${fecha}</td>
-          <td rowspan="4" style="text-align: right">
+          <td rowspan="6" style="text-align: right; padding-right: 25px;">
             <img src="/neorenovables_logo.png" alt="Logo Neo Renovables" />
           </td>
         </tr>
         <tr>
+          <td><strong>Fecha:</strong> ${fecha}</td>
+        </tr>
+        <tr>
           <td><strong>Cliente:</strong> ${nombreCliente}</td>
-          <td><strong>DNI:</strong></td>
         </tr>
         <tr>
           <td><strong>Dirección:</strong> ${direccionInstalacion}</td>
-          <td><strong>C.P.:</strong> ${codigoPostal}</td>
         </tr>
         <tr>
           <td><strong>Población:</strong> ${poblacionInstalacion}</td>
+        </tr>
+        <tr>
           <td><strong>Teléfono:</strong></td>
         </tr>
       </table>
@@ -802,59 +849,109 @@ export default function Presupuestos() {
     <table class="main-table">
       <thead>
         <tr>
-          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Descripción</th>
-          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Especificación Técnica</th>
-          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Und.</th>
-          <th style="border: none; border-bottom: 1px solid #000; border-right: 1px solid #000;">Precio</th>
-          <th style="border: none; border-bottom: 1px solid #000;">Total</th>
+          <th style="border: none; border-bottom: 0.5px solid #000; border-right: 0.5px solid #000; width: 100px">Descripción</th>
+          <th style="border: none; border-bottom: 0.5px solid #000; border-right: 0.5px solid #000;">Especificación Técnica</th>
+          <th style="border: none; border-bottom: 0.5px solid #000; border-right: 0.5px solid #000; width: 20px ">Und.</th>
+          <th style="border: none; border-bottom: 0.5px solid #000; border-right: 0.5px solid #000; width: 60px">Precio</th>
+          <th style="border: none; border-bottom: 0.5px solid #000; width: 70px">Total</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody style="height: 40vh;">
         ${itemsHtml}
+      </tbody>
+      <tbody>
 
         <!-- FILA DE TOTALES DENTRO DE LA MISMA TABLA -->
         <tr class="total-fila">
-          <td colspan="3" style="border-top: 1px solid #000; border-right: 1px solid #000;"></td>
-          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">Importe:</td>
-          <td style="text-align: center; background-color: #ffffff">
+          <td
+            colspan="1"
+            style="border-top: 1px solid #000; border-right: 1px solid #000; border-left: 1px solid #000;"
+          ></td>
+          <td
+            colspan="1"
+            style="border-top: 1px solid #000;"
+          ></td>
+          <td
+            colspan="1"
+            style="border-top: 1px solid #000; "
+          ></td>
+          <td style="text-align: right; background-color: #ffffff; border-right: 1px solid #000; font-weight: 900;">Importe:</td>
+          <td style="text-align: right; background-color: #ffffff; font-weight: 900; border-right: 1px solid #000;">
             ${totalBruto}
           </td>
         </tr>
         ${
           descuento !== "0,00 €"
             ? `<tr class="total-fila">
-          <td colspan="3" style="border-top: 1px solid #000; border-right: 1px solid #000;"></td>
-          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">Descuento:</td>
-          <td style="text-align: center; background-color: #ffffff">
+          <td
+            colspan="1"
+            style="border: none; border-right: 1px solid #000; border-left: 1px solid #000;"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none;"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none; "
+          ></td>
+          <td style="text-align: right; background-color: #ffffff; border-right: 1px solid #000; border-top: none;">Descuento:</td>
+          <td style="text-align: right; background-color: #ffffff; border-top: none; border-right: 1px solid #000;">
             ${descuento}
           </td>
         </tr>`
             : ``
         }
         <tr class="total-fila">
-          <td colspan="3" style=" border: none; border-right: 1px solid #000;"></td>
-          <td style="text-align: center; background-color: #ffffff; border-right: 1px solid #000;">
+          <td
+            colspan="1"
+            style="border: none; border-right: 1px solid #000; border-left: 1px solid #000;"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none;"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none;"
+          ></td>
+          <td style="text-align: right; background-color: #ffffff; border-right: 1px solid #000; border-top: none;">
             IVA (${iva_porcentaje}%):
           </td>
-          <td style="text-align: center; background-color: #ffffff;">${iva}</td>
+          <td style="text-align: right; background-color: #ffffff; border-top: none; border-right: 1px solid #000;">${iva}</td>
         </tr>
         <tr class="total-fila">
-          <td colspan="3" style="border: none; border-right: 1px solid #000;"></td>
+          <td
+            colspan="1"
+            style="border: none; border-right: 1px solid #000; border-bottom: 1px solid; border-left: 1px solid #000"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none; border-bottom: 1px solid;"
+          ></td>
+          <td
+            colspan="1"
+            style="border: none; border-bottom: 1px solid;"
+          ></td>
           <td
             style="
-              text-align: center;
+              text-align: right;
               background-color: #ffffff;
-              font-weight: bold;
+              font-weight: 900;
               border-right: 1px solid #000;
+              border-top: none;
+              border-bottom: 1px solid
             "
           >
             TOTAL:
           </td>
           <td
             style="
-              text-align: center;
+              text-align: right;
               background-color: #ffffff;
-              font-weight: bold;
+              font-weight: 900;
+              border-right: 1px solid #000;
+              border-bottom: 1px solid
             "
           >
             ${total}
@@ -898,10 +995,15 @@ export default function Presupuestos() {
     // Generamos el PDF
     html2pdf()
       .set({
-        margin: [10, 10],
+        margin: [10, 10, 10, 10],
         filename: `${num_presupuesto}.pdf`,
         image: { type: "jpeg", quality: 1 },
-        html2canvas: { scale: 1, backgroundColor: "#fff" },
+        html2canvas: {
+          scale: 3, // Aumenta la escala (equivale a DPI)
+          dpi: 600, // Resolución de 600 DPI
+          letterRendering: true,
+          useCORS: true, // Si cargas imágenes externas
+        },
         jsPDF: {
           unit: "mm",
           format: "a4",
@@ -914,6 +1016,18 @@ export default function Presupuestos() {
       .then((pdf) => {
         pdf.output("dataurlnewwindow");
       });
+    // .then((pdf) => {
+    //   //Abrimos el PDF con nombre personalizado
+    //   const blob = pdf.output("blob");
+    //   const url = URL.createObjectURL(blob);
+
+    //   const win = window.open("", "_blank");
+    //   win.document.write(
+    //     `<iframe src="${url}" style="border: none; width: 100%; height: 100vh;"></iframe>`
+    //   );
+    //   win.document.title = `Presupuesto ${num_presupuesto}`;
+    //   win.document.close();
+    // });
   };
 
   const handleOpenPDF = (presupuesto) => {
@@ -924,6 +1038,38 @@ export default function Presupuestos() {
   // const handleOpenAddCliente = (open) => {
   //   setOpenAddCliente(open);
   // };
+
+  const columnasVisibles = isMobile
+    ? columns.filter((col) =>
+        ["fecha", "num_presupuesto", "acciones"].includes(col.field)
+      )
+    : columns;
+
+  const CustomFooter = ({ checked, onChange }) => {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: 2,
+          py: 0,
+          backgroundColor: "#d3f7ff",
+          borderTop: "1px solid #757575",
+          fontSize: "12px",
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Checkbox size="small" checked={checked} onChange={onChange} />
+          }
+          label="Ver solo mis presupuestos"
+          sx={{ fontSize: "12px" }}
+        />
+        <GridFooter />
+      </Box>
+    );
+  };
 
   console.log(presupuestoSeleccionado);
   console.log(nuevoPresupuesto);
@@ -983,11 +1129,12 @@ export default function Presupuestos() {
       >
         <DataGrid
           rows={presupuestos}
-          columns={columns}
+          columns={columnasVisibles}
           getRowId={(row) => row.id}
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
@@ -1001,7 +1148,7 @@ export default function Presupuestos() {
               "--DataGrid-containerBackground": "#d3f7ff",
             },
             "& .MuiDataGrid-footerContainer": {
-              borderColor: "#757575",
+              borderColor: dataToken.role == "usuario" && "#757575",
               backgroundColor: "#d3f7ff",
             },
 
@@ -1024,6 +1171,20 @@ export default function Presupuestos() {
               labelRowsPerPage: "Filas por página",
             },
           }}
+          slots={
+            dataToken.role == "usuario"
+              ? {}
+              : {
+                  footer: () => (
+                    <CustomFooter
+                      checked={verSoloMisPresupuestos}
+                      onChange={(e) =>
+                        setVerSoloMisPresupuestos(e.target.checked)
+                      }
+                    />
+                  ),
+                }
+          }
         />
         {/* COMPONENTE OCULTO PARA GENERAR EL PDF */}
         {presupuestoSeleccionado && (
@@ -1038,12 +1199,14 @@ export default function Presupuestos() {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle>Nuevo Presupuesto</DialogTitle>
+        <DialogTitle fontWeight="bold">Nuevo Presupuesto</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4.26}>
               <FormControl size="small" fullWidth>
-                <InputLabel>Cliente existente</InputLabel>
+                <InputLabel sx={{ fontSize: "12px" }}>
+                  Cliente existente
+                </InputLabel>
                 <Select
                   value={nuevoPresupuesto.clienteId}
                   label="Cliente existente"
@@ -1053,6 +1216,7 @@ export default function Presupuestos() {
                       clienteId: e.target.value,
                     }))
                   }
+                  sx={{ fontSize: "12px" }}
                 >
                   {clientes.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
@@ -1062,7 +1226,7 @@ export default function Presupuestos() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={7.74}>
               <Button
                 variant="contained"
                 color="warning"
@@ -1086,6 +1250,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -1100,6 +1274,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
 
@@ -1116,6 +1300,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
 
@@ -1134,12 +1328,20 @@ export default function Presupuestos() {
                 fullWidth
                 InputLabelProps={{
                   shrink: true,
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
                 }}
               />
             </Grid>
             <Grid item xs={12} sm={1}>
               <FormControl size="small" fullWidth>
-                <InputLabel>IVA</InputLabel>
+                <InputLabel sx={{ fontSize: "12px" }}>IVA</InputLabel>
                 <Select
                   value={nuevoPresupuesto.iva}
                   label="IVA"
@@ -1149,6 +1351,7 @@ export default function Presupuestos() {
                       iva: parseInt(e.target.value),
                     }))
                   }
+                  sx={{ fontSize: "12px" }}
                 >
                   <MenuItem value={10}>10%</MenuItem>
                   <MenuItem value={21}>21%</MenuItem>
@@ -1164,81 +1367,161 @@ export default function Presupuestos() {
           </Typography>
 
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Categoría</InputLabel>
-                <Select
-                  value={productoSeleccionado.categoria}
-                  label="Categoría"
-                  onChange={(e) =>
-                    setProductoSeleccionado((prev) => ({
-                      ...prev,
-                      categoria: e.target.value,
-                      productoId: "",
-                      nombreManual: "",
-                      precio: "",
-                      descuento: "",
-                      descuento_porcentaje: "",
-                      cantidad: 1,
-                    }))
-                  }
-                >
-                  <MenuItem value="paneles">Panel Solar</MenuItem>
-                  <MenuItem value="inversores">Inversor</MenuItem>
-                  <MenuItem value="baterias">Batería</MenuItem>
-                  <MenuItem value="manual">Otro (manual)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={12}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
+                    <Select
+                      value={productoSeleccionado.categoria}
+                      label="Categoría"
+                      onChange={(e) =>
+                        setProductoSeleccionado((prev) => ({
+                          ...prev,
+                          categoria: e.target.value,
+                          productoId: "",
+                          nombreManual: "",
+                          precio: "",
+                          descuento: "",
+                          descuento_porcentaje: "",
+                          descripcion: "",
+                          cantidad: 1,
+                        }))
+                      }
+                      sx={{ fontSize: "12px" }}
+                    >
+                      <MenuItem value="paneles">Panel Solar</MenuItem>
+                      <MenuItem value="inversores">Inversor</MenuItem>
+                      <MenuItem value="baterias">Batería</MenuItem>
+                      <MenuItem value="manual">Otro (manual)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            {productoSeleccionado.categoria !== "manual" && (
-              <Grid item xs={12} sm={4}>
-                <FormControl
-                  disabled={!productoSeleccionado.categoria}
-                  size="small"
-                  fullWidth
-                >
-                  <InputLabel>Producto</InputLabel>
-                  <Select
-                    value={productoSeleccionado.productoId}
-                    label="Producto"
-                    onChange={(e) =>
-                      setProductoSeleccionado((prev) => ({
-                        ...prev,
-                        productoId: e.target.value,
-                        precio: productos[productoSeleccionado.categoria]
-                          ?.find((p) => p.id === parseInt(e.target.value))
-                          ?.precio.toString(),
-                      }))
-                    }
-                  >
-                    {productos[productoSeleccionado.categoria]?.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        {p.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {productoSeleccionado.categoria !== "manual" && (
+                  <Grid item xs={12} sm={12}>
+                    <FormControl
+                      disabled={!productoSeleccionado.categoria}
+                      size="small"
+                      fullWidth
+                    >
+                      <InputLabel sx={{ fontSize: "12px" }}>
+                        Producto
+                      </InputLabel>
+                      <Select
+                        value={productoSeleccionado.productoId}
+                        label="Producto"
+                        onChange={(e) =>
+                          setProductoSeleccionado((prev) => ({
+                            ...prev,
+                            productoId: e.target.value,
+                            precio: productos[productoSeleccionado.categoria]
+                              ?.find((p) => p.id === parseInt(e.target.value))
+                              ?.precio.toString(),
+                            descripcion: productos[
+                              productoSeleccionado.categoria
+                            ]
+                              ?.find((p) => p.id === parseInt(e.target.value))
+                              ?.descripcion?.toString(),
+                          }))
+                        }
+                        sx={{ fontSize: "12px" }}
+                      >
+                        {productos[productoSeleccionado.categoria]?.map((p) => (
+                          <MenuItem key={p.id} value={p.id}>
+                            {p.nombre}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+
+                {productoSeleccionado.categoria === "manual" && (
+                  <Grid item xs={12} sm={12}>
+                    <TextField
+                      size="small"
+                      label="Nombre Manual"
+                      value={productoSeleccionado.nombreManual}
+                      onChange={(e) =>
+                        setProductoSeleccionado((prev) => ({
+                          ...prev,
+                          nombreManual: e.target.value,
+                        }))
+                      }
+                      fullWidth
+                      InputProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto dentro del input
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto del label
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
               </Grid>
-            )}
-
-            {productoSeleccionado.categoria === "manual" && (
-              <Grid item xs={12} sm={4}>
+            </Grid>
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={6}>
                 <TextField
                   size="small"
-                  label="Nombre Manual"
-                  value={productoSeleccionado.nombreManual}
+                  disabled={!productoSeleccionado.categoria}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  multiline
+                  rows={4}
                   onChange={(e) =>
                     setProductoSeleccionado((prev) => ({
                       ...prev,
-                      nombreManual: e.target.value,
+                      descripcion: e.target.value,
                     }))
                   }
-                  fullWidth
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
                 />
               </Grid>
             )}
-
+            {productoSeleccionado.categoria === "manual" && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  size="small"
+                  multiline
+                  rows={4}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
+            )}
             <Grid item xs={6} sm={2}>
               <TextField
                 size="small"
@@ -1252,6 +1535,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={6} sm={1}>
@@ -1267,6 +1560,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={1}>
@@ -1282,6 +1585,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
 
@@ -1296,7 +1609,7 @@ export default function Presupuestos() {
 
           <>
             <TableContainer component={Paper} sx={{ mt: 3 }}>
-              <Table>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Producto</TableCell>
@@ -1412,17 +1725,18 @@ export default function Presupuestos() {
             justifyContent: "space-between",
           }}
         >
-          <DialogTitle>Editar Presupuesto</DialogTitle>
-          <Typography variant="overline" p={2}>
-            Presupuesto nº: {presupuestoSeleccionado?.num_presupuesto || "—"}
-          </Typography>
+          <DialogTitle fontWeight="bold" fontSize={{ xs: "14px", sm: "16px" }}>
+            Editar Presupuesto Nº: {presupuestoSeleccionado?.num_presupuesto}
+          </DialogTitle>
         </Box>
 
         <DialogContent dividers>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4.26}>
               <FormControl size="small" fullWidth>
-                <InputLabel>Cliente existente</InputLabel>
+                <InputLabel sx={{ fontSize: "12px" }}>
+                  Cliente existente
+                </InputLabel>
                 <Select
                   value={presupuestoSeleccionado?.cliente_id || ""}
                   label="Cliente existente"
@@ -1432,6 +1746,7 @@ export default function Presupuestos() {
                       cliente_id: e.target.value,
                     }))
                   }
+                  sx={{ fontSize: "12px" }}
                 >
                   {clientes.map((c) => (
                     <MenuItem key={c.id} value={c.id}>
@@ -1454,6 +1769,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -1468,6 +1793,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -1483,6 +1818,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={2}>
@@ -1500,12 +1845,20 @@ export default function Presupuestos() {
                 fullWidth
                 InputLabelProps={{
                   shrink: true,
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
                 }}
               />
             </Grid>
             <Grid item xs={12} sm={1}>
               <FormControl size="small" fullWidth>
-                <InputLabel>IVA</InputLabel>
+                <InputLabel sx={{ fontSize: "12px" }}>IVA</InputLabel>
                 <Select
                   value={presupuestoSeleccionado?.iva_porcentaje || 10}
                   label="IVA"
@@ -1515,6 +1868,7 @@ export default function Presupuestos() {
                       iva_porcentaje: parseInt(e.target.value),
                     }))
                   }
+                  sx={{ fontSize: "12px" }}
                 >
                   <MenuItem value={10}>10%</MenuItem>
                   <MenuItem value={21}>21%</MenuItem>
@@ -1524,7 +1878,7 @@ export default function Presupuestos() {
             {/* Campo para editar estado */}
             <Grid item xs={12} sm={2}>
               <FormControl size="small" fullWidth>
-                <InputLabel>Estado</InputLabel>
+                <InputLabel sx={{ fontSize: "12px" }}>Estado</InputLabel>
                 <Select
                   value={presupuestoSeleccionado?.estado || "Pendiente"}
                   label="Estado"
@@ -1534,6 +1888,7 @@ export default function Presupuestos() {
                       estado: e.target.value,
                     }))
                   }
+                  sx={{ fontSize: "12px" }}
                 >
                   <MenuItem value="pendiente">Pendiente</MenuItem>
                   <MenuItem value="aceptado">Aceptado</MenuItem>
@@ -1548,80 +1903,161 @@ export default function Presupuestos() {
             Añadir Producto al Presupuesto
           </Typography>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Categoría</InputLabel>
-                <Select
-                  value={productoSeleccionado.categoria}
-                  label="Categoría"
-                  onChange={(e) =>
-                    setProductoSeleccionado((prev) => ({
-                      ...prev,
-                      categoria: e.target.value,
-                      productoId: "",
-                      nombreManual: "",
-                      precio: "",
-                      descuento_porcentaje: "",
-                      cantidad: 1,
-                    }))
-                  }
-                >
-                  <MenuItem value="paneles">Panel Solar</MenuItem>
-                  <MenuItem value="inversores">Inversor</MenuItem>
-                  <MenuItem value="baterias">Batería</MenuItem>
-                  <MenuItem value="manual">Otro (manual)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={12}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
+                    <Select
+                      value={productoSeleccionado.categoria}
+                      label="Categoría"
+                      onChange={(e) =>
+                        setProductoSeleccionado((prev) => ({
+                          ...prev,
+                          categoria: e.target.value,
+                          productoId: "",
+                          nombreManual: "",
+                          precio: "",
+                          descuento_porcentaje: "",
+                          descripcion: "",
+                          cantidad: 1,
+                        }))
+                      }
+                      sx={{ fontSize: "12px" }}
+                    >
+                      <MenuItem value="paneles">Panel Solar</MenuItem>
+                      <MenuItem value="inversores">Inversor</MenuItem>
+                      <MenuItem value="baterias">Batería</MenuItem>
+                      <MenuItem value="manual">Otro (manual)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            {productoSeleccionado.categoria !== "manual" && (
-              <Grid item xs={12} sm={4}>
-                <FormControl
-                  disabled={!productoSeleccionado.categoria}
-                  size="small"
-                  fullWidth
-                >
-                  <InputLabel>Producto</InputLabel>
-                  <Select
-                    value={productoSeleccionado.productoId}
-                    label="Producto"
-                    onChange={(e) =>
-                      setProductoSeleccionado((prev) => ({
-                        ...prev,
-                        productoId: e.target.value,
-                        precio: productos[productoSeleccionado.categoria]
-                          ?.find((p) => p.id === parseInt(e.target.value))
-                          ?.precio.toString(),
-                      }))
-                    }
-                  >
-                    {productos[productoSeleccionado.categoria]?.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>
-                        {p.nombre}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {productoSeleccionado.categoria !== "manual" && (
+                  <Grid item xs={12} sm={12}>
+                    <FormControl
+                      disabled={!productoSeleccionado.categoria}
+                      size="small"
+                      fullWidth
+                    >
+                      <InputLabel sx={{ fontSize: "12px" }}>
+                        Producto
+                      </InputLabel>
+                      <Select
+                        value={productoSeleccionado.productoId}
+                        label="Producto"
+                        onChange={(e) =>
+                          setProductoSeleccionado((prev) => ({
+                            ...prev,
+                            productoId: e.target.value,
+                            precio: productos[productoSeleccionado.categoria]
+                              ?.find((p) => p.id === parseInt(e.target.value))
+                              ?.precio.toString(),
+                            descripcion: productos[
+                              productoSeleccionado.categoria
+                            ]
+                              ?.find((p) => p.id === parseInt(e.target.value))
+                              ?.descripcion?.toString(),
+                          }))
+                        }
+                        sx={{ fontSize: "12px" }}
+                      >
+                        {productos[productoSeleccionado.categoria]?.map((p) => (
+                          <MenuItem key={p.id} value={p.id}>
+                            {p.nombre}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+
+                {productoSeleccionado.categoria === "manual" && (
+                  <Grid item xs={12} sm={12}>
+                    <TextField
+                      size="small"
+                      label="Nombre Manual"
+                      value={productoSeleccionado.nombreManual}
+                      onChange={(e) =>
+                        setProductoSeleccionado((prev) => ({
+                          ...prev,
+                          nombreManual: e.target.value,
+                        }))
+                      }
+                      fullWidth
+                      InputProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto dentro del input
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto del label
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
               </Grid>
-            )}
-
-            {productoSeleccionado.categoria === "manual" && (
-              <Grid item xs={12} sm={4}>
+            </Grid>
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={6}>
                 <TextField
                   size="small"
-                  label="Nombre Manual"
-                  value={productoSeleccionado.nombreManual}
+                  disabled={!productoSeleccionado.categoria}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  multiline
+                  rows={4}
                   onChange={(e) =>
                     setProductoSeleccionado((prev) => ({
                       ...prev,
-                      nombreManual: e.target.value,
+                      descripcion: e.target.value,
                     }))
                   }
-                  fullWidth
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
                 />
               </Grid>
             )}
-
+            {productoSeleccionado.categoria === "manual" && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  size="small"
+                  multiline
+                  rows={4}
+                  disabled={!productoSeleccionado.categoria}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
+            )}
             <Grid item xs={6} sm={2}>
               <TextField
                 size="small"
@@ -1635,6 +2071,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={6} sm={1}>
@@ -1650,6 +2096,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={1}>
@@ -1665,6 +2121,16 @@ export default function Presupuestos() {
                   }))
                 }
                 fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -1675,7 +2141,7 @@ export default function Presupuestos() {
           </Grid>
 
           <TableContainer component={Paper} sx={{ mt: 3 }}>
-            <Table>
+            <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Producto</TableCell>
@@ -1708,7 +2174,9 @@ export default function Presupuestos() {
                     </TableCell>
                     <TableCell align="right">
                       {(
-                        parseFloat(item.precio_unitario) *
+                        parseFloat(
+                          item.precio_unitario || item.precioOriginal
+                        ) *
                           parseInt(item.cantidad) -
                         parseFloat(item.descuento || 0)
                       ).toFixed(2)}{" "}

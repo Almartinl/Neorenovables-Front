@@ -91,6 +91,16 @@ export default function AddCliente({ open, onClose }) {
               fullWidth
               size="small"
               required
+              InputProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto dentro del input
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto del label
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -102,6 +112,16 @@ export default function AddCliente({ open, onClose }) {
               fullWidth
               size="small"
               required
+              InputProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto dentro del input
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto del label
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -117,6 +137,16 @@ export default function AddCliente({ open, onClose }) {
               }
               fullWidth
               size="small"
+              InputProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto dentro del input
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto del label
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -128,6 +158,16 @@ export default function AddCliente({ open, onClose }) {
               onChange={handleChange}
               fullWidth
               size="small"
+              InputProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto dentro del input
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto del label
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={12}>
@@ -138,6 +178,16 @@ export default function AddCliente({ open, onClose }) {
               onChange={handleChange}
               fullWidth
               size="small"
+              InputProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto dentro del input
+                },
+              }}
+              InputLabelProps={{
+                style: {
+                  fontSize: "12px", // Tamaño del texto del label
+                },
+              }}
             />
           </Grid>
         </Grid>

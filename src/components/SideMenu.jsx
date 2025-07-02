@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Avatar from "@mui/material/Avatar";
@@ -29,6 +30,11 @@ const Drawer = styled(MuiDrawer)({
 
 export default function SideMenu() {
   const { dataToken } = useAuthContext();
+  const [open, setOpen] = React.useState(false);
+
+  const toggleDrawer = (newOpen) => () => {
+    setOpen(newOpen);
+  };
   return (
     <Drawer
       variant="permanent"
@@ -63,7 +69,7 @@ export default function SideMenu() {
           flexDirection: "column",
         }}
       >
-        <MenuContent />
+        <MenuContent drawerOpen={toggleDrawer} />
       </Box>
       <Stack
         direction="row"
@@ -88,31 +94,6 @@ export default function SideMenu() {
           >
             {dataToken.nombre + " " + dataToken.apellido}
           </Typography>
-          {/* {(dataToken.email.length > 22) & (dataToken.email.lenght < 30) ? (
-            <Typography
-              variant="caption"
-              fontSize={9}
-              sx={{ color: "text.secondary" }}
-            >
-              {dataToken.email}
-            </Typography>
-          ) : dataToken.email.lenght <= 22 ? (
-            <Typography
-              variant="caption"
-              fontSize={11}
-              sx={{ color: "text.secondary" }}
-            >
-              {dataToken.email}
-            </Typography>
-          ) : (
-            <Typography
-              variant="caption"
-              fontSize={6}
-              sx={{ color: "text.secondary" }}
-            >
-              {dataToken.email}
-            </Typography>
-          )} */}
         </Box>
         <OptionsMenu />
       </Stack>

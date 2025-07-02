@@ -16,9 +16,10 @@ import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import { useNavigate } from "react-router-dom";
-import { Box, Divider } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 
 const mainListItems = [
+  { text: "Clientes", icon: <GroupsRoundedIcon />, url: "/dashboard/clientes" },
   { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/dashboard" },
   {
     text: "Presupuestos",
@@ -28,7 +29,6 @@ const mainListItems = [
 ];
 
 const itemList = [
-  { text: "Clientes", icon: <GroupsRoundedIcon />, url: "/dashboard/clientes" },
   {
     text: "Productos",
     icon: <CategoryRoundedIcon />,
@@ -48,9 +48,10 @@ const secondaryListItems = [
   { text: "Ayuda", icon: <HelpRoundedIcon /> },
 ];
 
-export default function MenuContent() {
+export default function MenuContent({ drawerOpen }) {
   const navigate = useNavigate();
   function Linkto(ruta) {
+    drawerOpen(false)();
     navigate(ruta);
   }
   return (
@@ -61,6 +62,12 @@ export default function MenuContent() {
           flexDirection: "column",
         }}
       >
+        <Typography
+          variant="subtitle1"
+          sx={{ textAlign: "center", fontWeight: "bold" }}
+        >
+          Clientes
+        </Typography>
         <List dense>
           {mainListItems.map((item, index) => (
             <ListItem key={index} disablePadding sx={{ display: "block" }}>
@@ -75,6 +82,12 @@ export default function MenuContent() {
           ))}
         </List>
         <Divider />
+        <Typography
+          variant="subtitle1"
+          sx={{ textAlign: "center", fontWeight: "bold" }}
+        >
+          Empresa
+        </Typography>
         <List dense>
           {itemList.map((item, index) => (
             <ListItem key={index} disablePadding sx={{ display: "block" }}>

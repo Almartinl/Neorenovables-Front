@@ -39,6 +39,7 @@ export default function Inversores() {
     tensionmin: "",
     tensionmax: "",
     precio: "",
+    descripcion: "",
     ficha: "",
   });
 
@@ -127,7 +128,7 @@ export default function Inversores() {
   useEffect(() => {
     async function fetchInversores() {
       const response = await fetch(
-        `https://almartindev.com/api/product/inversores`
+        `http://localhost:3000/api/product/inversores`
       );
       const data = await response.json();
       setInversores(data);
@@ -138,7 +139,7 @@ export default function Inversores() {
   const eliminarInversorEnDB = async (id) => {
     try {
       const response = await fetch(
-        `https://almartindev.com/api/product/delete/inversores/${id}`,
+        `http://localhost:3000/api/product/delete/inversores/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -172,6 +173,7 @@ export default function Inversores() {
       tensionmin: "",
       tensionmax: "",
       precio: "",
+      descripcion: "",
       ficha: "",
     });
     setOpenAddDialog(true);
@@ -204,6 +206,7 @@ export default function Inversores() {
     formData.append("tensionmin", datos.tensionmin);
     formData.append("tensionmax", datos.tensionmax);
     formData.append("precio", datos.precio);
+    formData.append("descripcion", datos.descripcion);
 
     // Solo si se ha subido un nuevo PDF
     if (datos.nuevaFicha) {
@@ -211,13 +214,10 @@ export default function Inversores() {
     }
 
     try {
-      await fetch(
-        `https://almartindev.com/api/product/inversores/${datos.id}`,
-        {
-          method: "PATCH",
-          body: formData,
-        }
-      ).then((res) => {
+      await fetch(`http://localhost:3000/api/product/inversores/${datos.id}`, {
+        method: "PATCH",
+        body: formData,
+      }).then((res) => {
         if (res.status == 200) {
           setInversorChangeAdd(!inversorChangeAdd);
         }
@@ -324,6 +324,7 @@ export default function Inversores() {
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
@@ -372,36 +373,58 @@ export default function Inversores() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
+                { label: "Nombre", key: "nombre", size: 6, required: true },
+                { label: "Marca", key: "marca", size: 6, required: true },
                 {
                   label: "Potencia de salida (W)",
                   key: "potencia",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
                 {
                   label: "Intesidad de salida (A)",
                   key: "intensidad",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Nº de MPPT", key: "nmppt", type: "number" },
+                {
+                  label: "Nº de MPPT",
+                  key: "nmppt",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
                 {
                   label: "Tension Minima (VDC)",
                   key: "tensionmin",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
                 {
                   label: "Tension Maxima (VDC)",
                   key: "tensionmax",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
+                    size="small"
                     type={type || "text"}
                     label={label}
+                    required={required}
                     value={rowEditData?.[key] || ""}
                     onChange={(e) =>
                       setRowEditData((prev) => ({
@@ -409,9 +432,47 @@ export default function Inversores() {
                         [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={rowEditData?.["descripcion"] || ""}
+                  onChange={(e) =>
+                    setRowEditData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Campo para subir nuevo PDF */}
               <Grid item xs={12}>
                 <Button variant="outlined" component="label" fullWidth>
@@ -464,35 +525,56 @@ export default function Inversores() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
+                { label: "Nombre", key: "nombre", size: 6, required: true },
+                { label: "Marca", key: "marca", size: 6, required: true },
                 {
                   label: "Potencia de salida (W)",
                   key: "potencia",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
                 {
                   label: "Intesidad de salida (A)",
                   key: "intensidad",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Nº de MPPT", key: "nmppt", type: "number" },
+                {
+                  label: "Nº de MPPT",
+                  key: "nmppt",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
                 {
                   label: "Tension Minima (VDC)",
                   key: "tensionmin",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
                 {
                   label: "Tension Maxima (VDC)",
                   key: "tensionmax",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
-                    required
+                    required={required}
+                    size="small"
                     type={type || "text"}
                     label={label}
                     value={newInversorData[key]}
@@ -505,9 +587,47 @@ export default function Inversores() {
                             : e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={newInversorData["descripcion"]}
+                  onChange={(e) =>
+                    setNewInversorData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Input para subir PDF */}
               <Grid item xs={12}>
                 <Button
@@ -554,6 +674,7 @@ export default function Inversores() {
                 formData.append("tensionmin", newInversorData.tensionmin);
                 formData.append("tensionmax", newInversorData.tensionmax);
                 formData.append("precio", newInversorData.precio);
+                formData.append("descripcion", newInversorData.descripcion);
 
                 // Si hay PDF, lo añadimos también
                 if (newInversorData.ficha) {
@@ -561,7 +682,7 @@ export default function Inversores() {
                 }
 
                 // Enviar al backend
-                fetch("https://almartindev.com/api/product/add_inversor", {
+                fetch("http://localhost:3000/api/product/add_inversor", {
                   method: "POST",
                   body: formData,
                 })

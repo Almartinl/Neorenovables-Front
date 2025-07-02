@@ -11,13 +11,15 @@ import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import MenuButton from "./MenuButton";
 import MenuContent from "./MenuContent";
 import CardAlert from "./CardAlert";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
 
 function SideMenuMobile({ open, toggleDrawer }) {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+  const { logout, dataToken } = useAuthContext();
   const returnLogin = () => {
     toggleDrawer(false)();
-    navigate("/login");
+    logout();
   };
 
   return (
@@ -46,21 +48,18 @@ function SideMenuMobile({ open, toggleDrawer }) {
           >
             <Avatar
               sizes="small"
-              alt="Alejandro Martin"
+              alt={dataToken.nombre}
               src="/static/images/avatar/7.jpg"
               sx={{ width: 24, height: 24 }}
             />
-            <Typography component="p" variant="h6">
-              Alejandro Martin
+            <Typography component="p" variant="body2">
+              {dataToken.nombre + " " + dataToken.apellido}
             </Typography>
           </Stack>
-          {/* <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton> */}
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
-          <MenuContent />
+          <MenuContent drawerOpen={toggleDrawer} />
           <Divider />
         </Stack>
         <Stack sx={{ p: 2 }}>

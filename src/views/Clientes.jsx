@@ -286,6 +286,7 @@ export default function Clientes() {
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",

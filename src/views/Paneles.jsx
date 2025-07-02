@@ -42,6 +42,7 @@ export default function Paneles() {
     alto: "",
     color: "",
     precio: "",
+    descripcion: "",
     ficha: "",
   });
 
@@ -129,7 +130,7 @@ export default function Paneles() {
             label="Ver PDF"
             onClick={() =>
               window.open(
-                `https://almartindev.com/api${params.row.ficha}`,
+                `http://localhost:3000/api${params.row.ficha}`,
                 "_blank"
               )
             }
@@ -147,9 +148,7 @@ export default function Paneles() {
 
   useEffect(() => {
     async function fetchPaneles() {
-      const response = await fetch(
-        `https://almartindev.com/api/product/paneles`
-      );
+      const response = await fetch(`http://localhost:3000/api/product/paneles`);
       const data = await response.json();
       setPaneles(data);
     }
@@ -159,7 +158,7 @@ export default function Paneles() {
   const eliminarPanelEnDB = async (id) => {
     try {
       const response = await fetch(
-        `https://almartindev.com/api/product/delete/paneles/${id}`,
+        `http://localhost:3000/api/product/delete/paneles/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -195,6 +194,7 @@ export default function Paneles() {
       alto: "",
       color: "",
       precio: "",
+      descripcion: "",
     });
     setOpenAddDialog(true);
   };
@@ -217,18 +217,21 @@ export default function Paneles() {
   const handleUpdatePanel = async (datos) => {
     const formData = new FormData();
 
+    console.log(datos);
+
     // Añade cada campo
-    formData.append("nombre", datos.nombre);
-    formData.append("marca", datos.marca);
-    formData.append("potencia", datos.potencia);
-    formData.append("vmp", datos.vmp);
-    formData.append("imp", datos.imp);
-    formData.append("tipo", datos.tipo);
-    formData.append("largo", datos.largo);
-    formData.append("ancho", datos.ancho);
-    formData.append("alto", datos.alto);
-    formData.append("color", datos.color);
-    formData.append("precio", datos.precio);
+    formData.append("nombre", datos.nombre ?? "");
+    formData.append("marca", datos.marca ?? "");
+    formData.append("potencia", datos.potencia ?? "");
+    formData.append("vmp", datos.vmp ?? "");
+    formData.append("imp", datos.imp ?? "");
+    formData.append("tipo", datos.tipo ?? "");
+    formData.append("largo", datos.largo ?? "");
+    formData.append("ancho", datos.ancho ?? "");
+    formData.append("alto", datos.alto ?? "");
+    formData.append("color", datos.color ?? "");
+    formData.append("precio", datos.precio ?? "");
+    formData.append("descripcion", datos.descripcion ?? "");
 
     // Solo si se ha subido un nuevo PDF
     if (datos.nuevaFicha) {
@@ -236,7 +239,7 @@ export default function Paneles() {
     }
 
     try {
-      await fetch(`https://almartindev.com/api/product/paneles/${datos.id}`, {
+      await fetch(`http://localhost:3000/api/product/paneles/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
@@ -346,6 +349,7 @@ export default function Paneles() {
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
@@ -394,21 +398,64 @@ export default function Paneles() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
-                { label: "Potencia (W)", key: "potencia", type: "number" },
-                { label: "Vmp (V)", key: "vmp", type: "number" },
-                { label: "Imp (A)", key: "imp", type: "number" },
-                { label: "Tipo", key: "tipo" },
-                { label: "Largo (mm)", key: "largo", type: "number" },
-                { label: "Ancho (mm)", key: "ancho", type: "number" },
-                { label: "Alto (mm)", key: "alto", type: "number" },
-                { label: "Color", key: "color" },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                { label: "Nombre", key: "nombre", size: 6, required: true },
+                { label: "Marca", key: "marca", size: 6, required: true },
+                { label: "Color", size: 2.25, key: "color" },
+                { label: "Tipo", key: "tipo", size: 2.25 },
+                {
+                  label: "WP",
+                  key: "potencia",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Vmp",
+                  key: "vmp",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Imp (A)",
+                  key: "imp",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Largo (mm)",
+                  key: "largo",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Ancho (mm)",
+                  key: "ancho",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Alto (mm)",
+                  key: "alto",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  size: 1.5,
+                  type: "number",
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
+                    required={required}
+                    size="small"
                     type={type || "text"}
                     label={label}
                     value={rowEditData?.[key] || ""}
@@ -418,9 +465,47 @@ export default function Paneles() {
                         [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={rowEditData?.["descripcion"] || ""}
+                  onChange={(e) =>
+                    setRowEditData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Campo para subir nuevo PDF */}
               <Grid item xs={12}>
                 <Button variant="outlined" component="label" fullWidth>
@@ -473,37 +558,115 @@ export default function Paneles() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
-                { label: "Potencia (W)", key: "potencia", type: "number" },
-                { label: "Vmp (V)", key: "vmp", type: "number" },
-                { label: "Imp (A)", key: "imp", type: "number" },
-                { label: "Tipo", key: "tipo" },
-                { label: "Largo (mm)", key: "largo", type: "number" },
-                { label: "Ancho (mm)", key: "ancho", type: "number" },
-                { label: "Alto (mm)", key: "alto", type: "number" },
-                { label: "Color", key: "color" },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                { label: "Nombre", key: "nombre", size: 6, required: true },
+                { label: "Marca", key: "marca", size: 6, required: true },
+                { label: "Color", size: 2.25, key: "color" },
+                { label: "Tipo", key: "tipo", size: 2.25 },
+                {
+                  label: "WP",
+                  key: "potencia",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Vmp",
+                  key: "vmp",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Imp (A)",
+                  key: "imp",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Largo (mm)",
+                  key: "largo",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Ancho (mm)",
+                  key: "ancho",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Alto (mm)",
+                  key: "alto",
+                  size: 1.5,
+                  type: "number",
+                  required: true,
+                },
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  size: 1.5,
+                  type: "number",
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
-                    required
+                    size="small"
+                    variant="outlined"
+                    required={required}
                     type={type || "text"}
                     label={label}
                     value={newPanelData[key]}
                     onChange={(e) =>
                       setNewPanelData((prev) => ({
                         ...prev,
-                        [key]:
-                          type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value,
+                        [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={newPanelData["descripcion"]}
+                  onChange={(e) =>
+                    setNewPanelData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Input para subir PDF */}
               <Grid item xs={12}>
                 <Button
@@ -553,6 +716,7 @@ export default function Paneles() {
                 formData.append("alto", newPanelData.alto);
                 formData.append("color", newPanelData.color);
                 formData.append("precio", newPanelData.precio);
+                formData.append("descripcion", newPanelData.descripcion);
 
                 // Si hay PDF, lo añadimos también
                 if (newPanelData.ficha) {
@@ -560,7 +724,7 @@ export default function Paneles() {
                 }
 
                 // Enviar al backend
-                fetch("https://almartindev.com/api/product/add_panel", {
+                fetch("http://localhost:3000/api/product/add_panel", {
                   method: "POST",
                   body: formData,
                 })

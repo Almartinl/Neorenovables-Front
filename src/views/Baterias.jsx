@@ -35,6 +35,7 @@ export default function Baterias() {
     marca: "",
     capacidad: "",
     precio: "",
+    descripcion: "",
     ficha: "",
   });
 
@@ -99,7 +100,7 @@ export default function Baterias() {
   useEffect(() => {
     async function fetchBaterias() {
       const response = await fetch(
-        `https://almartindev.com/api/product/baterias`
+        `http://localhost:3000/api/product/baterias`
       );
       const data = await response.json();
 
@@ -111,7 +112,7 @@ export default function Baterias() {
   const eliminarBateriaEnDB = async (id) => {
     try {
       const response = await fetch(
-        `https://almartindev.com/api/product/delete/baterias/${id}`,
+        `http://localhost:3000/api/product/delete/baterias/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -141,6 +142,7 @@ export default function Baterias() {
       marca: "",
       capacidad: "",
       precio: "",
+      descripcion: "",
       ficha: "",
     });
     setOpenAddDialog(true);
@@ -169,6 +171,7 @@ export default function Baterias() {
     formData.append("marca", datos.marca);
     formData.append("capacidad", datos.capacidad);
     formData.append("precio", datos.precio);
+    formData.append("descripcion", datos.descripcion);
 
     // Solo si se ha subido un nuevo PDF
     if (datos.nuevaFicha) {
@@ -176,7 +179,7 @@ export default function Baterias() {
     }
 
     try {
-      await fetch(`https://almartindev.com/api/product/baterias/${datos.id}`, {
+      await fetch(`http://localhost:3000/api/product/baterias/${datos.id}`, {
         method: "PATCH",
         body: formData,
       }).then((res) => {
@@ -286,6 +289,7 @@ export default function Baterias() {
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
@@ -334,18 +338,29 @@ export default function Baterias() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
+                { label: "Nombre", key: "nombre", size: 4, required: true },
+                { label: "Marca", key: "marca", size: 4, required: true },
                 {
-                  label: "Capacidad de la Batería (WH)",
+                  label: "Capacidad (WH)",
                   key: "capacidad",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
+                    size="small"
+                    variant="outlined"
+                    required={required}
                     type={type || "text"}
                     label={label}
                     value={rowEditData?.[key] || ""}
@@ -355,10 +370,47 @@ export default function Baterias() {
                         [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
-
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={rowEditData?.["descripcion"] || ""}
+                  onChange={(e) =>
+                    setRowEditData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Campo para subir nuevo PDF */}
               <Grid item xs={12}>
                 <Button variant="outlined" component="label" fullWidth>
@@ -411,34 +463,79 @@ export default function Baterias() {
           <DialogContent dividers>
             <Grid container spacing={2}>
               {[
-                { label: "Nombre", key: "nombre" },
-                { label: "Marca", key: "marca" },
+                { label: "Nombre", key: "nombre", size: 4, required: true },
+                { label: "Marca", key: "marca", size: 4, required: true },
                 {
-                  label: "Capacidad de la Bateria (WH)",
+                  label: "Capacidad (WH)",
                   key: "capacidad",
                   type: "number",
+                  size: 2,
+                  required: true,
                 },
-                { label: "Precio (€)", key: "precio", type: "number" },
-              ].map(({ label, key, type }) => (
-                <Grid item xs={12} sm={6} key={key}>
+                {
+                  label: "Precio (€)",
+                  key: "precio",
+                  type: "number",
+                  size: 2,
+                  required: true,
+                },
+              ].map(({ label, key, size, type, required }) => (
+                <Grid item xs={12} sm={size} key={key}>
                   <TextField
                     fullWidth
-                    required
+                    size="small"
+                    variant="outlined"
+                    required={required}
                     type={type || "text"}
                     label={label}
                     value={newBateriaData[key]}
                     onChange={(e) =>
                       setNewBateriaData((prev) => ({
                         ...prev,
-                        [key]:
-                          type === "number"
-                            ? Number(e.target.value)
-                            : e.target.value,
+                        [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  label="Descripción"
+                  value={newBateriaData["descripcion"]}
+                  onChange={(e) =>
+                    setNewBateriaData((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
               {/* Input para subir PDF */}
               <Grid item xs={12}>
                 <Button
@@ -481,6 +578,7 @@ export default function Baterias() {
                 formData.append("marca", newBateriaData.marca);
                 formData.append("capacidad", newBateriaData.capacidad);
                 formData.append("precio", newBateriaData.precio);
+                formData.append("descripcion", newBateriaData.descripcion);
 
                 // Si hay PDF, lo añadimos también
                 if (newBateriaData.ficha) {
@@ -488,7 +586,7 @@ export default function Baterias() {
                 }
 
                 // Enviar al backend
-                fetch("https://almartindev.com/api/product/add_bateria", {
+                fetch("http://localhost:3000/api/product/add_bateria", {
                   method: "POST",
                   body: formData,
                 })

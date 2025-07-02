@@ -41,7 +41,7 @@ export default function Estudios() {
     },
     {
       field: "codigoPostal",
-      headerName: "Codigo Postal",
+      headerName: "C.P.",
       headerAlign: "center",
       align: "center",
       flex: 0.5,
@@ -144,6 +144,7 @@ export default function Estudios() {
             experimentalFeatures={{ newEditingApi: true }}
             disableRowSelectionOnClick
             density="compact"
+            disableColumnMenu
             sx={{
               "& .MuiDataGrid-cell": {
                 fontSize: "11px",

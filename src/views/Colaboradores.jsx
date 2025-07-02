@@ -275,6 +275,7 @@ export default function Colaboradores() {
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="standard"
+          disableColumnMenu
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
