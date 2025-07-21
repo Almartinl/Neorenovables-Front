@@ -26,6 +26,7 @@ import {
   Stack,
   FormControlLabel,
   Checkbox,
+  Autocomplete,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridFooter } from "@mui/x-data-grid";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -37,6 +38,8 @@ import PdfPresupuesto from "../components/PdfPresupuesto";
 import AddCliente from "../components/AddCliente";
 import { useMediaQuery } from "@mui/material";
 import { useAuthContext } from "../contexts/AuthContext";
+import DialogDetallesPresupuesto from "../components/DialogDetallesPresupuesto";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
@@ -49,6 +52,7 @@ export default function Presupuestos() {
   const [openAddCliente, setOpenAddCliente] = useState(false);
   const { dataToken } = useAuthContext();
   const [verSoloMisPresupuestos, setVerSoloMisPresupuestos] = useState(false);
+  const [openDetalles, setOpenDetalles] = useState(false);
 
   const isMobile = useMediaQuery("(max-width:1600px)");
   const [productos, setProductos] = useState({
@@ -57,12 +61,64 @@ export default function Presupuestos() {
     baterias: [],
   });
 
+  const DOCUMENTOS_POR_ROL = {
+    cliente: [
+      { key: "doc_dni", label: "DNI (delante y detrás)" },
+      { key: "doc_factura_luz", label: "Factura de la luz" },
+      { key: "doc_reg_catastral", label: "Registro catastral" },
+      { key: "doc_declaracion_responsable", label: "Declaración responsable" },
+      { key: "doc_tasa_aytmo", label: "Pago tasas ayuntamiento" },
+    ],
+    perito: [
+      { key: "doc_reg_licencia_obra", label: "Registro de licencia de obra" },
+      { key: "doc_cert_energ_previo", label: "Certificado energético previo" },
+      {
+        key: "doc_cert_energ_posterior",
+        label: "Certificado energético posterior",
+      },
+    ],
+    tecnico: [
+      { key: "doc_legalizacion", label: "Documentación de legalización" },
+    ],
+  };
+
+  const SeccionDocumentos = ({ titulo, documentos, data, onChange }) => (
+    <Grid item xs={12} sm={6}>
+      <Typography variant="subtitle2" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>
+        {titulo}
+      </Typography>
+      <Grid container spacing={2}>
+        {documentos.map((doc) => (
+          <Grid item xs={12} sm={4} key={doc.key}>
+            <FormControlLabel
+              disabled={presupuestoSeleccionado?.estado == "pendiente"}
+              control={
+                <Checkbox
+                  checked={Boolean(data?.[doc.key])}
+                  onChange={(e) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      [doc.key]: e.target.checked ? 1 : 0,
+                    }))
+                  }
+                />
+              }
+              label={doc.label}
+            />
+          </Grid>
+        ))}
+      </Grid>
+    </Grid>
+  );
+
   const [nuevoPresupuesto, setNuevoPresupuesto] = useState({
     clienteId: "",
     nombreCliente: "",
     direccionInstalacion: "",
     poblacionInstalacion: "",
+    telContacto: "",
     codigoPostal: "",
+    tituloPresupuesto: "",
     iva: "",
     fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
     num_presupuesto: "",
@@ -110,6 +166,27 @@ export default function Presupuestos() {
     fetchProductos();
   }, [dataToken.id, dataToken.role, reload, verSoloMisPresupuestos]);
 
+  const handleFilaClick = (params) => {
+    const presupuesto = params.row;
+
+    const productosLimpios =
+      presupuesto.items?.map((item) => ({
+        ...item,
+        cantidad: safeNumber(item.cantidad, 1),
+        precio_unitario: safeNumber(item.precio_unitario),
+        descuento: safeNumber(item.descuento),
+        descuento_porcentaje: safeNumber(item.descuento_porcentaje),
+      })) || [];
+
+    setPresupuestoSeleccionado({
+      ...presupuesto,
+      iva_porcentaje: safeNumber(presupuesto.iva_porcentaje, 21),
+      productos: productosLimpios,
+    });
+
+    setOpenDetalles(true);
+  };
+
   const generarNumeroPresupuesto = () => {
     const hoy = new Date();
     const year = hoy.getFullYear();
@@ -152,6 +229,9 @@ export default function Presupuestos() {
       nombreCliente: "",
       direccionInstalacion: "",
       poblacionInstalacion: "",
+      telContacto: "",
+      codigoPostal: "",
+      tituloPresupuesto: "",
       iva: "",
       fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
       estado: "",
@@ -357,7 +437,9 @@ export default function Presupuestos() {
         nombreCliente,
         direccionInstalacion,
         poblacionInstalacion,
+        telContacto,
         codigoPostal,
+        tituloPresupuesto,
         iva,
         fecha,
         productos,
@@ -377,7 +459,9 @@ export default function Presupuestos() {
         nombre_cliente_manual: nombreCliente || null,
         direccion_instalacion: direccionInstalacion || null,
         poblacion_instalacion: poblacionInstalacion || null,
+        tel_contacto: telContacto || null,
         codigo_postal: codigoPostal || null,
+        titulo_presupuesto: tituloPresupuesto || null,
         iva: ((totalBruto * iva) / 100).toFixed(2),
         iva_porcentaje: iva,
         total_bruto: totalBruto,
@@ -463,26 +547,34 @@ export default function Presupuestos() {
       headerName: "Fecha",
       align: "center",
       headerAlign: "center",
-      flex: 1,
+      flex: 0.8,
     },
     {
-      field: "num_presupuesto",
-      headerName: "Nº Prto.",
+      field: "nombre_usuario",
+      headerName: "Usuario",
       align: "center",
       headerAlign: "center",
       flex: 1,
     },
     {
+      field: "num_presupuesto",
+      headerName: "Nº Pto.",
+      align: "center",
+      headerAlign: "center",
+      flex: 0.8,
+    },
+
+    {
       field: "nombre",
       headerName: "Nombre",
-      flex: 1.5,
+      flex: 1,
       headerAlign: "right",
       align: "right",
     },
     {
       field: "apellidos",
       headerName: "Apellidos",
-      flex: 1.5,
+      flex: 1,
       headerAlign: "left",
       align: "left",
     },
@@ -596,10 +688,23 @@ export default function Presupuestos() {
         nombre_cliente_manual,
         direccion_instalacion,
         poblacion_instalacion,
+        tel_contacto,
         codigo_postal,
+        titulo_presupuesto,
         iva_porcentaje,
         fecha,
         estado,
+        a_cuenta,
+        a_cuenta_porcentaje,
+        doc_dni,
+        doc_factura_luz,
+        doc_reg_catastral,
+        doc_declaracion_responsable,
+        doc_tasa_aytmo,
+        doc_reg_licencia_obra,
+        doc_cert_energ_previo,
+        doc_cert_energ_posterior,
+        doc_legalizacion,
         productos,
       } = presupuestoSeleccionado;
 
@@ -617,13 +722,26 @@ export default function Presupuestos() {
         cliente_id: cliente_id || null,
         direccion_instalacion: direccion_instalacion || null,
         poblacion_instalacion: poblacion_instalacion || null,
+        tel_contacto: tel_contacto || null,
         codigo_postal: codigo_postal || null,
+        titulo_presupuesto: titulo_presupuesto || null,
         iva: safeNumber(totalIva),
         iva_porcentaje: ivaPorcentaje,
         total_bruto: safeNumber(totalBruto),
         total: safeNumber(totalBruto + safeNumber(totalIva)),
         fecha,
         estado,
+        a_cuenta: safeNumber(a_cuenta, 0),
+        a_cuenta_porcentaje: safeNumber(a_cuenta_porcentaje, 0),
+        doc_dni: doc_dni || 0,
+        doc_factura_luz: doc_factura_luz || 0,
+        doc_reg_catastral: doc_reg_catastral || 0,
+        doc_declaracion_responsable: doc_declaracion_responsable || 0,
+        doc_tasa_aytmo: doc_tasa_aytmo || 0,
+        doc_reg_licencia_obra: doc_reg_licencia_obra || 0,
+        doc_cert_energ_previo: doc_cert_energ_previo || 0,
+        doc_cert_energ_posterior: doc_cert_energ_posterior || 0,
+        doc_legalizacion: doc_legalizacion || 0,
       };
 
       // Mapear items con protección
@@ -679,7 +797,12 @@ export default function Presupuestos() {
       `${presupuesto.nombre} ${presupuesto.apellidos}`;
     const direccionInstalacion = presupuesto.direccion_instalacion || "";
     const poblacionInstalacion = presupuesto.poblacion_instalacion || "";
+    const telContacto = presupuesto.tel_contacto || "";
     const codigoPostal = presupuesto.codigo_postal || "";
+    const telefonoCliente = presupuesto.telefono || "";
+    const emailCliente = presupuesto.email || "";
+    const direccionCliente = presupuesto.direccion || "";
+    const tituloPresupuesto = presupuesto.titulo_presupuesto || "";
 
     // Datos del presupuesto
     const num_presupuesto = presupuesto.num_presupuesto || "—";
@@ -778,6 +901,7 @@ export default function Presupuestos() {
 
       .main-table tbody tr {
         page-break-inside: avoid;
+        height: 20px;
       }
 
       .main-table tbody tr:not(:last-child) td {
@@ -821,7 +945,7 @@ export default function Presupuestos() {
       <table class="info-table">
         <tr>
           <td><strong>Presupuesto nº:</strong> ${num_presupuesto}</td>
-          <td rowspan="6" style="text-align: right; padding-right: 25px;">
+          <td rowspan="9" style="text-align: right; padding-right: 25px;">
             <img src="/neorenovables_logo.png" alt="Logo Neo Renovables" />
           </td>
         </tr>
@@ -832,17 +956,26 @@ export default function Presupuestos() {
           <td><strong>Cliente:</strong> ${nombreCliente}</td>
         </tr>
         <tr>
-          <td><strong>Dirección:</strong> ${direccionInstalacion}</td>
+          <td><strong>Direccion Cliente:</strong> ${direccionCliente}</td>
+        </tr>
+        <tr>
+          <td><strong>Email:</strong> ${emailCliente}</td>
+        </tr>
+        <tr>
+          <td><strong>Teléfono Cliente:</strong> ${telefonoCliente}</td>
+        </tr>
+        <tr>
+          <td><strong>Dirección Instalación:</strong> ${direccionInstalacion}</td>
         </tr>
         <tr>
           <td><strong>Población:</strong> ${poblacionInstalacion}</td>
         </tr>
         <tr>
-          <td><strong>Teléfono:</strong></td>
+          <td><strong>Teléfono Contacto:</strong> ${telContacto}</td>
         </tr>
       </table>
 
-      <div class="section-title">Instalación Fotovoltaica</div>
+      <div class="section-title">${tituloPresupuesto}</div>
     </div>
 
     <!-- TABLA DE PRODUCTOS Y TOTALES UNIFICADOS -->
@@ -1071,6 +1204,7 @@ export default function Presupuestos() {
     );
   };
 
+  console.log(presupuestos);
   console.log(presupuestoSeleccionado);
   console.log(nuevoPresupuesto);
   return (
@@ -1130,6 +1264,7 @@ export default function Presupuestos() {
         <DataGrid
           rows={presupuestos}
           columns={columnasVisibles}
+          onRowClick={handleFilaClick}
           getRowId={(row) => row.id}
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
@@ -1195,58 +1330,40 @@ export default function Presupuestos() {
       {/* Dialog de creación */}
       <Dialog
         open={openDialog}
-        onClose={() => setOpenDialog(false)}
+        onClose={() => resetFormulario()}
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle fontWeight="bold">Nuevo Presupuesto</DialogTitle>
+        <DialogTitle
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          fontWeight="bold"
+        >
+          Nuevo Presupuesto
+          <IconButton
+            color="error"
+            onClick={resetFormulario}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent dividers>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Añadir Titulo al preuspuesto
+          </Typography>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4.26}>
-              <FormControl size="small" fullWidth>
-                <InputLabel sx={{ fontSize: "12px" }}>
-                  Cliente existente
-                </InputLabel>
-                <Select
-                  value={nuevoPresupuesto.clienteId}
-                  label="Cliente existente"
-                  onChange={(e) =>
-                    setNuevoPresupuesto((prev) => ({
-                      ...prev,
-                      clienteId: e.target.value,
-                    }))
-                  }
-                  sx={{ fontSize: "12px" }}
-                >
-                  {clientes.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.nombre + " " + c.apellidos}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={7.74}>
-              <Button
-                variant="contained"
-                color="warning"
-                startIcon={<AddRoundedIcon />}
-                onClick={() => setOpenAddCliente(true)}
-                size="small"
-              >
-                Crear Cliente
-              </Button>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 size="small"
-                label="Dirección Instalación"
-                value={nuevoPresupuesto.direccionInstalacion}
+                label="Título del Presupuesto"
+                value={nuevoPresupuesto.tituloPresupuesto}
+                required
                 onChange={(e) =>
                   setNuevoPresupuesto((prev) => ({
                     ...prev,
-                    direccionInstalacion: e.target.value,
+                    tituloPresupuesto: e.target.value,
                   }))
                 }
                 fullWidth
@@ -1262,58 +1379,71 @@ export default function Presupuestos() {
                 }}
               />
             </Grid>
+          </Grid>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Añadir Datos del Cliente
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={3}>
-              <TextField
+              <Autocomplete
                 size="small"
-                label="Población Instalación"
-                value={nuevoPresupuesto.poblacionInstalacion}
-                onChange={(e) =>
+                fullWidth
+                options={clientes}
+                getOptionLabel={(option) =>
+                  `${option.nombre} ${option.apellidos}`
+                }
+                value={
+                  clientes.find((c) => c.id === nuevoPresupuesto.clienteId) ||
+                  null
+                }
+                onChange={(e, newValue) => {
                   setNuevoPresupuesto((prev) => ({
                     ...prev,
-                    poblacionInstalacion: e.target.value,
-                  }))
+                    clienteId: newValue?.id || "",
+                  }));
+                }}
+                noOptionsText={
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "start",
+                      p: 1,
+                    }}
+                  >
+                    <span>No hay resultados.</span>
+                    <Button
+                      onClick={() => setOpenAddCliente(true)}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mt: 1 }}
+                    >
+                      ¿Quieres añadir un cliente?
+                    </Button>
+                  </Box>
                 }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
+                renderOption={(props, option) => (
+                  <li
+                    {...props}
+                    style={{ fontSize: "12px", padding: "4px 8px" }}
+                  >
+                    {option.nombre} {option.apellidos}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Cliente"
+                    InputLabelProps={{ style: { fontSize: "12px" } }}
+                    InputProps={{
+                      ...params.InputProps,
+                      style: { fontSize: "12px" },
+                    }}
+                  />
+                )}
               />
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <TextField
-                size="small"
-                label="Codigo Postal"
-                type="number"
-                value={nuevoPresupuesto.codigoPostal}
-                onChange={(e) =>
-                  setNuevoPresupuesto((prev) => ({
-                    ...prev,
-                    codigoPostal: e.target.value,
-                  }))
-                }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={2}>
+            </Grid>{" "}
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 size="small"
                 label="Fecha"
@@ -1353,10 +1483,115 @@ export default function Presupuestos() {
                   }
                   sx={{ fontSize: "12px" }}
                 >
-                  <MenuItem value={10}>10%</MenuItem>
-                  <MenuItem value={21}>21%</MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={0}>
+                    -- Sin IVA --
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={10}>
+                    10%
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={21}>
+                    21%
+                  </MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={2.5}>
+              <TextField
+                size="small"
+                label="Dirección Instalación"
+                value={nuevoPresupuesto.direccionInstalacion}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    direccionInstalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                size="small"
+                label="Población Instalación"
+                value={nuevoPresupuesto.poblacionInstalacion}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    poblacionInstalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="C.P."
+                type="number"
+                value={nuevoPresupuesto.codigoPostal}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    codigoPostal: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                size="small"
+                label="Telefono Contacto"
+                type="number"
+                value={nuevoPresupuesto.telContacto}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    telContacto: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
             </Grid>
           </Grid>
 
@@ -1367,130 +1602,83 @@ export default function Presupuestos() {
           </Typography>
 
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={12}>
-                  <FormControl size="small" fullWidth>
-                    <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
-                    <Select
-                      value={productoSeleccionado.categoria}
-                      label="Categoría"
-                      onChange={(e) =>
-                        setProductoSeleccionado((prev) => ({
-                          ...prev,
-                          categoria: e.target.value,
-                          productoId: "",
-                          nombreManual: "",
-                          precio: "",
-                          descuento: "",
-                          descuento_porcentaje: "",
-                          descripcion: "",
-                          cantidad: 1,
-                        }))
-                      }
-                      sx={{ fontSize: "12px" }}
-                    >
-                      <MenuItem value="paneles">Panel Solar</MenuItem>
-                      <MenuItem value="inversores">Inversor</MenuItem>
-                      <MenuItem value="baterias">Batería</MenuItem>
-                      <MenuItem value="manual">Otro (manual)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {productoSeleccionado.categoria !== "manual" && (
-                  <Grid item xs={12} sm={12}>
-                    <FormControl
-                      disabled={!productoSeleccionado.categoria}
-                      size="small"
-                      fullWidth
-                    >
-                      <InputLabel sx={{ fontSize: "12px" }}>
-                        Producto
-                      </InputLabel>
-                      <Select
-                        value={productoSeleccionado.productoId}
-                        label="Producto"
-                        onChange={(e) =>
-                          setProductoSeleccionado((prev) => ({
-                            ...prev,
-                            productoId: e.target.value,
-                            precio: productos[productoSeleccionado.categoria]
-                              ?.find((p) => p.id === parseInt(e.target.value))
-                              ?.precio.toString(),
-                            descripcion: productos[
-                              productoSeleccionado.categoria
-                            ]
-                              ?.find((p) => p.id === parseInt(e.target.value))
-                              ?.descripcion?.toString(),
-                          }))
-                        }
-                        sx={{ fontSize: "12px" }}
-                      >
-                        {productos[productoSeleccionado.categoria]?.map((p) => (
-                          <MenuItem key={p.id} value={p.id}>
-                            {p.nombre}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                )}
-
-                {productoSeleccionado.categoria === "manual" && (
-                  <Grid item xs={12} sm={12}>
-                    <TextField
-                      size="small"
-                      label="Nombre Manual"
-                      value={productoSeleccionado.nombreManual}
-                      onChange={(e) =>
-                        setProductoSeleccionado((prev) => ({
-                          ...prev,
-                          nombreManual: e.target.value,
-                        }))
-                      }
-                      fullWidth
-                      InputProps={{
-                        style: {
-                          fontSize: "12px", // Tamaño del texto dentro del input
-                        },
-                      }}
-                      InputLabelProps={{
-                        style: {
-                          fontSize: "12px", // Tamaño del texto del label
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-              </Grid>
-            </Grid>
-            {productoSeleccionado.categoria !== "manual" && (
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  size="small"
-                  disabled={!productoSeleccionado.categoria}
-                  value={productoSeleccionado.descripcion}
-                  label="Descripción completa"
-                  fullWidth
-                  multiline
-                  rows={4}
+            <Grid item xs={12} sm={3}>
+              <FormControl size="small" fullWidth>
+                <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
+                <Select
+                  value={productoSeleccionado.categoria}
+                  label="Categoría"
                   onChange={(e) =>
                     setProductoSeleccionado((prev) => ({
                       ...prev,
-                      descripcion: e.target.value,
+                      categoria: e.target.value,
+                      productoId: "",
+                      nombreManual: "",
+                      precio: "",
+                      descuento: "",
+                      descuento_porcentaje: "",
+                      descripcion: "",
+                      cantidad: 1,
                     }))
                   }
-                  InputProps={{
-                    style: {
-                      fontSize: "12px", // Tamaño del texto dentro del input
-                    },
-                  }}
-                  InputLabelProps={{
-                    style: {
-                      fontSize: "12px", // Tamaño del texto del label
-                    },
-                  }}
+                  sx={{ fontSize: "12px" }}
+                >
+                  <MenuItem sx={{ fontSize: "12px" }} value="paneles">
+                    Panel Solar
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="inversores">
+                    Inversor
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="baterias">
+                    Batería
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="manual">
+                    Otro (manual)
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={6}>
+                <Autocomplete
+                  size="small"
+                  fullWidth
+                  disabled={!productoSeleccionado.categoria}
+                  options={productos[productoSeleccionado.categoria] || []}
+                  getOptionLabel={(option) => option.nombre || ""}
+                  value={
+                    productos[productoSeleccionado.categoria]?.find(
+                      (p) => p.id === parseInt(productoSeleccionado.productoId)
+                    ) || null
+                  }
+                  onChange={(e, newValue) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      productoId: newValue?.id || "",
+                      precio: newValue?.precio?.toString() || "",
+                      descripcion: newValue?.descripcion?.toString() || "",
+                    }))
+                  }
+                  noOptionsText="No hay resultados"
+                  renderOption={(props, option) => (
+                    <li
+                      {...props}
+                      style={{ fontSize: "12px", padding: "4px 8px" }}
+                    >
+                      {option.nombre}
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Producto"
+                      InputLabelProps={{ style: { fontSize: "12px" } }}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { fontSize: "12px" },
+                      }}
+                    />
+                  )}
                 />
               </Grid>
             )}
@@ -1498,17 +1686,15 @@ export default function Presupuestos() {
               <Grid item xs={12} sm={6}>
                 <TextField
                   size="small"
-                  multiline
-                  rows={4}
-                  value={productoSeleccionado.descripcion}
-                  label="Descripción completa"
-                  fullWidth
+                  label="Nombre Manual"
+                  value={productoSeleccionado.nombreManual}
                   onChange={(e) =>
                     setProductoSeleccionado((prev) => ({
                       ...prev,
-                      descripcion: e.target.value,
+                      nombreManual: e.target.value,
                     }))
                   }
+                  fullWidth
                   InputProps={{
                     style: {
                       fontSize: "12px", // Tamaño del texto dentro del input
@@ -1522,7 +1708,7 @@ export default function Presupuestos() {
                 />
               </Grid>
             )}
-            <Grid item xs={6} sm={2}>
+            <Grid item xs={6} sm={1}>
               <TextField
                 size="small"
                 label="Precio"
@@ -1596,8 +1782,64 @@ export default function Presupuestos() {
                   },
                 }}
               />
-            </Grid>
-
+            </Grid>{" "}
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  size="small"
+                  disabled={!productoSeleccionado.categoria}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  multiline
+                  rows={4}
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
+            )}
+            {productoSeleccionado.categoria === "manual" && (
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  size="small"
+                  multiline
+                  rows={4}
+                  value={productoSeleccionado.descripcion}
+                  label="Descripción completa"
+                  fullWidth
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
+            )}
             <Grid item xs={12}>
               <Button variant="outlined" onClick={handleAddProductoNuevo}>
                 Añadir Producto
@@ -1694,19 +1936,28 @@ export default function Presupuestos() {
           </>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => resetFormulario()}>Cancelar</Button>
+          {/* <Button
+            size="small"
+            variant="contained"
+            color="error"
+            onClick={() => resetFormulario()}
+          >
+            Cancelar
+          </Button> */}
           <Button
             variant="contained"
             onClick={handleGuardarPresupuesto}
             color="success"
+            size="small"
             disabled={
               nuevoPresupuesto.clienteId == "" ||
+              nuevoPresupuesto.tituloPresupuesto == "" ||
               nuevoPresupuesto.productos.length <= 0
                 ? true
                 : false
             }
           >
-            Guardar Presupuesto
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>
@@ -1717,55 +1968,39 @@ export default function Presupuestos() {
         maxWidth="lg"
         fullWidth
       >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
+        <DialogTitle
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          fontWeight="bold"
+          fontSize={{ xs: "14px", sm: "16px" }}
         >
-          <DialogTitle fontWeight="bold" fontSize={{ xs: "14px", sm: "16px" }}>
-            Editar Presupuesto Nº: {presupuestoSeleccionado?.num_presupuesto}
-          </DialogTitle>
-        </Box>
+          Editar Presupuesto Nº: {presupuestoSeleccionado?.num_presupuesto}
+          <IconButton
+            color="error"
+            onClick={cerrarDialogoEdicion}
+            aria-label="close"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
         <DialogContent dividers>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Modificar Titulo al preuspuesto
+          </Typography>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4.26}>
-              <FormControl size="small" fullWidth>
-                <InputLabel sx={{ fontSize: "12px" }}>
-                  Cliente existente
-                </InputLabel>
-                <Select
-                  value={presupuestoSeleccionado?.cliente_id || ""}
-                  label="Cliente existente"
-                  onChange={(e) =>
-                    setPresupuestoSeleccionado((prev) => ({
-                      ...prev,
-                      cliente_id: e.target.value,
-                    }))
-                  }
-                  sx={{ fontSize: "12px" }}
-                >
-                  {clientes.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.nombre + " " + c.apellidos}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}></Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 size="small"
-                label="Dirección Instalación"
-                value={presupuestoSeleccionado?.direccion_instalacion || ""}
+                label="Título del Presupuesto"
+                value={presupuestoSeleccionado?.titulo_presupuesto}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                required
                 onChange={(e) =>
                   setPresupuestoSeleccionado((prev) => ({
                     ...prev,
-                    direccion_instalacion: e.target.value,
+                    titulo_presupuesto: e.target.value,
                   }))
                 }
                 fullWidth
@@ -1781,61 +2016,79 @@ export default function Presupuestos() {
                 }}
               />
             </Grid>
+          </Grid>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Mofificar Datos del Cliente
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={3}>
-              <TextField
+              <Autocomplete
                 size="small"
-                label="Población Instalación"
-                value={presupuestoSeleccionado?.poblacion_instalacion || ""}
-                onChange={(e) =>
+                fullWidth
+                options={clientes}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                getOptionLabel={(option) =>
+                  `${option.nombre} ${option.apellidos}`
+                }
+                value={
+                  clientes.find(
+                    (c) => c.id === presupuestoSeleccionado?.cliente_id
+                  ) || null
+                }
+                onChange={(e, newValue) =>
                   setPresupuestoSeleccionado((prev) => ({
                     ...prev,
-                    poblacion_instalacion: e.target.value,
+                    cliente_id: newValue?.id || "",
                   }))
                 }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                size="small"
-                label="Codigo Postal"
-                type="number"
-                value={presupuestoSeleccionado?.codigo_postal || ""}
-                onChange={(e) =>
-                  setPresupuestoSeleccionado((prev) => ({
-                    ...prev,
-                    codigo_postal: e.target.value,
-                  }))
+                noOptionsText={
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "start",
+                      p: 1,
+                    }}
+                  >
+                    <span>No hay resultados.</span>
+                    <Button
+                      onClick={() => setOpenAddCliente(true)}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mt: 1 }}
+                    >
+                      ¿Quieres añadir un cliente?
+                    </Button>
+                  </Box>
                 }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
+                renderOption={(props, option) => (
+                  <li
+                    {...props}
+                    style={{ fontSize: "12px", padding: "4px 8px" }}
+                  >
+                    {option.nombre} {option.apellidos}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Cliente"
+                    InputLabelProps={{ style: { fontSize: "12px" } }}
+                    InputProps={{
+                      ...params.InputProps,
+                      style: { fontSize: "12px" },
+                    }}
+                  />
+                )}
               />
             </Grid>
-            <Grid item xs={12} sm={2}>
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 size="small"
                 label="Fecha"
                 type="date"
                 value={presupuestoSeleccionado?.fecha.split("T")[0] || ""}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
                 onChange={(e) =>
                   setPresupuestoSeleccionado((prev) => ({
                     ...prev,
@@ -1857,10 +2110,14 @@ export default function Presupuestos() {
               />
             </Grid>
             <Grid item xs={12} sm={1}>
-              <FormControl size="small" fullWidth>
+              <FormControl
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                size="small"
+                fullWidth
+              >
                 <InputLabel sx={{ fontSize: "12px" }}>IVA</InputLabel>
                 <Select
-                  value={presupuestoSeleccionado?.iva_porcentaje || 10}
+                  value={presupuestoSeleccionado?.iva_porcentaje || 0}
                   label="IVA"
                   onChange={(e) =>
                     setPresupuestoSeleccionado((prev) => ({
@@ -1870,17 +2127,127 @@ export default function Presupuestos() {
                   }
                   sx={{ fontSize: "12px" }}
                 >
-                  <MenuItem value={10}>10%</MenuItem>
-                  <MenuItem value={21}>21%</MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={0}>
+                    -- Sin IVA --
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={10}>
+                    10%
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value={21}>
+                    21%
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={2.5}>
+              <TextField
+                size="small"
+                label="Dirección Instalación"
+                value={presupuestoSeleccionado?.direccion_instalacion || ""}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    direccion_instalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                size="small"
+                label="Población Instalación"
+                value={presupuestoSeleccionado?.poblacion_instalacion || ""}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    poblacion_instalacion: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="C.P."
+                type="number"
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                value={presupuestoSeleccionado?.codigo_postal || ""}
+                onChange={(e) =>
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    codigo_postal: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                size="small"
+                label="Telefono"
+                type="number"
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                value={presupuestoSeleccionado?.tel_contacto || ""}
+                onChange={(e) =>
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    tel_contacto: e.target.value,
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+
             {/* Campo para editar estado */}
             <Grid item xs={12} sm={2}>
               <FormControl size="small" fullWidth>
                 <InputLabel sx={{ fontSize: "12px" }}>Estado</InputLabel>
                 <Select
-                  value={presupuestoSeleccionado?.estado || "Pendiente"}
+                  value={presupuestoSeleccionado?.estado || "pendiente"}
                   label="Estado"
                   onChange={(e) =>
                     setPresupuestoSeleccionado((prev) => ({
@@ -1890,12 +2257,127 @@ export default function Presupuestos() {
                   }
                   sx={{ fontSize: "12px" }}
                 >
-                  <MenuItem value="pendiente">Pendiente</MenuItem>
-                  <MenuItem value="aceptado">Aceptado</MenuItem>
-                  <MenuItem value="rechazado">Rechazado</MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="pendiente">
+                    Pendiente
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="aceptado">
+                    Aceptado
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="rechazado">
+                    Rechazado
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Grid>
+          </Grid>
+
+          {/* Campos para edicion de A/C, %A/C y documentos entregados */}
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Modificar A/C, % (A/C) y Documentos Entregados
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                size="small"
+                label="A Cuenta (€)"
+                type="number"
+                value={presupuestoSeleccionado?.a_cuenta || ""}
+                disabled={presupuestoSeleccionado?.estado == "pendiente"}
+                onChange={(e) => {
+                  const nuevoACuenta = parseFloat(e.target.value);
+                  const total = parseFloat(presupuestoSeleccionado?.total || 0);
+
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    a_cuenta: nuevoACuenta,
+                    a_cuenta_porcentaje:
+                      total > 0 ? ((nuevoACuenta / total) * 100).toFixed(2) : 0,
+                  }));
+                }}
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="% A Cuenta"
+                type="number"
+                value={(() => {
+                  const total = parseFloat(presupuestoSeleccionado?.total || 0);
+                  const aCuenta = parseFloat(
+                    presupuestoSeleccionado?.a_cuenta || 0
+                  );
+                  const porcentajeManual = parseFloat(
+                    presupuestoSeleccionado?.a_cuenta_porcentaje
+                  );
+
+                  if (!isNaN(porcentajeManual)) return porcentajeManual;
+                  if (total === 0) return 0;
+                  return ((aCuenta / total) * 100).toFixed(2);
+                })()}
+                disabled={presupuestoSeleccionado?.estado == "pendiente"}
+                onChange={(e) => {
+                  const nuevoPorcentaje = parseFloat(e.target.value);
+                  const total = parseFloat(presupuestoSeleccionado?.total || 0);
+
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    a_cuenta_porcentaje: nuevoPorcentaje,
+                    a_cuenta:
+                      total > 0
+                        ? ((nuevoPorcentaje / 100) * total).toFixed(2)
+                        : 0,
+                  }));
+                }}
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Documentos Entregados
+          </Typography>
+
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <SeccionDocumentos
+              titulo="Cliente"
+              documentos={DOCUMENTOS_POR_ROL.cliente}
+              data={presupuestoSeleccionado}
+              onChange={setPresupuestoSeleccionado}
+            />
+
+            <SeccionDocumentos
+              titulo="Perito"
+              documentos={DOCUMENTOS_POR_ROL.perito}
+              data={presupuestoSeleccionado}
+              onChange={setPresupuestoSeleccionado}
+            />
+
+            <SeccionDocumentos
+              titulo="Técnico"
+              documentos={DOCUMENTOS_POR_ROL.tecnico}
+              data={presupuestoSeleccionado}
+              onChange={setPresupuestoSeleccionado}
+            />
           </Grid>
 
           <Divider sx={{ my: 2 }} />
@@ -1903,105 +2385,187 @@ export default function Presupuestos() {
             Añadir Producto al Presupuesto
           </Typography>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={12}>
-                  <FormControl size="small" fullWidth>
-                    <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
-                    <Select
-                      value={productoSeleccionado.categoria}
-                      label="Categoría"
-                      onChange={(e) =>
-                        setProductoSeleccionado((prev) => ({
-                          ...prev,
-                          categoria: e.target.value,
-                          productoId: "",
-                          nombreManual: "",
-                          precio: "",
-                          descuento_porcentaje: "",
-                          descripcion: "",
-                          cantidad: 1,
-                        }))
-                      }
-                      sx={{ fontSize: "12px" }}
-                    >
-                      <MenuItem value="paneles">Panel Solar</MenuItem>
-                      <MenuItem value="inversores">Inversor</MenuItem>
-                      <MenuItem value="baterias">Batería</MenuItem>
-                      <MenuItem value="manual">Otro (manual)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {productoSeleccionado.categoria !== "manual" && (
-                  <Grid item xs={12} sm={12}>
-                    <FormControl
-                      disabled={!productoSeleccionado.categoria}
-                      size="small"
-                      fullWidth
-                    >
-                      <InputLabel sx={{ fontSize: "12px" }}>
-                        Producto
-                      </InputLabel>
-                      <Select
-                        value={productoSeleccionado.productoId}
-                        label="Producto"
-                        onChange={(e) =>
-                          setProductoSeleccionado((prev) => ({
-                            ...prev,
-                            productoId: e.target.value,
-                            precio: productos[productoSeleccionado.categoria]
-                              ?.find((p) => p.id === parseInt(e.target.value))
-                              ?.precio.toString(),
-                            descripcion: productos[
-                              productoSeleccionado.categoria
-                            ]
-                              ?.find((p) => p.id === parseInt(e.target.value))
-                              ?.descripcion?.toString(),
-                          }))
-                        }
-                        sx={{ fontSize: "12px" }}
-                      >
-                        {productos[productoSeleccionado.categoria]?.map((p) => (
-                          <MenuItem key={p.id} value={p.id}>
-                            {p.nombre}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                )}
-
-                {productoSeleccionado.categoria === "manual" && (
-                  <Grid item xs={12} sm={12}>
-                    <TextField
-                      size="small"
-                      label="Nombre Manual"
-                      value={productoSeleccionado.nombreManual}
-                      onChange={(e) =>
-                        setProductoSeleccionado((prev) => ({
-                          ...prev,
-                          nombreManual: e.target.value,
-                        }))
-                      }
-                      fullWidth
-                      InputProps={{
-                        style: {
-                          fontSize: "12px", // Tamaño del texto dentro del input
-                        },
-                      }}
-                      InputLabelProps={{
-                        style: {
-                          fontSize: "12px", // Tamaño del texto del label
-                        },
-                      }}
-                    />
-                  </Grid>
-                )}
-              </Grid>
+            <Grid item xs={12} sm={3}>
+              <FormControl
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                size="small"
+                fullWidth
+              >
+                <InputLabel sx={{ fontSize: "12px" }}>Categoría</InputLabel>
+                <Select
+                  value={productoSeleccionado.categoria}
+                  label="Categoría"
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      categoria: e.target.value,
+                      productoId: "",
+                      nombreManual: "",
+                      precio: "",
+                      descuento_porcentaje: "",
+                      descripcion: "",
+                      cantidad: 1,
+                    }))
+                  }
+                  sx={{ fontSize: "12px" }}
+                >
+                  <MenuItem sx={{ fontSize: "12px" }} value="paneles">
+                    Panel Solar
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="inversores">
+                    Inversor
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="baterias">
+                    Batería
+                  </MenuItem>
+                  <MenuItem sx={{ fontSize: "12px" }} value="manual">
+                    Otro (manual)
+                  </MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
             {productoSeleccionado.categoria !== "manual" && (
               <Grid item xs={12} sm={6}>
+                <Autocomplete
+                  size="small"
+                  fullWidth
+                  noOptionsText="No hay resultados"
+                  disabled={!productoSeleccionado.categoria}
+                  options={productos[productoSeleccionado.categoria] || []}
+                  getOptionLabel={(option) => option.nombre || ""}
+                  value={
+                    productos[productoSeleccionado.categoria]?.find(
+                      (p) => p.id === parseInt(productoSeleccionado.productoId)
+                    ) || null
+                  }
+                  onChange={(e, newValue) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      productoId: newValue?.id || "",
+                      precio: newValue?.precio?.toString() || "",
+                      descripcion: newValue?.descripcion?.toString() || "",
+                    }))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Producto"
+                      InputLabelProps={{ style: { fontSize: "12px" } }}
+                      InputProps={{
+                        ...params.InputProps,
+                        style: { fontSize: "12px" },
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+            )}
+            {productoSeleccionado.categoria === "manual" && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  size="small"
+                  label="Nombre Manual"
+                  value={productoSeleccionado.nombreManual}
+                  onChange={(e) =>
+                    setProductoSeleccionado((prev) => ({
+                      ...prev,
+                      nombreManual: e.target.value,
+                    }))
+                  }
+                  fullWidth
+                  InputProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto dentro del input
+                    },
+                  }}
+                  InputLabelProps={{
+                    style: {
+                      fontSize: "12px", // Tamaño del texto del label
+                    },
+                  }}
+                />
+              </Grid>
+            )}{" "}
+            <Grid item xs={6} sm={1}>
+              <TextField
+                size="small"
+                label="Precio"
+                type="number"
+                value={productoSeleccionado.precio}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    precio: parseFloat(e.target.value),
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={6} sm={1}>
+              <TextField
+                size="small"
+                label="Cantidad"
+                type="number"
+                value={productoSeleccionado.cantidad}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    cantidad: parseInt(e.target.value),
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={1}>
+              <TextField
+                size="small"
+                label="Dto.(%)"
+                type="number"
+                value={productoSeleccionado.descuento_porcentaje}
+                disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                onChange={(e) =>
+                  setProductoSeleccionado((prev) => ({
+                    ...prev,
+                    descuento_porcentaje: parseInt(e.target.value),
+                  }))
+                }
+                fullWidth
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            {productoSeleccionado.categoria !== "manual" && (
+              <Grid item xs={12} sm={12}>
                 <TextField
                   size="small"
                   disabled={!productoSeleccionado.categoria}
@@ -2030,7 +2594,7 @@ export default function Presupuestos() {
               </Grid>
             )}
             {productoSeleccionado.categoria === "manual" && (
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={12}>
                 <TextField
                   size="small"
                   multiline
@@ -2058,81 +2622,6 @@ export default function Presupuestos() {
                 />
               </Grid>
             )}
-            <Grid item xs={6} sm={2}>
-              <TextField
-                size="small"
-                label="Precio"
-                type="number"
-                value={productoSeleccionado.precio}
-                onChange={(e) =>
-                  setProductoSeleccionado((prev) => ({
-                    ...prev,
-                    precio: parseFloat(e.target.value),
-                  }))
-                }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={6} sm={1}>
-              <TextField
-                size="small"
-                label="Cantidad"
-                type="number"
-                value={productoSeleccionado.cantidad}
-                onChange={(e) =>
-                  setProductoSeleccionado((prev) => ({
-                    ...prev,
-                    cantidad: parseInt(e.target.value),
-                  }))
-                }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={1}>
-              <TextField
-                size="small"
-                label="Dto.(%)"
-                type="number"
-                value={productoSeleccionado.descuento_porcentaje}
-                onChange={(e) =>
-                  setProductoSeleccionado((prev) => ({
-                    ...prev,
-                    descuento_porcentaje: parseInt(e.target.value),
-                  }))
-                }
-                fullWidth
-                InputProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto dentro del input
-                  },
-                }}
-                InputLabelProps={{
-                  style: {
-                    fontSize: "12px", // Tamaño del texto del label
-                  },
-                }}
-              />
-            </Grid>
             <Grid item xs={12}>
               <Button variant="outlined" onClick={handleAddProductoEdicion}>
                 Añadir Producto
@@ -2183,7 +2672,10 @@ export default function Presupuestos() {
                       €
                     </TableCell>
                     <TableCell align="center">
-                      <IconButton onClick={() => eliminarItem(item.id, true)}>
+                      <IconButton
+                        disabled={presupuestoSeleccionado?.estado == "aceptado"}
+                        onClick={() => eliminarItem(item.id, true)}
+                      >
                         <DeleteIcon color="error" />
                       </IconButton>
                     </TableCell>
@@ -2243,16 +2735,24 @@ export default function Presupuestos() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => cerrarDialogoEdicion()}>Cancelar</Button>
+          {/* <Button
+            variant="contained"
+            size="small"
+            color="error"
+            onClick={() => cerrarDialogoEdicion()}
+          >
+            Cancelar
+          </Button> */}
           <Button
             variant="contained"
+            size="small"
             onClick={handleActualizarPresupuesto}
             color="success"
             disabled={
               presupuestoSeleccionado?.productos.length <= 0 ? true : false
             }
           >
-            Guardar Cambios
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>
@@ -2266,6 +2766,15 @@ export default function Presupuestos() {
             setReload(!reload);
           }
         }}
+      />
+      <DialogDetallesPresupuesto
+        open={openDetalles}
+        onClose={() => setOpenDetalles(false)}
+        presupuestoSeleccionado={presupuestoSeleccionado}
+        clientes={clientes}
+        calcularSubtotalModificado={calcularSubtotalModificado}
+        calcularDescuento={calcularDescuento}
+        calcularTotalConIVAModificado={calcularTotalConIVAModificado}
       />
     </Box>
   );

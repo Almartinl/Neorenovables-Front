@@ -81,16 +81,6 @@ export default function Clientes() {
           label="Editar"
           onClick={() => handleOpenDialog(params.row)}
         />,
-        // params.row && (
-        //   <GridActionsCellItem
-        //     icon={<PictureAsPdfIcon sx={{ color: "#f44336" }} />}
-        //     disabled={params.row.ficha == null || params.row.ficha === ""}
-        //     label="Ver PDF"
-        //     onClick={() =>
-        //       window.open(`https://almartindev.com/${params.row.ficha}`, "_blank")
-        //     }
-        //   />
-        // ),
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
           label="Eliminar"
