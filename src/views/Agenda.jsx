@@ -307,7 +307,7 @@ export default function Agenda() {
               ? "listWeek,dayGridMonth"
               : "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
           }}
-          height={isMobile ? "80vh" : "87vh"}
+          height={isMobile ? "80vh" : "85vh"}
           locale={esLocale}
           firstDay={1}
           selectable

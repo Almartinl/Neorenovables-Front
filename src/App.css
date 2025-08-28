@@ -57,6 +57,25 @@
   color: #888;
 }
 
+/* Líneas más gordas en la vista de mes (dayGrid) */
+.fc .fc-daygrid-day,
+.fc .fc-col-header-cell {
+  border-width: 1.5px !important; /* más grosor */
+  border-color: #000 !important; /* puedes poner el color */
+}
+
+/* Líneas más gordas en la vista de semana/día (timeGrid) */
+.fc .fc-timegrid-slot {
+  border-bottom-width: 1.5px !important;
+  border-color: #000 !important;
+}
+
+/* Opcional: reforzar bordes exteriores */
+.fc .fc-scrollgrid {
+  border: 1.5px solid #000 !important;
+}
+
+
 
 
 /* MuiFormLabel-root.MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-sizeSmall MuiInputLabel-outlined css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root */
