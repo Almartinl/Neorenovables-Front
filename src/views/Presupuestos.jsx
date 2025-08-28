@@ -46,6 +46,7 @@ export default function Presupuestos() {
   const [numPresupuestos, setNumPresupuestos] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [clientes, setClientes] = useState([]);
+  const [colaboradores, setColaboradores] = useState([]);
   const [reload, setReload] = useState(false);
   const [openEditarDialog, setOpenEditarDialog] = useState(false);
   const [presupuestoSeleccionado, setPresupuestoSeleccionado] = useState(null);
@@ -91,7 +92,7 @@ export default function Presupuestos() {
         {documentos.map((doc) => (
           <Grid item xs={12} sm={4} key={doc.key}>
             <FormControlLabel
-              disabled={presupuestoSeleccionado?.estado == "pendiente"}
+              disabled={presupuestoSeleccionado?.estado != "aceptado"}
               control={
                 <Checkbox
                   checked={Boolean(data?.[doc.key])}
@@ -123,6 +124,8 @@ export default function Presupuestos() {
     fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
     num_presupuesto: "",
     estado: "",
+    colaborador: "",
+    logoColaborador: "",
     productos: [],
   });
 
@@ -164,6 +167,7 @@ export default function Presupuestos() {
     fetchPresupuestosByUser();
     fetchClientes();
     fetchProductos();
+    fetchColaboradores();
   }, [dataToken.id, dataToken.role, reload, verSoloMisPresupuestos]);
 
   const handleFilaClick = (params) => {
@@ -223,6 +227,12 @@ export default function Presupuestos() {
     setClientes(data);
   };
 
+  const fetchColaboradores = async () => {
+    const res = await fetch("https://almartindev.com/api/colaborador/");
+    const data = await res.json();
+    setColaboradores(data);
+  };
+
   function resetFormulario() {
     setNuevoPresupuesto({
       clienteId: "",
@@ -235,6 +245,8 @@ export default function Presupuestos() {
       iva: "",
       fecha: new Date().toISOString().split("T")[0], // formato YYYY-MM-DD
       estado: "",
+      colaborador: "",
+      logoColaborador: "",
       productos: [],
     });
     setProductoSeleccionado({
@@ -442,6 +454,8 @@ export default function Presupuestos() {
         tituloPresupuesto,
         iva,
         fecha,
+        colaborador,
+        logoColaborador,
         productos,
       } = nuevoPresupuesto;
 
@@ -467,6 +481,8 @@ export default function Presupuestos() {
         total_bruto: totalBruto,
         total: totalBruto + (totalBruto * iva) / 100,
         fecha: fecha,
+        colaborador: colaborador || null,
+        logo_colaborador: logoColaborador || null,
       };
 
       // Convertir productos en items con formato esperado
@@ -568,18 +584,18 @@ export default function Presupuestos() {
       field: "nombre",
       headerName: "Nombre",
       flex: 1,
-      headerAlign: "right",
-      align: "right",
+      headerAlign: "center",
+      align: "center",
     },
     {
       field: "apellidos",
       headerName: "Apellidos",
       flex: 1,
-      headerAlign: "left",
-      align: "left",
+      headerAlign: "center",
+      align: "center",
     },
     {
-      field: "telefono",
+      field: "tel_contacto",
       headerName: "Telefono",
       align: "center",
       headerAlign: "center",
@@ -591,27 +607,27 @@ export default function Presupuestos() {
       flex: 1.5,
     },
     { field: "poblacion_instalacion", headerName: "Población", flex: 1 },
-    { field: "codigo_postal", headerName: "C.P.", flex: 1 },
+    { field: "codigo_postal", headerName: "C.P.", flex: 0.5 },
     {
       field: "total_bruto",
       headerName: "Neto (€)",
       align: "right",
       headerAlign: "right",
-      flex: 1,
+      flex: 0.8,
     },
     {
       field: "iva",
       headerName: "IVA (€)",
       align: "right",
       headerAlign: "right",
-      flex: 1,
+      flex: 0.8,
     },
     {
       field: "total",
       headerName: "Total (€)",
       align: "right",
       headerAlign: "right",
-      flex: 1,
+      flex: 0.8,
     },
     {
       field: "estado",
@@ -641,7 +657,7 @@ export default function Presupuestos() {
           onClick={() => eliminarPresupuesto(params.id)}
         />,
       ],
-      flex: 1,
+      flex: 1.2,
     },
   ];
 
@@ -705,6 +721,8 @@ export default function Presupuestos() {
         doc_cert_energ_previo,
         doc_cert_energ_posterior,
         doc_legalizacion,
+        colaborador,
+        logo_colaborador,
         productos,
       } = presupuestoSeleccionado;
 
@@ -742,6 +760,8 @@ export default function Presupuestos() {
         doc_cert_energ_previo: doc_cert_energ_previo || 0,
         doc_cert_energ_posterior: doc_cert_energ_posterior || 0,
         doc_legalizacion: doc_legalizacion || 0,
+        colaborador: colaborador || null,
+        logo_colaborador: logo_colaborador || null,
       };
 
       // Mapear items con protección
@@ -803,6 +823,9 @@ export default function Presupuestos() {
     const emailCliente = presupuesto.email || "";
     const direccionCliente = presupuesto.direccion || "";
     const tituloPresupuesto = presupuesto.titulo_presupuesto || "";
+    const colaborador = presupuesto.logo_colaborador || "";
+
+    console.log(presupuesto);
 
     // Datos del presupuesto
     const num_presupuesto = presupuesto.num_presupuesto || "—";
@@ -945,33 +968,38 @@ export default function Presupuestos() {
       <table class="info-table">
         <tr>
           <td><strong>Presupuesto nº:</strong> ${num_presupuesto}</td>
-          <td rowspan="9" style="text-align: right; padding-right: 25px;">
+          <td></td>
+          ${
+            colaborador &&
+            `
+              <td rowspan="6" style="text-align: center; padding-right: 25px;">
+                <img
+                  src="https://almartindev.com/${colaborador}"
+                  alt="Logo Colaborador"
+                />
+              </td>`
+          }
+          <td rowspan="6" style="text-align: right; padding-right: 25px;">
             <img src="/neorenovables_logo.png" alt="Logo Neo Renovables" />
           </td>
         </tr>
         <tr>
           <td><strong>Fecha:</strong> ${fecha}</td>
+          <td><strong>Dirección Instalación:</strong> ${direccionInstalacion}</td>
         </tr>
         <tr>
           <td><strong>Cliente:</strong> ${nombreCliente}</td>
+          <td><strong>Población:</strong> ${poblacionInstalacion}</td>
         </tr>
         <tr>
           <td><strong>Direccion Cliente:</strong> ${direccionCliente}</td>
+          <td><strong>Teléfono Contacto:</strong> ${telContacto}</td>
         </tr>
         <tr>
           <td><strong>Email:</strong> ${emailCliente}</td>
         </tr>
         <tr>
           <td><strong>Teléfono Cliente:</strong> ${telefonoCliente}</td>
-        </tr>
-        <tr>
-          <td><strong>Dirección Instalación:</strong> ${direccionInstalacion}</td>
-        </tr>
-        <tr>
-          <td><strong>Población:</strong> ${poblacionInstalacion}</td>
-        </tr>
-        <tr>
-          <td><strong>Teléfono Contacto:</strong> ${telContacto}</td>
         </tr>
       </table>
 
@@ -989,7 +1017,9 @@ export default function Presupuestos() {
           <th style="border: none; border-bottom: 0.5px solid #000; width: 70px">Total</th>
         </tr>
       </thead>
-      <tbody style="height: 40vh;">
+      <tbody style="height: ${
+        presupuestos.items?.length > 5 ? "auto" : "40vh"
+      };">
         ${itemsHtml}
       </tbody>
       <tbody>
@@ -1266,11 +1296,26 @@ export default function Presupuestos() {
           columns={columnasVisibles}
           onRowClick={handleFilaClick}
           getRowId={(row) => row.id}
+          // getRowClassName={(params) => {
+          //   switch (params.row.estado) {
+          //     case "pendiente":
+          //       return "fila-pendiente";
+          //     case "aceptado":
+          //       return "fila-aceptado";
+          //     case "rechazado":
+          //       return "fila-rechazado";
+          //     default:
+          //       return "";
+          //   }
+          // }}
           experimentalFeatures={{ newEditingApi: true }}
           disableRowSelectionOnClick
           density="compact"
           disableColumnMenu
           sx={{
+            // "& .fila-pendiente": { backgroundColor: "#fff3cd" },
+            // "& .fila-aceptado": { backgroundColor: "#d4edda" },
+            // "& .fila-rechazado": { backgroundColor: "#f8d7da" },
             "& .MuiDataGrid-cell": {
               fontSize: "11px",
               borderColor: "#757575",
@@ -1593,6 +1638,66 @@ export default function Presupuestos() {
                 }}
               />
             </Grid>
+          </Grid>
+
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Añadir Colaborador
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={3}>
+              <Autocomplete
+                size="small"
+                fullWidth
+                options={colaboradores}
+                getOptionLabel={(option) => `${option.colaborador}`}
+                value={
+                  colaboradores.find(
+                    (c) => c.colaborador === nuevoPresupuesto.colaborador
+                  ) || null
+                }
+                onChange={(e, newValue) => {
+                  setNuevoPresupuesto((prev) => ({
+                    ...prev,
+                    colaborador: newValue?.colaborador || "",
+                    logoColaborador: newValue?.logo || "",
+                  }));
+                }}
+                noOptionsText="No hay resultados"
+                renderOption={(props, option) => (
+                  <li
+                    {...props}
+                    style={{ fontSize: "12px", padding: "4px 8px" }}
+                  >
+                    {option.colaborador}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Colaborador"
+                    InputLabelProps={{ style: { fontSize: "12px" } }}
+                    InputProps={{
+                      ...params.InputProps,
+                      style: { fontSize: "12px" },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+            {nuevoPresupuesto.logoColaborador && (
+              <Grid item xs={12} sm={3}>
+                <img
+                  src={`https://almartindev.com/api${nuevoPresupuesto.logoColaborador}`}
+                  alt="Logo Colaborador"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: "100px",
+                    objectFit: "contain",
+                  }}
+                />
+              </Grid>
+            )}
           </Grid>
 
           <Divider sx={{ my: 2 }} />
@@ -2241,7 +2346,6 @@ export default function Presupuestos() {
                 }}
               />
             </Grid>
-
             {/* Campo para editar estado */}
             <Grid item xs={12} sm={2}>
               <FormControl size="small" fullWidth>
@@ -2270,6 +2374,66 @@ export default function Presupuestos() {
               </FormControl>
             </Grid>
           </Grid>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Modificar Colaborador
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={3}>
+              <Autocomplete
+                size="small"
+                fullWidth
+                options={colaboradores}
+                getOptionLabel={(option) => `${option.colaborador}`}
+                value={
+                  colaboradores.find(
+                    (c) =>
+                      c.colaborador === presupuestoSeleccionado?.colaborador
+                  ) || null
+                }
+                onChange={(e, newValue) => {
+                  setPresupuestoSeleccionado((prev) => ({
+                    ...prev,
+                    colaborador: newValue?.colaborador || "",
+                    logo_colaborador: newValue?.logo || "",
+                  }));
+                }}
+                noOptionsText="No hay resultados"
+                renderOption={(props, option) => (
+                  <li
+                    {...props}
+                    style={{ fontSize: "12px", padding: "4px 8px" }}
+                  >
+                    {option.colaborador}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Colaborador"
+                    InputLabelProps={{ style: { fontSize: "12px" } }}
+                    InputProps={{
+                      ...params.InputProps,
+                      style: { fontSize: "12px" },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+            {presupuestoSeleccionado?.logo_colaborador && (
+              <Grid item xs={12} sm={3}>
+                <img
+                  src={`https://almartindev.com/api${presupuestoSeleccionado?.logo_colaborador}`}
+                  alt="Logo Colaborador"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: "100px",
+                    objectFit: "contain",
+                  }}
+                />
+              </Grid>
+            )}
+          </Grid>
 
           {/* Campos para edicion de A/C, %A/C y documentos entregados */}
           <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
@@ -2282,7 +2446,7 @@ export default function Presupuestos() {
                 label="A Cuenta (€)"
                 type="number"
                 value={presupuestoSeleccionado?.a_cuenta || ""}
-                disabled={presupuestoSeleccionado?.estado == "pendiente"}
+                disabled={presupuestoSeleccionado?.estado != "aceptado"}
                 onChange={(e) => {
                   const nuevoACuenta = parseFloat(e.target.value);
                   const total = parseFloat(presupuestoSeleccionado?.total || 0);
@@ -2325,7 +2489,7 @@ export default function Presupuestos() {
                   if (total === 0) return 0;
                   return ((aCuenta / total) * 100).toFixed(2);
                 })()}
-                disabled={presupuestoSeleccionado?.estado == "pendiente"}
+                disabled={presupuestoSeleccionado?.estado != "aceptado"}
                 onChange={(e) => {
                   const nuevoPorcentaje = parseFloat(e.target.value);
                   const total = parseFloat(presupuestoSeleccionado?.total || 0);

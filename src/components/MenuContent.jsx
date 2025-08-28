@@ -16,16 +16,21 @@ import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import { useNavigate } from "react-router-dom";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Typography, Button } from "@mui/material";
 
 const mainListItems = [
   { text: "Clientes", icon: <GroupsRoundedIcon />, url: "/dashboard/clientes" },
-  { text: "Estudios", icon: <AnalyticsRoundedIcon />, url: "/dashboard" },
+  {
+    text: "Estudios",
+    icon: <AnalyticsRoundedIcon />,
+    url: "/dashboard/estudios",
+  },
   {
     text: "Presupuestos",
     icon: <AssignmentRoundedIcon />,
     url: "/dashboard/presupuestos",
   },
+  { text: "Agenda", icon: <PeopleRoundedIcon />, url: "/dashboard/agenda" },
 ];
 
 const itemList = [
@@ -104,8 +109,19 @@ export default function MenuContent({ drawerOpen }) {
       </Box>
 
       <List dense>
+        <ListItem key={0} sx={{ display: "block" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            fullWidth
+            onClick={() => Linkto("/dashboard")}
+          >
+            Ver Dashboard
+          </Button>
+        </ListItem>
         {secondaryListItems.map((item, index) => (
-          <ListItem key={index} disablePadding sx={{ display: "block" }}>
+          <ListItem key={index + 1} disablePadding sx={{ display: "block" }}>
             <ListItemButton>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />

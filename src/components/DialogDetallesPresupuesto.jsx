@@ -15,7 +15,9 @@ import {
   TableRow,
   Paper,
   Checkbox,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const DOCUMENTOS_POR_ROL = {
   cliente: [
@@ -38,17 +40,36 @@ const DOCUMENTOS_POR_ROL = {
   ],
 };
 
-const renderDato = (label, value) => (
+const renderDato = (label, type, value) => (
   <Grid item xs={12} sm={4}>
     <Typography variant="body2" sx={{ fontWeight: "bold", fontSize: "13px" }}>
       {label}
     </Typography>
-    <Typography
-      variant="body2"
-      sx={{ color: "text.secondary", fontSize: "13px" }}
-    >
-      {value || "-"}
-    </Typography>
+    {type !== "img" ? (
+      <Typography
+        variant="body2"
+        sx={{ color: "text.secondary", fontSize: "13px" }}
+      >
+        {value || "-"}
+      </Typography>
+    ) : type === "img" && value !== null ? (
+      <img
+        src={`https://almartindev.com/api${value}`}
+        alt="No disponible"
+        style={{
+          height: "auto",
+          maxHeight: "100px",
+          objectFit: "contain",
+        }}
+      />
+    ) : (
+      <Typography
+        variant="body2"
+        sx={{ color: "text.secondary", fontSize: "13px" }}
+      >
+        -
+      </Typography>
+    )}
   </Grid>
 );
 
@@ -86,8 +107,17 @@ const DialogDetallesPresupuesto = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle sx={{ fontWeight: "bold", fontSize: { xs: 14, sm: 16 } }}>
+      <DialogTitle
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        fontWeight="bold"
+        fontSize={{ xs: "14px", sm: "16px" }}
+      >
         Detalles del Presupuesto Nº: {presupuestoSeleccionado?.num_presupuesto}
+        <IconButton color="error" onClick={onClose} aria-label="close">
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: 3 }}>
@@ -96,16 +126,43 @@ const DialogDetallesPresupuesto = ({
           Información General
         </Typography>
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          {renderDato("Título", presupuestoSeleccionado?.titulo_presupuesto)}
+          {renderDato(
+            "Título",
+            "text",
+            presupuestoSeleccionado?.titulo_presupuesto
+          )}
           {renderDato(
             "Cliente",
+            "text",
             cliente
               ? `${cliente.nombre} ${cliente.apellidos}`
               : "Cliente no encontrado"
           )}
-          {renderDato("Fecha", presupuestoSeleccionado?.fecha?.split("T")[0])}
-          {renderDato("Estado", presupuestoSeleccionado?.estado?.toUpperCase())}
-          {renderDato("Teléfono", presupuestoSeleccionado?.tel_contacto)}
+          {renderDato(
+            "Fecha",
+            "text",
+            presupuestoSeleccionado?.fecha?.split("T")[0]
+          )}
+          {renderDato(
+            "Estado",
+            "text",
+            presupuestoSeleccionado?.estado?.toUpperCase()
+          )}
+          {renderDato(
+            "Teléfono",
+            "text",
+            presupuestoSeleccionado?.tel_contacto
+          )}
+          {renderDato(
+            "Colaborador",
+            "text",
+            presupuestoSeleccionado?.colaborador
+          )}
+          {renderDato(
+            "Logo Colaborador",
+            "img",
+            presupuestoSeleccionado?.logo_colaborador
+          )}
         </Grid>
 
         <Divider sx={{ my: 2 }} />
@@ -117,15 +174,22 @@ const DialogDetallesPresupuesto = ({
         <Grid container spacing={2} sx={{ mb: 2 }}>
           {renderDato(
             "Dirección",
+            "text",
             presupuestoSeleccionado?.direccion_instalacion
           )}
           {renderDato(
             "Población",
+            "text",
             presupuestoSeleccionado?.poblacion_instalacion
           )}
-          {renderDato("Código Postal", presupuestoSeleccionado?.codigo_postal)}
+          {renderDato(
+            "Código Postal",
+            "text",
+            presupuestoSeleccionado?.codigo_postal
+          )}
           {renderDato(
             "IVA (%)",
+            "text",
             `${presupuestoSeleccionado?.iva_porcentaje || 0} %`
           )}
         </Grid>
@@ -142,6 +206,7 @@ const DialogDetallesPresupuesto = ({
             <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
               <TableRow>
                 <TableCell>Producto</TableCell>
+                <TableCell align="center">Descripción</TableCell>
                 <TableCell align="right">Cantidad</TableCell>
                 <TableCell align="right">Precio</TableCell>
                 <TableCell align="right">Dto (%)</TableCell>
@@ -153,6 +218,7 @@ const DialogDetallesPresupuesto = ({
               {(presupuestoSeleccionado?.productos || []).map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.nombre}</TableCell>
+                  <TableCell align="center">{item.descripcion} </TableCell>
                   <TableCell align="right">{item.cantidad}</TableCell>
                   <TableCell align="right">
                     {parseFloat(
@@ -237,9 +303,21 @@ const DialogDetallesPresupuesto = ({
           Información Económica
         </Typography>
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          {renderDato("Cantidad a cuenta (€)", `${aCuenta.toFixed(2)} €`)}
-          {renderDato("% A cuenta", `${aCuentaPorcentaje.toFixed(2)} %`)}
-          {renderDato("Total pendiente", `${totalPendiente.toFixed(2)} €`)}
+          {renderDato(
+            "Cantidad a cuenta (€)",
+            "text",
+            `${aCuenta.toFixed(2)} €`
+          )}
+          {renderDato(
+            "% A cuenta",
+            "text",
+            `${aCuentaPorcentaje.toFixed(2)} %`
+          )}
+          {renderDato(
+            "Total pendiente",
+            "text",
+            `${totalPendiente.toFixed(2)} €`
+          )}
         </Grid>
 
         {/* Documentos */}

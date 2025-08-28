@@ -337,6 +337,7 @@ export default function Clientes() {
                 <Grid item xs={12} sm={6} key={key}>
                   <TextField
                     fullWidth
+                    size="small"
                     type={type || "text"}
                     label={label}
                     value={rowEditData?.[key] || ""}
@@ -346,6 +347,16 @@ export default function Clientes() {
                         [key]: e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}
@@ -389,6 +400,7 @@ export default function Clientes() {
                   <TextField
                     fullWidth
                     required
+                    size="small"
                     type={type || "text"}
                     label={label}
                     value={newClienteData[key]}
@@ -401,6 +413,16 @@ export default function Clientes() {
                             : e.target.value,
                       }))
                     }
+                    InputProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto dentro del input
+                      },
+                    }}
+                    InputLabelProps={{
+                      style: {
+                        fontSize: "12px", // Tamaño del texto del label
+                      },
+                    }}
                   />
                 </Grid>
               ))}

@@ -27,6 +27,7 @@ import Colaboradores from "./views/Colaboradores";
 import { AuthContextProvider } from "./contexts/AuthContext";
 import { ROLES } from "./const/roles";
 import PrivateRoute from "./components/routes/PrivatRoute/PrivateRoute";
+import Agenda from "./views/Agenda";
 
 function App() {
   return (
@@ -41,8 +42,9 @@ function App() {
               />
             }
           >
-            <Route index element={<Estudios />} />
-            <Route path="crear-estudio" element={<NuevoEstudio />} />
+            <Route index element={<Dashboard />} />
+            <Route path="estudios" element={<Estudios />} />
+            <Route path="estudios/crear-estudio" element={<NuevoEstudio />} />
             <Route path="productos" element={<Productos />} />
             <Route path="productos/paneles" element={<Paneles />} />
             <Route path="productos/inversores" element={<Inversores />} />
@@ -50,6 +52,7 @@ function App() {
             <Route path="clientes" element={<Clientes />} />
             <Route path="presupuestos" element={<Presupuestos />} />
             <Route path="colaboradores" element={<Colaboradores />} />
+            <Route path="agenda" element={<Agenda />} />
           </Route>
           {/* <Route path="/test" element={<MainGrid />} /> */}
           <Route path="/login" element={<Login />} />

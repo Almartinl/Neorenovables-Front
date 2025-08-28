@@ -1,69 +1,117 @@
-import * as React from "react";
-
-import { alpha } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import AppNavbar from "../components/AppNavbar";
-import Header from "../components/Header";
-import MainGrid from "../components/MainGrid";
-import SideMenu from "../components/SideMenu";
-import AppTheme from "../shared-theme/AppTheme";
+import React from "react";
+import { Card, CardContent, Typography, Grid } from "@mui/material";
 import {
-  chartsCustomizations,
-  dataGridCustomizations,
-  datePickersCustomizations,
-  treeViewCustomizations,
-} from "../theme/customizations";
-import MapCustom from "../components/MapCustom";
-import CustomizedDataGrid from "../components/CustomizedDataGrid";
-import Grid from "@mui/material/Grid2";
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-const xThemeComponents = {
-  ...chartsCustomizations,
-  ...dataGridCustomizations,
-  ...datePickersCustomizations,
-  ...treeViewCustomizations,
+const Dashboard = () => {
+  // Datos de prueba (luego los reemplazas con tu API)
+  const stats = {
+    presupuestos: 120,
+    clientes: 45,
+    productos: 85,
+    colaboradores: 12,
+    estudios: 34,
+  };
+
+  const presupuestosEstado = [
+    { name: "Aceptados", value: 50 },
+    { name: "Rechazados", value: 30 },
+    { name: "Pendientes", value: 40 },
+  ];
+
+  const clientesPorMes = [
+    { mes: "Ene", clientes: 5 },
+    { mes: "Feb", clientes: 8 },
+    { mes: "Mar", clientes: 12 },
+    { mes: "Abr", clientes: 10 },
+    { mes: "May", clientes: 15 },
+  ];
+
+  const COLORS = ["#4caf50", "#f44336", "#ff9800"];
+
+  return (
+    <Grid container spacing={2} sx={{ p: 2 }}>
+      {/* Cards con totales */}
+      {Object.entries(stats).map(([key, value]) => (
+        <Grid item xs={12} sm={6} md={2.4} key={key}>
+          <Card sx={{ borderRadius: 3, boxShadow: 3, textAlign: "center" }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </Typography>
+              <Typography
+                variant="h4"
+                color="primary"
+                sx={{ fontWeight: "bold" }}
+              >
+                {value}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+
+      {/* Gráfico de estados de presupuestos */}
+      <Grid item xs={12} md={6}>
+        <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
+              Estados de Presupuestos
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={presupuestosEstado}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {presupuestosEstado.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Gráfico de clientes por mes */}
+      <Grid item xs={12} md={6}>
+        <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
+              Nuevos Clientes por Mes
+            </Typography>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={clientesPorMes}>
+                <XAxis dataKey="mes" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="clientes" fill="#2196f3" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
+  );
 };
 
-export default function Dashboard(props) {
-  return (
-    <AppTheme {...props} themeComponents={xThemeComponents}>
-      <CssBaseline enableColorScheme />
-      <Box sx={{ display: "flex" }}>
-        <SideMenu />
-        <AppNavbar />
-        {/* Main content */}
-        <Box
-          component="main"
-          sx={(theme) => ({
-            flexGrow: 1,
-            backgroundColor: theme.vars
-              ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
-              : alpha(theme.palette.background.default, 1),
-            overflow: "auto",
-          })}
-        >
-          <Stack
-            spacing={2}
-            sx={{
-              alignItems: "center",
-              mx: 3,
-              pb: 5,
-              mt: { xs: 8, md: 0 },
-            }}
-          >
-            <Header />
-            <Box sx={{ width: "100%", maxWidth: { sm: "100%" } }}>
-              <Grid size={{ xs: 12 }}>
-                <CustomizedDataGrid />
-              </Grid>
-            </Box>
-            {/* <MainGrid /> */}
-            {/* <MapCustom /> */}
-          </Stack>
-        </Box>
-      </Box>
-    </AppTheme>
-  );
-}
+export default Dashboard;

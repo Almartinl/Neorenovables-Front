@@ -328,6 +328,7 @@ export default function Colaboradores() {
                   <Grid item xs={12} sm={6} key={key}>
                     <TextField
                       fullWidth
+                      size="small"
                       type={type || "text"}
                       label={label}
                       value={rowEditData?.[key] || ""}
@@ -337,13 +338,23 @@ export default function Colaboradores() {
                           [key]: e.target.value,
                         }))
                       }
+                      InputProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto dentro del input
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto del label
+                        },
+                      }}
                     />
                   </Grid>
                 )
               )}
 
               {/* Campo para subir nuevo logo */}
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <Button variant="outlined" component="label" fullWidth>
                   Subir Nuevo Logo (Img)
                   <input
@@ -398,6 +409,7 @@ export default function Colaboradores() {
                   <Grid item xs={12} sm={6} key={key}>
                     <TextField
                       fullWidth
+                      size="small"
                       required
                       type={type || "text"}
                       label={label}
@@ -411,12 +423,22 @@ export default function Colaboradores() {
                               : e.target.value,
                         }))
                       }
+                      InputProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto dentro del input
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: {
+                          fontSize: "12px", // Tamaño del texto del label
+                        },
+                      }}
                     />
                   </Grid>
                 )
               )}
               {/* Input para subir Logo*/}
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <Button
                   component="label"
                   variant="outlined"
