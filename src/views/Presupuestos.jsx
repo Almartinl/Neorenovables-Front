@@ -974,7 +974,7 @@ export default function Presupuestos() {
             `
               <td rowspan="6" style="text-align: center; padding-right: 25px;">
                 <img
-                  src="https://almartindev.com/${colaborador}"
+                  src="https://almartindev.com/api${colaborador}"
                   alt="Logo Colaborador"
                 />
               </td>`
