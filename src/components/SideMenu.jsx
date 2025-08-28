@@ -47,7 +47,7 @@ export default function SideMenu() {
     >
       <Link to={"/"}>
         <Box pt={2}>
-          <img src="/calcsolaris.png" alt="logo" width="200px" />
+          <img src="/neorenovables_logo.png" alt="logo" width="200px" />
         </Box>
       </Link>
 

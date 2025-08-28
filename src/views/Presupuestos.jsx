@@ -55,7 +55,7 @@ export default function Presupuestos() {
   const [verSoloMisPresupuestos, setVerSoloMisPresupuestos] = useState(false);
   const [openDetalles, setOpenDetalles] = useState(false);
 
-  const isMobile = useMediaQuery("(max-width:1600px)");
+  const isMobile = useMediaQuery("(max-width:1200px)");
   const [productos, setProductos] = useState({
     paneles: [],
     inversores: [],
