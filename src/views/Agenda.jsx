@@ -304,6 +304,26 @@ export default function Agenda() {
     });
   };
 
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+    /* Fila de días de la semana - fondo y texto */
+    .fc-col-header-cell {
+      background-color: #88888aff !important;
+      color: white !important;
+    }
+    .fc-col-header-cell .fc-col-header-cell-cushion {
+      color: white !important;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 3px 0;
+      font-size: 14px;
+    }
+  `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   return (
     <Box mt={{ xs: 10, md: 0 }} sx={{ p: 2 }}>
       <Typography
@@ -333,12 +353,13 @@ export default function Agenda() {
           ]}
           initialView={initialView}
           headerToolbar={{
-            left: "prev,next today",
             center: "title",
+            start: false,
+            end: false,
+          }}
+          footerToolbar={{
+            left: "prev,next today",
             right: "dayGridMonth,listWeek",
-            // right: isMobile
-            //   ? "listWeek,dayGridMonth"
-            //   : "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
           }}
           height={isMobile ? "75vh" : "85vh"}
           locale={esLocale}
