@@ -896,6 +896,8 @@ export default function Presupuestos() {
       }
       .info-table {
         border-color: #fd8700;
+        border-collapse: separate;
+        padding: 5px;
       }
 
       .info-table td {

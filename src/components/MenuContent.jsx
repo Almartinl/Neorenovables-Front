@@ -15,6 +15,7 @@ import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import { useNavigate } from "react-router-dom";
 import { Box, Divider, Typography, Button } from "@mui/material";
 
@@ -30,7 +31,11 @@ const mainListItems = [
     icon: <AssignmentRoundedIcon />,
     url: "/dashboard/presupuestos",
   },
-  { text: "Agenda", icon: <PeopleRoundedIcon />, url: "/dashboard/agenda" },
+  {
+    text: "Agenda",
+    icon: <CalendarMonthRoundedIcon />,
+    url: "/dashboard/agenda",
+  },
 ];
 
 const itemList = [
