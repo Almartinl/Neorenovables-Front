@@ -85,7 +85,7 @@ export default function Agenda() {
 
   /** 🔁 Cargar eventos desde API */
   const loadEvents = () => {
-    fetch("http://localhost:3000/api/agenda")
+    fetch("https://almartindev.com/api/agenda")
       .then((res) => res.json())
       .then((data) => {
         const citas = data.map((c) => ({
@@ -131,7 +131,7 @@ export default function Agenda() {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/api/agenda/add_cita", {
+      const res = await fetch("https://almartindev.com/api/agenda/add_cita", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -184,7 +184,7 @@ export default function Agenda() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/agenda/delete/${selectedEvent.id}`,
+        `https://almartindev.com/api/agenda/delete/${selectedEvent.id}`,
         { method: "DELETE" }
       );
 
@@ -216,7 +216,7 @@ export default function Agenda() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/agenda/update/${selectedEvent.id}`,
+        `https://almartindev.com/api/agenda/update/${selectedEvent.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
