@@ -18,23 +18,32 @@ import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import { useNavigate } from "react-router-dom";
 import { Box, Divider, Typography, Button } from "@mui/material";
+import { useAuthContext } from "../contexts/AuthContext";
 
 const mainListItems = [
-  { text: "Clientes", icon: <GroupsRoundedIcon />, url: "/dashboard/clientes" },
+  {
+    text: "Clientes",
+    icon: <GroupsRoundedIcon />,
+    url: "/dashboard/clientes",
+    rol: "superadmin",
+  },
   {
     text: "Estudios",
     icon: <AnalyticsRoundedIcon />,
     url: "/dashboard/estudios",
+    rol: "superadmin",
   },
   {
     text: "Presupuestos",
     icon: <AssignmentRoundedIcon />,
     url: "/dashboard/presupuestos",
+    rol: "superadmin",
   },
   {
     text: "Agenda",
     icon: <CalendarMonthRoundedIcon />,
     url: "/dashboard/agenda",
+    rol: "admin, usuario, superadmin",
   },
 ];
 
@@ -43,12 +52,14 @@ const itemList = [
     text: "Productos",
     icon: <CategoryRoundedIcon />,
     url: "/dashboard/productos",
+    rol: "superadmin",
   },
 
   {
     text: "Colaboradores",
     icon: <BusinessRoundedIcon />,
     url: "/dashboard/colaboradores",
+    rol: "superadmin",
   },
 ];
 
@@ -59,6 +70,7 @@ const secondaryListItems = [
 ];
 
 export default function MenuContent({ drawerOpen }) {
+  const { dataToken } = useAuthContext();
   const navigate = useNavigate();
   function Linkto(ruta) {
     drawerOpen(false)();
@@ -82,6 +94,9 @@ export default function MenuContent({ drawerOpen }) {
           {mainListItems.map((item, index) => (
             <ListItem key={index} disablePadding sx={{ display: "block" }}>
               <ListItemButton
+                disabled={
+                  item.rol && !item.rol.split(", ").includes(dataToken.role)
+                }
                 selected={location.pathname === item.url}
                 onClick={() => Linkto(item.url)}
               >
@@ -102,6 +117,9 @@ export default function MenuContent({ drawerOpen }) {
           {itemList.map((item, index) => (
             <ListItem key={index} disablePadding sx={{ display: "block" }}>
               <ListItemButton
+                disabled={
+                  item.rol && !item.rol.split(", ").includes(dataToken.role)
+                }
                 selected={location.pathname === item.url}
                 onClick={() => Linkto(item.url)}
               >

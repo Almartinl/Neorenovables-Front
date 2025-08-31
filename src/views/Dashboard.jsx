@@ -39,7 +39,7 @@ const Dashboard = () => {
   const COLORS = ["#4caf50", "#f44336", "#ff9800"];
 
   return (
-    <Grid container spacing={2} sx={{ p: 2 }}>
+    <Grid container spacing={2} sx={{ p: 2, mt: { xs: 10, md: 0 } }}>
       {/* Cards con totales */}
       {Object.entries(stats).map(([key, value]) => (
         <Grid item xs={12} sm={6} md={2.4} key={key}>

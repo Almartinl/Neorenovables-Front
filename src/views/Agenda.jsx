@@ -85,7 +85,7 @@ export default function Agenda() {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   const initialView = useMemo(
-    () => (isMobile ? "listWeek" : "dayGridMonth"),
+    () => (isMobile ? "dayGridMonth" : "dayGridMonth"),
     [isMobile]
   );
 
@@ -825,6 +825,8 @@ export default function Agenda() {
                   variant="outlined"
                   color="primary"
                   fullWidth
+                  size="small"
+                  disabled={dataToken.role === "usuario"}
                 >
                   Subir documento (PDF)
                   <input
@@ -938,51 +940,52 @@ export default function Agenda() {
             }}
           >
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="calendar">
+              {/* <span role="img" aria-label="calendar">
                 📅
-              </span>
-              <b>Fecha:</b> {selectedEvent?.start} → {selectedEvent?.end}
+              </span> */}
+              <b>Fecha:</b>
+              {selectedEvent?.start} → {selectedEvent?.end}
             </Typography>
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="type">
+              {/* <span role="img" aria-label="type">
                 🏷️
-              </span>
+              </span> */}
               <b>Tipo:</b> {selectedEvent?.tipo || "–"}
             </Typography>
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="workers">
+              {/* <span role="img" aria-label="workers">
                 👷
-              </span>
+              </span> */}
               <b>Técnicos:</b> {selectedEvent?.tecnicos || "–"}
             </Typography>
-            <Typography sx={detailStyle}>
+            {/* <Typography sx={detailStyle}>
               <span role="img" aria-label="budget">
                 📄
               </span>
               <b>Presupuesto:</b> {selectedEvent?.presupuesto || "–"}
-            </Typography>
+            </Typography> */}
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="contact">
+              {/* <span role="img" aria-label="contact">
                 👤
-              </span>
+              </span> */}
               <b>Contacto:</b> {selectedEvent?.contacto || "–"}
             </Typography>
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="phone">
+              {/* <span role="img" aria-label="phone">
                 📞
-              </span>
+              </span> */}
               <b>Teléfono:</b> {selectedEvent?.telefono || "–"}
             </Typography>
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="location">
+              {/* <span role="img" aria-label="location">
                 📍
-              </span>
+              </span> */}
               <b>Dirección:</b> {selectedEvent?.direccion || "–"}
             </Typography>
             <Typography sx={detailStyle}>
-              <span role="img" aria-label="city">
+              {/* <span role="img" aria-label="city">
                 🏙️
-              </span>
+              </span> */}
               <b>Población:</b> {selectedEvent?.poblacion || "–"}
             </Typography>
           </Box>
@@ -1008,49 +1011,54 @@ export default function Agenda() {
               {selectedEvent.notes}
             </Box>
           )}
+        </DialogContent>
 
+        <DialogActions
+          sx={{
+            p: 2,
+            px: 3.1,
+            pb: 4,
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           {/* Enlace al parte de trabajo */}
           {selectedEvent?.doc_url && (
-            <Box sx={{ mt: 2, textAlign: "center" }}>
+            <Box sx={{ mt: 2, textAlign: "left" }}>
               <a
                 href={`https://almartindev.com/api${selectedEvent.doc_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  display: "inline-block",
-                  padding: "8px 16px",
-                  backgroundColor: "#1976d2",
-                  color: "white",
-                  textDecoration: "none",
-                  borderRadius: "20px",
-                  fontSize: "0.9rem",
-                  fontWeight: "medium",
-                  boxShadow: "0 2px 6px rgba(25,118,210,0.3)",
-                  transition: "all 0.2s",
-                }}
-                onMouseOver={(e) =>
-                  (e.target.style.backgroundColor = "#1565c0")
-                }
-                onMouseOut={(e) => (e.target.style.backgroundColor = "#1976d2")}
+                // style={{
+                //   display: "flex",
+                //   padding: "8px 16px",
+                //   backgroundColor: "#2ac515ff",
+                //   color: "white",
+                //   textDecoration: "none",
+                //   borderRadius: "20px",
+                //   fontSize: "0.9rem",
+                //   fontWeight: "medium",
+                //   boxShadow: "0 2px 6px rgba(25,118,210,0.3)",
+                //   transition: "all 0.2s",
+                // }}
+                // onMouseOver={(e) =>
+                //   (e.target.style.backgroundColor = "#24a013ff")
+                // }
+                // onMouseOut={(e) =>
+                //   (e.target.style.backgroundColor = "#2ac515ff")
+                // }
               >
-                🔗 Ver Parte de Trabajo
+                Parte de Trabajo
               </a>
             </Box>
           )}
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2, justifyContent: "center" }}>
           <Button
             onClick={() => setOpenView(false)}
             variant="contained"
-            color="primary"
+            color="warning"
             size="small"
             sx={{
-              px: 4,
-              py: 1,
-              fontWeight: "bold",
               textTransform: "none",
-              borderRadius: 20,
             }}
           >
             Cerrar
