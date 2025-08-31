@@ -934,60 +934,79 @@ export default function Agenda() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
               gap: 1.5,
               mb: 2,
             }}
           >
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="calendar">
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="calendar">
                 📅
               </span> */}
-              <b>Fecha:</b>
-              {selectedEvent?.start} → {selectedEvent?.end}
-            </Typography>
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="type">
+                  <b>Fecha:</b>
+                  {selectedEvent?.start} → {selectedEvent?.end}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="type">
                 🏷️
               </span> */}
-              <b>Tipo:</b> {selectedEvent?.tipo || "–"}
-            </Typography>
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="workers">
+                  <b>Tipo:</b> {selectedEvent?.tipo || "–"}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="workers">
                 👷
               </span> */}
-              <b>Técnicos:</b> {selectedEvent?.tecnicos || "–"}
-            </Typography>
+                  <b>Técnicos:</b> {selectedEvent?.tecnicos || "–"}
+                </Typography>
+              </Grid>
+            </Grid>
+
             {/* <Typography sx={detailStyle}>
               <span role="img" aria-label="budget">
                 📄
               </span>
               <b>Presupuesto:</b> {selectedEvent?.presupuesto || "–"}
             </Typography> */}
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="contact">
+            <Grid container spacing={2} mt={0.3}>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="contact">
                 👤
               </span> */}
-              <b>Contacto:</b> {selectedEvent?.contacto || "–"}
-            </Typography>
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="phone">
+                  <b>Contacto:</b> {selectedEvent?.contacto || "–"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="phone">
                 📞
               </span> */}
-              <b>Teléfono:</b> {selectedEvent?.telefono || "–"}
-            </Typography>
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="location">
+                  <b>Teléfono:</b> {selectedEvent?.telefono || "–"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="location">
                 📍
               </span> */}
-              <b>Dirección:</b> {selectedEvent?.direccion || "–"}
-            </Typography>
-            <Typography sx={detailStyle}>
-              {/* <span role="img" aria-label="city">
+                  <b>Dirección:</b> {selectedEvent?.direccion || "–"}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography sx={detailStyle}>
+                  {/* <span role="img" aria-label="city">
                 🏙️
               </span> */}
-              <b>Población:</b> {selectedEvent?.poblacion || "–"}
-            </Typography>
+                  <b>Población:</b> {selectedEvent?.poblacion || "–"}
+                </Typography>
+              </Grid>
+            </Grid>
           </Box>
 
           {/* Notas */}
