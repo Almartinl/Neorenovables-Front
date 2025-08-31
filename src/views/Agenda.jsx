@@ -70,8 +70,13 @@ export default function Agenda() {
     notes: "",
     presupuesto: "",
     tecnicos: "",
-    tipo: "FV",
+    tipo: "Fotovoltaica",
     estado: "pendiente",
+    contacto: "",
+    telefono: "",
+    direccion: "",
+    poblacion: "",
+    doc_url: "",
   });
 
   // Diálogo de edición
@@ -95,9 +100,14 @@ export default function Agenda() {
           end: toISO(c.fecha_fin),
           notes: c.notas || "",
           presupuesto: c.presupuesto_id || "",
-          tipo: c.tipo || "FV",
+          tipo: c.tipo || "Fotovoltaica",
           estado: c.estado || "pendiente",
           tecnicos: c.tecnicos || "",
+          contacto: c.contacto || "",
+          telefono: c.telefono || "",
+          direccion: c.direccion || "",
+          poblacion: c.poblacion || "",
+          doc_url: c.doc_url || "",
         }));
         setEvents(citas);
       })
@@ -121,61 +131,97 @@ export default function Agenda() {
     const s = toISO(draft.start);
     const e = toISO(draft.end || draft.start);
 
-    if (!draft.title || !s) {
+    if (!draft.title || !s || !draft.poblacion) {
       setSnack({
         open: true,
-        message: "Título, fecha de inicio y fecha de fin son obligatorios.",
+        message:
+          "Título, poblacion, fecha de inicio y fecha de fin son obligatorios.",
         severity: "warning",
       });
       return;
     }
 
-    try {
-      const res = await fetch("https://almartindev.com/api/agenda/add_cita", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          presupuesto_id: draft.presupuesto || null,
-          cita: draft.title,
-          fecha_inicio: s,
-          fecha_fin: e,
-          notas: draft.notes,
-          tipo: draft.tipo,
-          estado: draft.estado,
-          tecnicos: draft.tecnicos,
-        }),
-      });
+    const formData = new FormData();
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error al crear cita");
+    // Añadimos los campos
+    formData.append("cita", draft.title);
+    formData.append("fecha_inicio", s);
+    formData.append("fecha_fin", e);
+    formData.append("notas", draft.notes);
+    formData.append("tipo", draft.tipo);
+    formData.append("estado", draft.estado);
+    formData.append("tecnicos", draft.tecnicos);
+    formData.append("contacto", draft.contacto);
+    formData.append("telefono", draft.telefono);
+    formData.append("direccion", draft.direccion);
+    formData.append("poblacion", draft.poblacion);
 
-      setOpenCreate(false);
-      setDraft({
-        title: "",
-        start: "",
-        end: "",
-        notes: "",
-        presupuesto: "",
-        tecnicos: "",
-        tipo: "FV",
-        estado: "pendiente",
-      });
-
-      setSnack({
-        open: true,
-        message: "✅ Cita creada.",
-        severity: "success",
-      });
-
-      // 🔁 Recargar desde API
-      loadEvents();
-    } catch (err) {
-      setSnack({
-        open: true,
-        message: err.message,
-        severity: "error",
-      });
+    // Si hay PDF, lo añadimos también
+    if (draft.doc_url) {
+      formData.append("doc_url", draft.doc_url);
     }
+
+    // Enviar al backend
+    fetch("https://almartindev.com/api/agenda/add_cita", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => {
+        if (res.status == 200) {
+          setOpenCreate(false);
+          setDraft({
+            title: "",
+            start: "",
+            end: "",
+            notes: "",
+            presupuesto: "",
+            tecnicos: "",
+            tipo: "Fotovoltaica",
+            estado: "pendiente",
+            contacto: "",
+            telefono: "",
+            direccion: "",
+            poblacion: "",
+            doc_url: "",
+          });
+
+          setSnack({
+            open: true,
+            message: "✅ Cita creada.",
+            severity: "success",
+          });
+
+          loadEvents();
+        }
+      })
+      .catch((err) => {
+        setSnack({
+          open: true,
+          message: err.message,
+          severity: "error",
+        });
+      });
+
+    // const res = await fetch("https://almartindev.com/api/agenda/add_cita", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({
+    //     presupuesto_id: draft.presupuesto || null,
+    //     cita: draft.title,
+    //     fecha_inicio: s,
+    //     fecha_fin: e,
+    //     notas: draft.notes,
+    //     tipo: draft.tipo,
+    //     estado: draft.estado,
+    //     tecnicos: draft.tecnicos,
+    //   }),
+    // });
+
+    // const data = await res.json();
+    // if (!res.ok) throw new Error(data.message || "Error al crear cita");
+
+    // 🔁 Recargar desde API
+    loadEvents();
   };
 
   /** 🔴 Borrar cita (DELETE) */
@@ -214,44 +260,53 @@ export default function Agenda() {
   const handleUpdate = async () => {
     if (!selectedEvent) return;
 
-    try {
-      const res = await fetch(
-        `https://almartindev.com/api/agenda/update/${selectedEvent.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cita: selectedEvent.title, // ✅ Solo el título limpio
-            fecha_inicio: selectedEvent.start,
-            fecha_fin: selectedEvent.end,
-            notas: selectedEvent.notes,
-            tipo: selectedEvent.tipo, // se guarda aparte
-            estado: selectedEvent.estado,
-            tecnicos: selectedEvent.tecnicos,
-          }),
-        }
-      );
+    const formData = new FormData();
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error al actualizar");
+    // Añadimos los campos
+    formData.append("cita", selectedEvent.title);
+    formData.append("fecha_inicio", selectedEvent.start);
+    formData.append("fecha_fin", selectedEvent.end);
+    formData.append("notas", selectedEvent.notes);
+    formData.append("tipo", selectedEvent.tipo);
+    formData.append("estado", selectedEvent.estado);
+    formData.append("tecnicos", selectedEvent.tecnicos);
+    formData.append("contacto", selectedEvent.contacto);
+    formData.append("telefono", selectedEvent.telefono);
+    formData.append("direccion", selectedEvent.direccion);
+    formData.append("poblacion", selectedEvent.poblacion);
 
-      setOpenEdit(false);
-      setSelectedEvent(null);
-
-      setSnack({
-        open: true,
-        message: "✏️ Cita actualizada.",
-        severity: "success",
-      });
-
-      loadEvents(); // Recargar
-    } catch (err) {
-      setSnack({
-        open: true,
-        message: err.message,
-        severity: "error",
-      });
+    // Si hay PDF, lo añadimos también
+    if (selectedEvent.doc_url) {
+      formData.append("doc_url", selectedEvent.doc_url);
     }
+
+    // Enviar al backend
+    fetch(`https://almartindev.com/api/agenda/update/${selectedEvent.id}`, {
+      method: "PATCH",
+      body: formData,
+    })
+      .then((res) => {
+        if (res.status == 200) {
+          setOpenEdit(false);
+          setSelectedEvent(null);
+          setSnack({
+            open: true,
+            message: "✏️ Cita actualizada.",
+            severity: "success",
+          });
+
+          loadEvents();
+        }
+      })
+      .catch((err) => {
+        setSnack({
+          open: true,
+          message: err.message,
+          severity: "error",
+        });
+      });
+
+    loadEvents(); // Recargar
   };
 
   /** 🔹 Click sobre evento */
@@ -263,6 +318,8 @@ export default function Agenda() {
     const endExclusive = ev.end ? toISO(ev.end) : startISO;
     const endInclusive = addDays(endExclusive, -1);
 
+    console.log(ev);
+
     setSelectedEvent({
       id: ev.id,
       title: ev.title.replace(/\s*\(.*?\)\s*$/, ""), // Elimina "(FV)", "(Eólico)", etc.
@@ -272,7 +329,12 @@ export default function Agenda() {
       presupuesto: ev.extendedProps?.presupuesto || "",
       tecnicos: ev.extendedProps?.tecnicos || "",
       estado: ev.extendedProps?.estado || "pendiente",
-      tipo: ev.extendedProps?.tipo || "FV",
+      tipo: ev.extendedProps?.tipo || "Fotovoltaica",
+      contacto: ev.extendedProps?.contacto || "",
+      telefono: ev.extendedProps?.telefono || "",
+      direccion: ev.extendedProps?.direccion || "",
+      poblacion: ev.extendedProps?.poblacion || "",
+      doc_url: ev.extendedProps?.doc_url || "",
     });
 
     // 🔥 Mostramos SweetAlert con dos botones
@@ -373,23 +435,53 @@ export default function Agenda() {
               notes: "",
               presupuesto: "",
               tecnicos: "",
-              tipo: "FV",
+              tipo: "Fotovoltaica",
               estado: "pendiente",
+              contacto: "",
+              telefono: "",
+              direccion: "",
+              poblacion: "",
+              doc_url: "",
             });
             setOpenCreate(true);
           }}
           eventClick={handleEventClick}
+          eventContent={(info) => {
+            // Aquí puedes acceder a info.event.extendedProps
+            const poblacion =
+              info.event.extendedProps.poblacion || "Sin población";
+            const tipo = info.event.extendedProps.tipo || "";
+
+            return (
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  color: "white",
+                  textAlign: "left",
+                  width: "100%",
+                  overflow: "hidden",
+                  textTransform: "capitalize",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {poblacion} ({tipo})
+              </div>
+            );
+          }}
           events={events.map((e) => ({
             ...e,
             start: e.start,
             end: addDays(e.end, 1), // FullCalendar espera end exclusivo
             allDay: true,
             backgroundColor:
-              e.tipo === "FV"
+              e.tipo === "Fotovoltaica"
                 ? "#0004ffff"
-                : e.tipo === "Mantenimiento"
+                : e.tipo === "Mantenimiento/Averia"
                 ? "#ff0000ff"
-                : e.tipo === "CVE"
+                : e.tipo === "Cargador VE"
                 ? "#388e3c"
                 : e.tipo === "Electricidad"
                 ? "#1976d2"
@@ -397,6 +489,7 @@ export default function Agenda() {
             borderColor: "transparent",
             textColor: "white",
             // ✅ Solo mostramos el tipo en la vista, NO en el título real
+            extendedProps: { ...e },
             title: `${e.title} (${e.tipo})`,
           }))}
           dayMaxEvents={true}
@@ -429,16 +522,19 @@ export default function Agenda() {
                   }
                   sx={{ fontSize: "12px" }}
                 >
-                  <MenuItem sx={{ fontSize: "12px" }} value="FV">
+                  <MenuItem sx={{ fontSize: "12px" }} value="Fotovoltaica">
                     Fotovoltaica
                   </MenuItem>
-                  <MenuItem sx={{ fontSize: "12px" }} value="CVE">
+                  <MenuItem sx={{ fontSize: "12px" }} value="Cargador VE">
                     Cargadores VE
                   </MenuItem>
                   <MenuItem sx={{ fontSize: "12px" }} value="Electricidad">
                     Electricidad
                   </MenuItem>
-                  <MenuItem sx={{ fontSize: "12px" }} value="Mantenimiento">
+                  <MenuItem
+                    sx={{ fontSize: "12px" }}
+                    value="Mantenimiento/Averia"
+                  >
                     Mantenimiento/Averia
                   </MenuItem>
                   <MenuItem sx={{ fontSize: "12px" }} value="Otro">
@@ -582,11 +678,11 @@ export default function Agenda() {
                 margin="dense"
                 label="Persona de contacto"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                value={draft.notes}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={draft.contacto}
                 onChange={(e) =>
-                  setDraft((p) => ({ ...p, notes: e.target.value }))
+                  setDraft((p) => ({ ...p, contacto: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -606,11 +702,11 @@ export default function Agenda() {
                 margin="dense"
                 label="Telefono de contacto"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                value={draft.notes}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={draft.telefono}
                 onChange={(e) =>
-                  setDraft((p) => ({ ...p, notes: e.target.value }))
+                  setDraft((p) => ({ ...p, telefono: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -624,17 +720,41 @@ export default function Agenda() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 size="small"
                 margin="dense"
                 label="Direccion Cita"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                value={draft.notes}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={draft.direccion}
                 onChange={(e) =>
-                  setDraft((p) => ({ ...p, notes: e.target.value }))
+                  setDraft((p) => ({ ...p, direccion: e.target.value }))
+                }
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={2}>
+              <TextField
+                size="small"
+                margin="dense"
+                label="Poblacion Cita"
+                fullWidth
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={draft.poblacion}
+                onChange={(e) =>
+                  setDraft((p) => ({ ...p, poblacion: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -690,6 +810,36 @@ export default function Agenda() {
               },
             }}
           />
+          <Grid container spacing={2} sx={{ mt: 1, alignItems: "center" }}>
+            <Grid item xs={12} sm={3}>
+              <Grid item xs={12}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                >
+                  Subir documento (PDF)
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    hidden
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        doc_url: e.target.files[0], // Guardamos el archivo
+                      }))
+                    }
+                  />
+                </Button>
+                {draft?.doc_url && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Archivo seleccionado: {draft.doc_url.name}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button size="small" onClick={() => setOpenCreate(false)}>
@@ -721,7 +871,7 @@ export default function Agenda() {
           </Typography>
 
           <Typography>
-            <b>📅 Rango:</b> {selectedEvent?.start} → {selectedEvent?.end}
+            <b>📅 Fecha:</b> {selectedEvent?.start} → {selectedEvent?.end}
           </Typography>
           <Typography>
             <b>🏷️ Tipo:</b> {selectedEvent?.tipo}
@@ -734,6 +884,19 @@ export default function Agenda() {
           </Typography>
           <Typography>
             <b>📄 Presupuesto:</b> {selectedEvent?.presupuesto || "–"}
+          </Typography>
+
+          <Typography>
+            <b>👤 Contacto:</b> {selectedEvent?.contacto || "–"}
+          </Typography>
+          <Typography>
+            <b>📞 Teléfono:</b> {selectedEvent?.telefono || "–"}
+          </Typography>
+          <Typography>
+            <b>📍 Dirección:</b> {selectedEvent?.direccion || "–"}
+          </Typography>
+          <Typography>
+            <b>🏙️ Población:</b> {selectedEvent?.poblacion || "–"}
           </Typography>
 
           {selectedEvent?.notes && (
@@ -750,12 +913,25 @@ export default function Agenda() {
               {selectedEvent.notes}
             </Typography>
           )}
+          {selectedEvent?.doc_url && (
+            <Typography sx={{ mt: 2 }}>
+              <a
+                href={`https://almartindev.com/api${selectedEvent.doc_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none", color: "#1976d2" }}
+              >
+                Ver Parte de trabajo
+              </a>
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button
             onClick={() => setOpenView(false)}
             variant="contained"
             color="primary"
+            size="small"
           >
             Cerrar
           </Button>
@@ -781,23 +957,26 @@ export default function Agenda() {
               >
                 <InputLabel sx={{ fontSize: "12px" }}>Tipo de Cita</InputLabel>
                 <Select
-                  value={selectedEvent?.tipo || "FV"}
+                  value={selectedEvent?.tipo || "Fotovoltaica"}
                   label="Tipo de Cita"
                   onChange={(e) =>
                     setSelectedEvent((p) => ({ ...p, tipo: e.target.value }))
                   }
                   sx={{ fontSize: "12px" }}
                 >
-                  <MenuItem sx={{ fontSize: "12px" }} value="FV">
+                  <MenuItem sx={{ fontSize: "12px" }} value="Fotovoltaica">
                     Fotovoltaica
                   </MenuItem>
-                  <MenuItem sx={{ fontSize: "12px" }} value="CVE">
+                  <MenuItem sx={{ fontSize: "12px" }} value="Cargador VE">
                     Cargadores VE
                   </MenuItem>
                   <MenuItem sx={{ fontSize: "12px" }} value="Electricidad">
                     Electricidad
                   </MenuItem>
-                  <MenuItem sx={{ fontSize: "12px" }} value="Mantenimiento">
+                  <MenuItem
+                    sx={{ fontSize: "12px" }}
+                    value="Mantenimiento/Averia"
+                  >
                     Mantenimiento/Averia
                   </MenuItem>
                   <MenuItem sx={{ fontSize: "12px" }} value="Otro">
@@ -944,11 +1123,11 @@ export default function Agenda() {
                 margin="dense"
                 label="Persona de contacto"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                // value={selectedEvent?.title || ""}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={selectedEvent?.contacto || ""}
                 onChange={(e) =>
-                  setSelectedEvent((p) => ({ ...p, title: e.target.value }))
+                  setSelectedEvent((p) => ({ ...p, contacto: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -968,11 +1147,11 @@ export default function Agenda() {
                 margin="dense"
                 label="Telefono de contacto"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                // value={selectedEvent?.title || ""}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={selectedEvent?.telefono || ""}
                 onChange={(e) =>
-                  setSelectedEvent((p) => ({ ...p, title: e.target.value }))
+                  setSelectedEvent((p) => ({ ...p, telefono: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -986,17 +1165,41 @@ export default function Agenda() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={4}>
               <TextField
                 size="small"
                 margin="dense"
                 label="Direccion Cita"
                 fullWidth
-                disabled
-                // disabled={dataToken.role === "usuario"}
-                // value={selectedEvent?.title || ""}
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={selectedEvent?.direccion || ""}
                 onChange={(e) =>
-                  setSelectedEvent((p) => ({ ...p, title: e.target.value }))
+                  setSelectedEvent((p) => ({ ...p, direccion: e.target.value }))
+                }
+                InputProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto dentro del input
+                  },
+                }}
+                InputLabelProps={{
+                  style: {
+                    fontSize: "12px", // Tamaño del texto del label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={2}>
+              <TextField
+                size="small"
+                margin="dense"
+                label="Poblacion Cita"
+                fullWidth
+                // disabled
+                disabled={dataToken.role === "usuario"}
+                value={selectedEvent?.poblacion || ""}
+                onChange={(e) =>
+                  setSelectedEvent((p) => ({ ...p, poblacion: e.target.value }))
                 }
                 InputProps={{
                   style: {
@@ -1056,6 +1259,41 @@ export default function Agenda() {
               },
             }}
           />
+          <Grid container spacing={2} sx={{ mt: 1, alignItems: "center" }}>
+            <Grid item xs={12} sm={3}>
+              <Grid item xs={12}>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                  disabled={dataToken.role === "usuario"}
+                  size="small"
+                >
+                  nuevo documento (PDF)
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    hidden
+                    onChange={(e) =>
+                      setSelectedEvent((prev) => ({
+                        ...prev,
+                        doc_url: e.target.files[0], // Guardamos el archivo
+                      }))
+                    }
+                  />
+                </Button>
+                {selectedEvent?.doc_url && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Archivo seleccionado:{" "}
+                    {selectedEvent.doc_url.name
+                      ? selectedEvent.doc_url.name
+                      : "documento existente"}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button size="small" onClick={() => setOpenEdit(false)}>
