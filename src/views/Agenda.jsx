@@ -51,6 +51,7 @@ export default function Agenda() {
   const { dataToken } = useAuthContext();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [openEdit, setOpenEdit] = useState(false); // Edición
+  const [loading, setLoading] = useState(false);
 
   // Estado de eventos
   const [events, setEvents] = useState([]);
@@ -128,10 +129,12 @@ export default function Agenda() {
 
   /** 🟢 Crear cita (POST) */
   const handleCreate = async () => {
+    setLoading(true);
     const s = toISO(draft.start);
     const e = toISO(draft.end || draft.start);
 
     if (!draft.title || !s || !draft.poblacion) {
+      setLoading(false);
       setSnack({
         open: true,
         message:
@@ -168,6 +171,7 @@ export default function Agenda() {
     })
       .then((res) => {
         if (res.status == 200) {
+          setLoading(false);
           setOpenCreate(false);
           setDraft({
             title: "",
@@ -195,30 +199,13 @@ export default function Agenda() {
         }
       })
       .catch((err) => {
+        setLoading(false);
         setSnack({
           open: true,
           message: err.message,
           severity: "error",
         });
       });
-
-    // const res = await fetch("https://almartindev.com/api/agenda/add_cita", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     presupuesto_id: draft.presupuesto || null,
-    //     cita: draft.title,
-    //     fecha_inicio: s,
-    //     fecha_fin: e,
-    //     notas: draft.notes,
-    //     tipo: draft.tipo,
-    //     estado: draft.estado,
-    //     tecnicos: draft.tecnicos,
-    //   }),
-    // });
-
-    // const data = await res.json();
-    // if (!res.ok) throw new Error(data.message || "Error al crear cita");
 
     // 🔁 Recargar desde API
     loadEvents();
@@ -229,6 +216,7 @@ export default function Agenda() {
     if (!selectedEvent) return;
 
     try {
+      setLoading(true);
       const res = await fetch(
         `https://almartindev.com/api/agenda/delete/${selectedEvent.id}`,
         { method: "DELETE" }
@@ -253,12 +241,15 @@ export default function Agenda() {
         message: err.message,
         severity: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   /** 🔵 Actualizar cita (PATCH) */
   const handleUpdate = async () => {
     if (!selectedEvent) return;
+    setLoading(true);
 
     const formData = new FormData();
 
@@ -287,6 +278,7 @@ export default function Agenda() {
     })
       .then((res) => {
         if (res.status == 200) {
+          setLoading(false);
           setOpenEdit(false);
           setSelectedEvent(null);
           setSnack({
@@ -299,6 +291,7 @@ export default function Agenda() {
         }
       })
       .catch((err) => {
+        setLoading(false);
         setSnack({
           open: true,
           message: err.message,
@@ -317,8 +310,6 @@ export default function Agenda() {
     const startISO = toISO(ev.start);
     const endExclusive = ev.end ? toISO(ev.end) : startISO;
     const endInclusive = addDays(endExclusive, -1);
-
-    console.log(ev);
 
     setSelectedEvent({
       id: ev.id,
@@ -385,6 +376,21 @@ export default function Agenda() {
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
+
+  const detailStyle = {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 0.5,
+    fontSize: "0.95rem",
+    lineHeight: 1.5,
+    "& > b": {
+      minWidth: "70px",
+      display: "inline-block",
+    },
+    span: {
+      mt: 0.2,
+    },
+  };
 
   return (
     <Box mt={{ xs: 10, md: 0 }} sx={{ p: 2 }}>
@@ -463,7 +469,8 @@ export default function Agenda() {
                   overflow: "hidden",
                   textTransform: "capitalize",
                   display: "flex",
-                  justifyContent: "center",
+                  justifyContent: "flex-start",
+                  paddingLeft: "2px",
                   alignItems: "center",
                 }}
               >
@@ -842,17 +849,21 @@ export default function Agenda() {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button size="small" onClick={() => setOpenCreate(false)}>
+          <Button
+            size="small"
+            onClick={() => setOpenCreate(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
           <Button
             size="small"
-            disabled={dataToken.role === "usuario"}
+            disabled={dataToken.role === "usuario" || loading}
             onClick={handleCreate}
             variant="contained"
             color="success"
           >
-            Guardar
+            {loading ? "Guardando..." : "Guardar"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -863,75 +874,184 @@ export default function Agenda() {
         onClose={() => setOpenView(false)}
         fullWidth
         maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+          },
+        }}
       >
-        <DialogTitle>📋 Detalles de la Cita</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
-            {selectedEvent?.title}
+        {/* Cabecera con color por estado */}
+        <Box
+          sx={{
+            backgroundColor:
+              selectedEvent?.estado === "pendiente"
+                ? "#f57c00"
+                : selectedEvent?.estado === "iniciado"
+                ? "#1976d2"
+                : "#2e7d32",
+            color: "white",
+            py: 1.5,
+            px: 3,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold">
+            📋 Detalles de la Cita
+          </Typography>
+          <Box
+            sx={{
+              ml: "auto",
+              backgroundColor: "rgba(255,255,255,0.2)",
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 2,
+              fontSize: "0.8rem",
+              textTransform: "capitalize",
+            }}
+          >
+            {selectedEvent?.estado || "–"}
+          </Box>
+        </Box>
+
+        <DialogContent sx={{ p: 3 }}>
+          {/* Título principal */}
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            color="primary"
+            sx={{ mb: 2, wordBreak: "break-word" }}
+          >
+            {selectedEvent?.title || "Sin título"}
           </Typography>
 
-          <Typography>
-            <b>📅 Fecha:</b> {selectedEvent?.start} → {selectedEvent?.end}
-          </Typography>
-          <Typography>
-            <b>🏷️ Tipo:</b> {selectedEvent?.tipo}
-          </Typography>
-          <Typography>
-            <b>⚙️ Estado:</b> {selectedEvent?.estado}
-          </Typography>
-          <Typography>
-            <b>👷 Técnicos:</b> {selectedEvent?.tecnicos || "–"}
-          </Typography>
-          <Typography>
-            <b>📄 Presupuesto:</b> {selectedEvent?.presupuesto || "–"}
-          </Typography>
+          {/* Información principal en grid */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 1.5,
+              mb: 2,
+            }}
+          >
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="calendar">
+                📅
+              </span>
+              <b>Fecha:</b> {selectedEvent?.start} → {selectedEvent?.end}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="type">
+                🏷️
+              </span>
+              <b>Tipo:</b> {selectedEvent?.tipo || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="workers">
+                👷
+              </span>
+              <b>Técnicos:</b> {selectedEvent?.tecnicos || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="budget">
+                📄
+              </span>
+              <b>Presupuesto:</b> {selectedEvent?.presupuesto || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="contact">
+                👤
+              </span>
+              <b>Contacto:</b> {selectedEvent?.contacto || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="phone">
+                📞
+              </span>
+              <b>Teléfono:</b> {selectedEvent?.telefono || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="location">
+                📍
+              </span>
+              <b>Dirección:</b> {selectedEvent?.direccion || "–"}
+            </Typography>
+            <Typography sx={detailStyle}>
+              <span role="img" aria-label="city">
+                🏙️
+              </span>
+              <b>Población:</b> {selectedEvent?.poblacion || "–"}
+            </Typography>
+          </Box>
 
-          <Typography>
-            <b>👤 Contacto:</b> {selectedEvent?.contacto || "–"}
-          </Typography>
-          <Typography>
-            <b>📞 Teléfono:</b> {selectedEvent?.telefono || "–"}
-          </Typography>
-          <Typography>
-            <b>📍 Dirección:</b> {selectedEvent?.direccion || "–"}
-          </Typography>
-          <Typography>
-            <b>🏙️ Población:</b> {selectedEvent?.poblacion || "–"}
-          </Typography>
-
+          {/* Notas */}
           {selectedEvent?.notes && (
-            <Typography
+            <Box
               sx={{
                 mt: 2,
-                p: 2,
-                backgroundColor: "#f5f5f5",
-                borderRadius: 1,
+                p: 2.5,
+                backgroundColor: "#f9f9fb",
+                borderRadius: 2,
+                border: "1px solid #e0e0e0",
                 fontSize: "0.95rem",
+                lineHeight: 1.6,
                 whiteSpace: "pre-line",
+                boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)",
               }}
             >
+              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                📝 Notas
+              </Typography>
               {selectedEvent.notes}
-            </Typography>
+            </Box>
           )}
+
+          {/* Enlace al parte de trabajo */}
           {selectedEvent?.doc_url && (
-            <Typography sx={{ mt: 2 }}>
+            <Box sx={{ mt: 2, textAlign: "center" }}>
               <a
                 href={`https://almartindev.com/api${selectedEvent.doc_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ textDecoration: "none", color: "#1976d2" }}
+                style={{
+                  display: "inline-block",
+                  padding: "8px 16px",
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  textDecoration: "none",
+                  borderRadius: "20px",
+                  fontSize: "0.9rem",
+                  fontWeight: "medium",
+                  boxShadow: "0 2px 6px rgba(25,118,210,0.3)",
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) =>
+                  (e.target.style.backgroundColor = "#1565c0")
+                }
+                onMouseOut={(e) => (e.target.style.backgroundColor = "#1976d2")}
               >
-                Ver Parte de trabajo
+                🔗 Ver Parte de Trabajo
               </a>
-            </Typography>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions>
+
+        <DialogActions sx={{ p: 2, justifyContent: "center" }}>
           <Button
             onClick={() => setOpenView(false)}
             variant="contained"
             color="primary"
             size="small"
+            sx={{
+              px: 4,
+              py: 1,
+              fontWeight: "bold",
+              textTransform: "none",
+              borderRadius: 20,
+            }}
           >
             Cerrar
           </Button>
@@ -1301,16 +1421,16 @@ export default function Agenda() {
           </Button>
           <Button
             size="small"
-            disabled={dataToken.role === "usuario"}
+            disabled={dataToken.role === "usuario" || loading}
             onClick={handleUpdate}
             variant="contained"
             color="success"
           >
-            Guardar cambios
+            {loading ? "Guardando..." : "Guardar cambios"}
           </Button>
           <Button
             size="small"
-            disabled={dataToken.role === "usuario"}
+            disabled={dataToken.role === "usuario" || loading}
             onClick={() => {
               setOpenEdit(false); // Cierra el diálogo inmediatamente
               setTimeout(() => {
@@ -1339,7 +1459,7 @@ export default function Agenda() {
             }}
             color="error"
           >
-            Borrar Cita
+            {loading ? "Borrando..." : "Borrar cita"}
           </Button>
         </DialogActions>
       </Dialog>
