@@ -24,9 +24,12 @@ import {
   InputLabel,
   Grid2,
   Grid,
+  IconButton,
 } from "@mui/material";
 import { useAuthContext } from "../contexts/AuthContext";
 import Swal from "sweetalert2";
+import CloseIcon from "@mui/icons-material/Close";
+import { color } from "framer-motion";
 
 /** Helpers de fecha */
 const toISO = (d) => {
@@ -452,32 +455,6 @@ export default function Agenda() {
             setOpenCreate(true);
           }}
           eventClick={handleEventClick}
-          eventContent={(info) => {
-            // Aquí puedes acceder a info.event.extendedProps
-            const poblacion =
-              info.event.extendedProps.poblacion || "Sin población";
-            const tipo = info.event.extendedProps.tipo || "";
-
-            return (
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  color: "white",
-                  textAlign: "left",
-                  width: "100%",
-                  overflow: "hidden",
-                  textTransform: "capitalize",
-                  display: "flex",
-                  justifyContent: "flex-start",
-                  paddingLeft: "2px",
-                  alignItems: "center",
-                }}
-              >
-                {poblacion} ({tipo})
-              </div>
-            );
-          }}
           events={events.map((e) => ({
             ...e,
             start: e.start,
@@ -499,6 +476,35 @@ export default function Agenda() {
             extendedProps: { ...e },
             title: `${e.title} (${e.tipo})`,
           }))}
+          eventContent={(info) => {
+            // Aquí puedes acceder a info.event.extendedProps
+            const poblacion =
+              info.event.extendedProps.poblacion || "Sin población";
+            const tipo = info.event.extendedProps.tipo || "";
+            const view = info.view.type; // 'dayGridMonth', 'listWeek'
+
+            const isListView = view === "listWeek";
+
+            return (
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  color: isListView ? "#000" : "white",
+                  textAlign: "left",
+                  width: "100%",
+                  overflow: "hidden",
+                  textTransform: "capitalize",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  paddingLeft: "2px",
+                  alignItems: "center",
+                }}
+              >
+                {poblacion} ({tipo})
+              </div>
+            );
+          }}
           dayMaxEvents={true}
         />
       </Box>
@@ -1042,10 +1048,10 @@ export default function Agenda() {
           }}
         >
           {/* Enlace al parte de trabajo */}
-          {selectedEvent?.doc_url && (
+          {selectedEvent?.doc_url && selectedEvent?.doc_url !== " " ? (
             <Box sx={{ mt: 2, textAlign: "left" }}>
               <a
-                href={`https://almartindev.com/api${selectedEvent.doc_url}`}
+                href={`https://almartindev.com/api${selectedEvent?.doc_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 // style={{
@@ -1070,6 +1076,8 @@ export default function Agenda() {
                 Parte de Trabajo
               </a>
             </Box>
+          ) : (
+            <Box></Box>
           )}
           <Button
             onClick={() => setOpenView(false)}
@@ -1430,13 +1438,29 @@ export default function Agenda() {
                     }
                   />
                 </Button>
-                {selectedEvent?.doc_url && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Archivo seleccionado:{" "}
-                    {selectedEvent.doc_url.name
-                      ? selectedEvent.doc_url.name
-                      : "documento existente"}
-                  </Typography>
+                {selectedEvent?.doc_url && selectedEvent?.doc_url !== " " ? (
+                  <>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Archivo seleccionado:{" "}
+                      {selectedEvent?.doc_url
+                        ? selectedEvent.doc_url.name
+                          ? selectedEvent.doc_url.name
+                          : "documento existente"
+                        : "documento existente"}
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          setSelectedEvent((p) => ({ ...p, doc_url: " " }));
+                          e.stopPropagation();
+                        }}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </Typography>
+                  </>
+                ) : (
+                  <></>
                 )}
               </Grid>
             </Grid>
